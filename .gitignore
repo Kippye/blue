@@ -1,10 +1,9 @@
 # folders
-obj\
-bin\
-libs\
-resources\
-blue\
 .vs\
+blue\
+bin\
+obj\
+resources\
 
 # luarocks build files
 *.src.rock
@@ -19,37 +18,36 @@ blue\
 *.elf
 
 # VS project files
-*.vcxproj
+*.exp
 *.filters
 *.ilk
-*.exp
 *.pdb
 *.sln
+*.vcxproj
 
 # Precompiled Headers
 *.gch
 *.pch
 
 # Libraries
-*.lib
 *.a
-*.la
-*.lo
 *.def
 *.exp
+*.la
+*.lib
+*.lo
 
 # Shared objects (inc. Windows DLLs)
-#*.dll
+*.dll
+*.dylib
 *.so
 *.so.*
-*.dylib
 
 # Executables
-*.exe
-*.bat
-*.out
 *.app
-*.i*86
-*.x86_64
+*.bat
+*.exe
 *.hex
-
+*.i*86
+*.out
+*.x86_64
