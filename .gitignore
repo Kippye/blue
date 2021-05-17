@@ -1,3 +1,11 @@
+# folders
+obj\
+bin\
+libs\
+resources\
+blue\
+.vs\
+
 # luarocks build files
 *.src.rock
 *.zip
