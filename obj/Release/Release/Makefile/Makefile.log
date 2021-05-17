@@ -1,0 +1,32 @@
+﻿  window.cpp
+C:\Program Files (x86)\Windows Kits\10\Include\10.0.18362.0\shared\minwindef.h(130,1): warning C4005: 'APIENTRY': macro redefinition
+C:\Dev\Programs\C++\Project_W\libs\glad\include\glad\glad.h(32): message : see previous definition of 'APIENTRY'
+C:\Dev\Programs\C++\Project_W\include\shader.h(45,34): warning C4101: 'e': unreferenced local variable
+C:\Dev\Programs\C++\Project_W\include\stb_image.h(123,9): warning C4068: unknown pragma
+C:\Dev\Programs\C++\Project_W\include\stb_image.h(124,9): warning C4068: unknown pragma
+C:\Dev\Programs\C++\Project_W\include\stb_image.h(125,9): warning C4068: unknown pragma
+C:\Dev\Programs\C++\Project_W\include\stb_image.h(126,9): warning C4068: unknown pragma
+C:\Dev\Programs\C++\Project_W\source\window.cpp(121,1): warning C4007: 'WinMain': must be '__stdcall'
+C:\Dev\Programs\C++\Project_W\source\window.cpp(120,5): error C2731: 'WinMain': function cannot be overloaded
+C:\Dev\Programs\C++\Project_W\source\window.cpp(120): message : see declaration of 'WinMain'
+C:\Dev\Programs\C++\Project_W\source\window.cpp(127,42): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+C:\Dev\Programs\C++\Project_W\source\window.cpp(127,28): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+C:\Dev\Programs\C++\Project_W\source\window.cpp(227,22): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Dev\Programs\C++\Project_W\source\window.cpp(279,49): warning C4305: 'argument': truncation from 'double' to 'float'
+C:\Dev\Programs\C++\Project_W\source\window.cpp(280,53): warning C4305: 'argument': truncation from 'double' to 'float'
+C:\Dev\Programs\C++\Project_W\source\window.cpp(290,48): warning C4305: 'argument': truncation from 'double' to 'float'
+C:\Dev\Programs\C++\Project_W\source\window.cpp(291,52): warning C4305: 'argument': truncation from 'double' to 'float'
+C:\Dev\Programs\C++\Project_W\source\window.cpp(298,48): warning C4305: 'argument': truncation from 'double' to 'float'
+C:\Dev\Programs\C++\Project_W\source\window.cpp(299,52): warning C4305: 'argument': truncation from 'double' to 'float'
+C:\Dev\Programs\C++\Project_W\source\window.cpp(306,48): warning C4305: 'argument': truncation from 'double' to 'float'
+C:\Dev\Programs\C++\Project_W\source\window.cpp(307,52): warning C4305: 'argument': truncation from 'double' to 'float'
+C:\Dev\Programs\C++\Project_W\source\window.cpp(314,48): warning C4305: 'argument': truncation from 'double' to 'float'
+C:\Dev\Programs\C++\Project_W\source\window.cpp(315,52): warning C4305: 'argument': truncation from 'double' to 'float'
+C:\Dev\Programs\C++\Project_W\source\window.cpp(408,11): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Dev\Programs\C++\Project_W\source\window.cpp(409,11): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Dev\Programs\C++\Project_W\source\window.cpp(415,17): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Dev\Programs\C++\Project_W\source\window.cpp(416,17): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Dev\Programs\C++\Project_W\source\window.cpp(417,11): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Dev\Programs\C++\Project_W\source\window.cpp(418,11): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Dev\Programs\C++\Project_W\source\window.cpp(432,17): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+C:\Dev\Programs\C++\Project_W\source\window.cpp(433,18): warning C4244: '=': conversion from 'int' to 'float', possible loss of data

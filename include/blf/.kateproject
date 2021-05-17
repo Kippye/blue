@@ -1,0 +1,12 @@
+{
+    "name": "BlurLevelFormat",
+    "files": [ 
+    { "directory": ".", "filters": ["*.lua", "*.glsl", "*.hpp", "*.cpp", "Makefile"], "recursive": 1 } ],
+    "build": {
+        "directory": ".",
+        "build": "make all",
+        "clean": "make clean",
+        "run": "make run",
+        "valgrind": "make -i; ./bin/BlurEngine"
+  }
+}

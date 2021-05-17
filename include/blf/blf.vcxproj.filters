@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="blf">
+      <UniqueIdentifier>{1962880B-856B-887C-0EE7-9E7C7AEF937C}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\BlurLevelFormat.cpp" />
+    <ClCompile Include="src\blf\blffile.cpp">
+      <Filter>blf</Filter>
+    </ClCompile>
+    <ClCompile Include="src\blf\commontable.cpp">
+      <Filter>blf</Filter>
+    </ClCompile>
+    <ClCompile Include="src\blf\datatable.cpp">
+      <Filter>blf</Filter>
+    </ClCompile>
+    <ClCompile Include="src\blf\enums.cpp">
+      <Filter>blf</Filter>
+    </ClCompile>
+    <ClCompile Include="src\blf\foreignattributetable.cpp">
+      <Filter>blf</Filter>
+    </ClCompile>
+    <ClCompile Include="src\blf\foreignobject.cpp">
+      <Filter>blf</Filter>
+    </ClCompile>
+    <ClCompile Include="src\blf\objectattribute.cpp">
+      <Filter>blf</Filter>
+    </ClCompile>
+    <ClCompile Include="src\blf\objectdefinition.cpp">
+      <Filter>blf</Filter>
+    </ClCompile>
+    <ClCompile Include="src\blf\reader.cpp">
+      <Filter>blf</Filter>
+    </ClCompile>
+    <ClCompile Include="src\blf\string.cpp">
+      <Filter>blf</Filter>
+    </ClCompile>
+    <ClCompile Include="src\blf\templatearrayconstiterator.cpp">
+      <Filter>blf</Filter>
+    </ClCompile>
+    <ClCompile Include="src\blf\version.cpp">
+      <Filter>blf</Filter>
+    </ClCompile>
+    <ClCompile Include="src\blf\writer.cpp">
+      <Filter>blf</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
