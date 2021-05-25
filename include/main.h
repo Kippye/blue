@@ -6,7 +6,7 @@
 #include <camera.h>
 #include <render.h>
 #include <input.h>
-#include <level_view.h>
+#include <editor.h>
 #include <gui.h>
 
 class Window;
@@ -15,22 +15,22 @@ class TextureLoader;
 class Camera;
 class Render;
 class Input;
-class Level_View;
+class Editor;
 
 class Program
 {
-		public:
-			Window& windowManager = *(new Window());
-			FileSystem& fileSystem = FileSystem();
-			TextureLoader& textureLoader = TextureLoader();
-			Camera& camera = Camera();
-			Render& render = Render();
-			Input& input = Input();
-			Level_View levelView = Level_View();
-			Gui& gui = Gui();
+	public:
+		Window& windowManager = *(new Window());
+		FileSystem& fileSystem = *(new FileSystem());
+		TextureLoader& textureLoader = *(new TextureLoader());
+		Camera& camera = *(new Camera());
+		Render& render = *(new Render());
+		Input& input = *(new Input());
+		Editor editor = *(new Editor());
+		Gui& gui = *(new Gui());
 
-			Program(const Program&) = default;
-			Program& operator=(const Program&) = default;
-			Program();
-			void loop();
+		Program(const Program&) = default;
+		Program& operator=(const Program&) = default;
+		Program();
+		void loop();
 };

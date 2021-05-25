@@ -14,8 +14,24 @@ void Input::setup()
 
 void Input::processInput(GLFWwindow* window)
 {
+	if (program.fileSystem.contextOpen) { return; }
+	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+	{
+		if (program.gui.guiHovered) { return; }
+		shift_down = true;
+	}
+	if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
+	{
+		if (program.gui.guiHovered) { return; }
+		ctrl_down = true;
+	}
+	if (glfwGetKey(window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS)
+	{
+		if (program.gui.guiHovered) { return; }
+		alt_down = true;
+	}
 	// check any situations in which we would not want to control the camera or send inputs to other listeners
-	if (program.fileSystem.contextOpen || program.gui.guiFocused) { return; }
+	if (program.gui.guiFocused) { return; }
 
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) // forwards
 	{
@@ -33,14 +49,6 @@ void Input::processInput(GLFWwindow* window)
 	{
 		program.camera.moveCamera(program.camera.cameraRight * program.render.deltaTime);
 	}
-	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
-	{
-		program.camera.currentCameraSpeed = program.camera.CAMERA_SPEED * 2.5f;
-	}
-	if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
-	{
-		program.camera.currentCameraSpeed = program.camera.CAMERA_SPEED * 0.25f;
-	}
 	//~ if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) // jump
 	//~ {
 		//~ camera.moveCamera(camera.worldUp * deltaTime);
@@ -53,17 +61,17 @@ void Input::processInput(GLFWwindow* window)
 
 void Input::key_event(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-	if (program.fileSystem.contextOpen || program.gui.guiFocused) { return; }
-
 	if (action == GLFW_PRESS)
 	{
 		switch (key)
 		{
 			case (GLFW_KEY_ESCAPE): // free mikey maus
+			if (program.fileSystem.contextOpen || program.gui.guiFocused) { return; }
 			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 			program.windowManager.hasFocus = false;
 			break;
 			case (GLFW_KEY_BACKSPACE): // exit the program
+			if (program.fileSystem.contextOpen || program.gui.guiFocused) { return; }
 			glfwSetWindowShouldClose(window, true);
 			break;
 		}
@@ -74,10 +82,16 @@ void Input::key_event(GLFWwindow* window, int key, int scancode, int action, int
 		switch (key)
 		{
 			case (GLFW_KEY_LEFT_SHIFT):
-			program.camera.currentCameraSpeed = program.camera.CAMERA_SPEED;
+			if (program.fileSystem.contextOpen || program.gui.guiHovered) { return; }
+			shift_down = false;
 			break;
 			case (GLFW_KEY_LEFT_CONTROL):
-			program.camera.currentCameraSpeed = program.camera.CAMERA_SPEED;
+			if (program.fileSystem.contextOpen || program.gui.guiHovered) { return; }
+			ctrl_down = false;
+			break;
+			case (GLFW_KEY_LEFT_ALT):
+			if (program.fileSystem.contextOpen || program.gui.guiHovered) { return; }
+			alt_down = false;
 			break;
 		}
 	}
@@ -85,36 +99,32 @@ void Input::key_event(GLFWwindow* window, int key, int scancode, int action, int
 
 void Input::mouse_button_event(GLFWwindow* window, int key, int action, int mods)
 {
-	if (program.fileSystem.contextOpen || program.gui.guiFocused) { return; }
+	if (program.fileSystem.contextOpen || program.gui.guiHovered) { return; }
 
-	if (key == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
+	if (action == GLFW_PRESS)
 	{
-		//glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-		program.windowManager.hasFocus = true;
+		if (key == GLFW_MOUSE_BUTTON_LEFT)
+		{
+			//glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+			program.windowManager.hasFocus = true;
+			program.editor.tool_use();
+		}
+		else if (key == GLFW_MOUSE_BUTTON_RIGHT)
+		{
+			program.editor.tool_use_secondary();
+		}
 	}
 }
 
 void Input::cursor_pos_event(GLFWwindow* window, double xPos, double yPos)
 {
-	if (program.fileSystem.contextOpen || program.gui.guiFocused) { return; }
-
 	if (program.windowManager.hasFocus)
 	{
-		Input::mouseX = xPos;
-		Input::mouseY = yPos;
-		Input::firstMouseMovement = false;
+		mousePos.x = xPos;
+		mousePos.y = yPos;
+		firstMouseMovement = false;
+		program.editor.updateToolPos(mousePos);
 	}
-	// the window is focused and mouse movements should let us look around
-	//~ if (hasFocus)
-	//~ {
-		//~ float xOffset = (xPos - lastX) * program->camera.cameraSensitivity;
-		//~ float yOffset = (lastY - yPos) * program->camera.cameraSensitivity;
-		//~ lastX = xPos;
-		//~ lastY = yPos;
-
-		//~ program->camera.yaw += xOffset;
-		//~ program->camera.pitch += yOffset;
-	//~ }
 }
 
 void Input::scroll_event(GLFWwindow* window, double xOffset, double yOffset)
@@ -122,6 +132,4 @@ void Input::scroll_event(GLFWwindow* window, double xOffset, double yOffset)
 	if (program.fileSystem.contextOpen || program.gui.guiFocused) { return; }
 
 	program.camera.moveCamera(program.camera.movementFront * (float)(yOffset * program.camera.zoomSpeed * program.render.deltaTime));
-
-	//~ camera.FOV = std::clamp(camera.FOV - (float)yOffset, 1.0f, 45.0f);
 }

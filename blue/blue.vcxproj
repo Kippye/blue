@@ -91,27 +91,29 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\include\camera.h" />
+    <ClInclude Include="..\include\editor.h" />
     <ClInclude Include="..\include\editor_tile.h" />
     <ClInclude Include="..\include\fileSystem.h" />
     <ClInclude Include="..\include\gui.h" />
     <ClInclude Include="..\include\input.h" />
-    <ClInclude Include="..\include\level_view.h" />
     <ClInclude Include="..\include\main.h" />
     <ClInclude Include="..\include\render.h" />
     <ClInclude Include="..\include\shader.h" />
     <ClInclude Include="..\include\stb_image.h" />
     <ClInclude Include="..\include\textures.h" />
+    <ClInclude Include="..\include\util.h" />
     <ClInclude Include="..\include\window.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\ImGuiFileDialog.cpp" />
     <ClCompile Include="..\source\blf_converter.cpp" />
+    <ClCompile Include="..\source\camera.cpp" />
+    <ClCompile Include="..\source\editor.cpp" />
     <ClCompile Include="..\source\editor_tile.cpp" />
     <ClCompile Include="..\source\fileSystem.cpp" />
     <ClCompile Include="..\source\gui.cpp" />
     <ClCompile Include="..\source\imgui_demo.cpp" />
     <ClCompile Include="..\source\input.cpp" />
-    <ClCompile Include="..\source\level_view.cpp" />
     <ClCompile Include="..\source\main.cpp" />
     <ClCompile Include="..\source\render.cpp" />
     <ClCompile Include="..\source\textures.cpp" />

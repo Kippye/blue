@@ -7,6 +7,10 @@ extern "C" {
 
 #include <functional>
 
+#include <glm.hpp>
+#include <gtc/matrix_transform.hpp>
+#include <gtc/type_ptr.hpp>
+
 class Window
 {
 	public:
@@ -17,9 +21,12 @@ class Window
 		bool firstMouseMovement = true;
 		bool hasFocus = true;
 		bool shouldClose = false;
-
+	// lifecycle functions
 	void initialize();
 	void terminate();
+	// utility functions
+	glm::vec4 round_to_grid(glm::vec4 pos);
+
 	// window events
 	std::function<void(Window*, int, int)> framebuffer_size_callback;
 	std::function<void(Window*, int)> window_focus_callback;
@@ -27,6 +34,6 @@ class Window
 	// input events
 	std::function<void(Window*, int, int, int, int)> key_callback;
 	std::function<void(Window*, int, int, int)> mouse_button_callback;
-	std::function<void(Window*, double, double)> cursor_pos_callback;
 	std::function<void(Window*, double, double)> scroll_callback;
+	std::function<void(Window*, double, double)> cursor_pos_callback;
 };

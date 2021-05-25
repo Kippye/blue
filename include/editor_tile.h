@@ -3,14 +3,18 @@
 #include <glm.hpp>
 #include <gtc/matrix_transform.hpp>
 #include <gtc/type_ptr.hpp>
+#include <util.h>
 
-class Transforms
+class Location
 {
 	public:
-		glm::vec3 Position = glm::vec3(0.0f);
+		glm::vec4 Position = glm::vec4(0.0f);
+		Bounding_Box box;
+
 		// not supported by blur yet glm::vec3 rotation;
-		Transforms();
-		Transforms(glm::vec3 _Position);
+
+		Location();
+		Location(glm::vec4 _Position);
 };
 
 class Visuals
@@ -18,18 +22,27 @@ class Visuals
 	public:
 		bool Visible = true;
 		glm::vec2 atlasCoords = glm::vec2(0.0f);
+		int renderIndex;
+
 		Visuals();
 		Visuals(bool _Visible, glm::vec2 _atlasCoords);
 };
 
-class Editor_Tile
+class Tile
 {
+	private:
+		static inline unsigned int lastID = 0;
 	public:
-		Editor_Tile();
-		Editor_Tile(Transforms trans);
-		Editor_Tile(Visuals visual);
-		Editor_Tile(Transforms trans, Visuals visual);
-		Transforms transforms;
+		unsigned int ID = 0;
+		Location location;
 		Visuals visuals;
-		//Physics physics;
+		Tile();
+		Tile(Location _location);
+		Tile(Visuals _visuals);
+		Tile(Location _location, Visuals _visuals);
+
 };
+
+// operators
+inline bool operator==(const Tile& tile1, const Tile& tile2){ return tile1.ID == tile2.ID; }
+inline bool operator!=(const Tile& tile1, const Tile& tile2){ return !(tile1 == tile2); }

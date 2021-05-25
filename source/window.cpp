@@ -3,9 +3,6 @@ extern "C" {
 }
 #include <GLFW/glfw3.h>
 #include <window.h>
-#include <glm.hpp>
-#include <gtc/matrix_transform.hpp>
-#include <gtc/type_ptr.hpp>
 
 #include <iostream>
 #include <fstream>
@@ -81,7 +78,6 @@ void Window::initialize()
 		self->SCREEN_WIDTH = width;
 		self->SCREEN_HEIGHT = height;
 		glViewport(0, 0, width, height);
-		std::cout << "framebuffer resize" << std::endl;
 	};
 
 	thisWindow->window_focus_callback = [](auto self, int focused)
@@ -91,13 +87,13 @@ void Window::initialize()
 			// update the textures from the content folder
 			if (program.fileSystem.contentDir != "")
 			{
-				std::vector<std::string>& filesInContent = program.fileSystem.getInDir(program.fileSystem.contentDir.c_str());
-				//program.gui.tileTextures = program.textureLoader.loadTextures(filesInContent);
-				program.gui.tileTextures = program.textureLoader.loadTextures(filesInContent, program.fileSystem.contentDir);
-				program.gui.textureAtlas = program.textureLoader.loadTextureAtlas(filesInContent, program.fileSystem.contentDir);
+				// TODO: reinstate this stuff when it's no longer annoying
+				//~ std::vector<std::string>& filesInContent = program.fileSystem.getInDir(program.fileSystem.contentDir.c_str());
+				//~ //program.gui.tileTextures = program.textureLoader.loadTextures(filesInContent);
+				//~ program.gui.tileTextures = program.textureLoader.loadTextures(filesInContent, program.fileSystem.contentDir);
+				//~ program.gui.textureAtlas = program.textureLoader.loadTextureAtlas(filesInContent, program.fileSystem.contentDir);
 
-				program.render.textureAtlas = program.gui.textureAtlas;
-				program.render.test();
+				//~ program.render.textureAtlas = program.gui.textureAtlas;
 			}
 			//glfwSetInputMode(self->window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 		}
@@ -133,6 +129,15 @@ void Window::initialize()
 	{
 		program.input.scroll_event(self->window, xOffset, yOffset);
 	};
+}
+
+// TODO: move to some kind of math utiliy along with rad2deg, range, etc
+glm::vec4 Window::round_to_grid(glm::vec4 pos)
+{
+	// TODO: round func
+	pos.x = round(pos.x);
+	pos.y = round(pos.y);
+	return pos;
 }
 
 void Window::terminate()

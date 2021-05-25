@@ -1,7 +1,8 @@
 #include <GLFW/glfw3.h>
-#include <glm.hpp>
+
 #include <gtc/matrix_transform.hpp>
 #include <gtc/type_ptr.hpp>
+#include <glm/gtx/string_cast.hpp>
 
 #include <main.h>
 #include <render.h>
@@ -14,9 +15,12 @@ void Render::setup()
 	// [debug] glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 	//~ // general settings
-	glEnable(GL_DEPTH_TEST);
+	//glEnable(GL_DEPTH_TEST);
+	// add blending for transparency
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	glGenBuffers(1, &instanceVBO);
 
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
@@ -33,7 +37,8 @@ void Render::setup()
 	// set vertex attribute pointers
 	// this is the "stride" value, aka sum of position, normal and texcoords
 	int stride = 5;
-	// position attribute
+	// position attribute	std::cout << glGetError() << std::endl;
+
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 	// texture coord attribute
@@ -48,38 +53,11 @@ void Render::setup()
 	shader.setInt("texture1", 0);
 }
 
-void Render::test()
+void Render::updateInstanceArray()
 {
-	// TEMP: loading 10000 tiles in a 100 by 100 square with different textures //
-	int x = 0, y = 0;
-	int texX = 0, texY = 0;
-    for (int i = 0; i < INSTANCE_CAP / 2; i++)
-    {
-		if (texX ==	textureAtlas->width / 16)
-		{
-			texX = 0;
-			y++;
-			texY ++;
-		}
-		if (texY == textureAtlas->height / 16)
-		{
-			texX = 0;
-			texY = 0;
-		}
-
-		glm::vec4 instance;
-		instance.x = x;
-		instance.y = y;
-		instance.z = texX;
-		instance.w = texY;
-		instanceData[i] = instance;
-		x ++;
-		texX ++;
-	}
-
-	glGenBuffers(1, &instanceVBO);
+	glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4) * INSTANCE_CAP, &instanceData[0], GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4) * instanceData.size(), instanceData.data(), GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 	// also set instance data
@@ -97,7 +75,12 @@ void Render::render()
 	deltaTime = currentFrame - lastFrame;
 	lastFrame = currentFrame;
 	timeCounter += deltaTime;
+	//~ mouse_button_delay += deltaTime;
 
+	//~ if (mouse_button_delay >= 0.1f)
+	//~ {
+		//~ program.input.mouse_button_repeat(program.windowManager.window);
+	//~ }
 	if (timeCounter >= 0.25f)
 	{
 		FPS = (int)((1.0f / deltaTime) + 0.5f);
@@ -112,38 +95,67 @@ void Render::render()
 	// use the general purpose shader
 	shader.use();
 
-	// set uniforms
-	glm::mat4 model = glm::mat4(1.0f);
-	// update the camera view direction (not really needed but eh)
-	program.camera.updateView();
-	// projection  				   					FOV													ASPECT RATIO									CLIP RANGE
-	glm::mat4 projection = glm::perspective(glm::radians(program.camera.FOV), (float)(program.windowManager.SCREEN_WIDTH / program.windowManager.SCREEN_HEIGHT), 0.1f, 100.0f);
+	// TODO? orthographic projection
 	/* glm::mat4 projection = glm::ortho
 	(
 		0.0f, program.windowManager.SCREEN_WIDTH, 0.0f, program.windowManager.SCREEN_HEIGHT,
-		-1000.0f, 1000.0f
+		-1000.0f, 1000.0f	std::cout << glGetError() << std::endl;
+
 	);*/
+	// set uniforms
 
-	shader.setMat4("model", model);
 	shader.setMat4("view", program.camera.view);
-	shader.setMat4("projection", projection);
-	//~glm::mat4 model = glm::translate(glm::mat4(1.0f), program.levelView.currentTiles[tile].transforms.Position);
+	shader.setMat4("projection", program.camera.projection);
 
-	if (textureAtlas != nullptr)
-	shader.setVec2("atlasSize", glm::vec2(textureAtlas->width, textureAtlas->height));
-
-	// use the texture atlas
 	if (textureAtlas != nullptr)
 	{
+		shader.setVec2("atlasSize", glm::vec2(textureAtlas->width, textureAtlas->height));
+
+		// use the texture atlas
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, textureAtlas->ID);
 		glBindVertexArray(VAO);
-
-		glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0, program.levelView.currentTiles.size());
+		//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0, program.editor.tiles.size());
 	}
+
 	program.gui.drawGui();
 
 	glfwSwapBuffers(program.windowManager.window);
+}
+
+void Render::add_to_render_list(Tile &tile)
+{
+	instanceData.emplace_back(glm::vec4(tile.location.Position.x, tile.location.Position.y, tile.visuals.atlasCoords.x, tile.visuals.atlasCoords.y));
+	tile.visuals.renderIndex = instanceData.size() - 1;
+	updateInstanceArray();
+}
+
+void Render::add_to_render_list(std::vector<Tile> &tiles)
+{
+	for (int i = 0; i < tiles.size(); i++)
+	{
+		instanceData.emplace_back(glm::vec4(tiles[i].location.Position.x, tiles[i].location.Position.y, tiles[i].visuals.atlasCoords.x, tiles[i].visuals.atlasCoords.y));
+		tiles[i].visuals.renderIndex = instanceData.size() - 1;
+	}
+
+	updateInstanceArray();
+}
+
+void Render::remove_from_render_list(Tile &tile, int index)
+{
+	instanceData.erase(instanceData.begin() + index);
+	updateInstanceArray();
+}
+
+void Render::remove_from_render_list(std::vector<Tile> &tiles, std::vector<int> &indices)
+{
+	for (int i = 0; i < tiles.size(); i++)
+	{
+		instanceData.erase(instanceData.begin() + indices[i]);
+	}
+
+	updateInstanceArray();
 }
 
 void Render::terminate()
@@ -152,4 +164,5 @@ void Render::terminate()
     glDeleteBuffers(1, &EBO);
 	glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
+    glDeleteBuffers(1, &instanceVBO);
 }

@@ -5,6 +5,17 @@
 #include <gtc/matrix_transform.hpp>
 #include <gtc/type_ptr.hpp>
 
+class Ray
+{
+	public:
+		glm::vec3 startPos, endPos, direction;
+		float length;
+		void traceRay();
+
+		Ray(){}
+		Ray(glm::vec3 _startPos, glm::vec3 _direction, float distance);
+};
+
 class Camera
 {
 	public:
@@ -15,47 +26,25 @@ class Camera
 		glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 		glm::vec3 movementFront = glm::vec3(0.0f, 0.0f, -1.0f);
 		glm::vec3 worldUp = glm::vec3(0.0f, 1.0f, 0.0f);
-		glm::mat4 view;
+		glm::mat4 view, projection;
 		float yaw = -90.0f, pitch = 0.0f;
 		float FOV = 45.0f;
 		float zoomSpeed = 1.5f;
 		float currentCameraSpeed = CAMERA_SPEED;
 		const float cameraSensitivity = 0.1f;
-
-	float yVelocity = 0.0f;
-
-	public:
-	Camera()
-	{
-		// create a lookat matrix
-		view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
-	}
+		float yVelocity = 0.0f;
 
 	public:
-	void moveCamera(glm::vec3 movement)
-	{
-		cameraPos += movement * currentCameraSpeed;
-		cameraPos.z = std::clamp(cameraPos.z, 2.0f, 30.0f);
-	}
-
-	public:
-	void updateView()
-	{
-		// maybe this should be in moveCamera, if i do make mouse looking as well
-		pitch = std::clamp(pitch, -89.0f, 89.0f);
-
-		// calculate new front vector
-		glm::vec3 direction;
-		direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-		direction.y = sin(glm::radians(pitch));
-		direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-		cameraFront = glm::normalize(direction);
-		direction.y = 0;
-		movementFront = glm::normalize(direction);
-
-		cameraRight = glm::normalize(glm::cross(cameraFront, worldUp));  // normalize the vectors, because their length gets closer to 0 the more you look up or down which results in slower movement.
-        cameraUp    = glm::normalize(glm::cross(cameraRight, cameraFront));
-
-		view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
-	}
+		Camera();
+		void moveCamera(glm::vec3 movement);
+		void updateView();
+		// Function that calculates the world ray from eye coordinates and distance.
+		Ray to_world_ray(glm::vec4 eyeCoords, float distance);
+		// Function converting pixel coordinates to NDCs.
+		glm::vec2 to_NDC(glm::vec2 pos);
+		// Function calculating eye coordinates from clip coordinates.
+		glm::vec4 to_eye(glm::vec4 clipCoords);
+		Ray screen_to_world_ray(glm::vec2 pos);
+		// Function calculating screen, world coordinates.
+		glm::vec4 screen_to_world(glm::vec2 pos);
 };

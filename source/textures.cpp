@@ -8,6 +8,85 @@ extern "C" {
 #include <stb_image.h>
 #include <cmath>
 
+#define DEBUG_TEXTURE_LOADING false
+
+GLuint TextureLoader::createEmptyTexture(int* width, int* height)
+{
+	unsigned char *data = new unsigned char[*width * *height];
+
+	GLuint ID;
+
+    for (int i = 0; i < *width * *height; i++)
+        data = 0;
+    glGenTextures(1, &ID);
+    glBindTexture(GL_TEXTURE_2D, ID);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, *width, *height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    delete[] data;
+    return ID;
+}
+
+unsigned char* TextureLoader::loadTextureData(const char* fileName, int* width, int* height, std::string directory, bool flip, unsigned int* ID, bool bind)
+{
+	std::string filePath = fileName;
+	std::string fullPath = (directory + filePath);
+
+	int nrChannels;
+
+	stbi_set_flip_vertically_on_load(flip);
+	unsigned char* data = stbi_load(fullPath.c_str(), width, height, &nrChannels, 4);
+
+	if (bind)
+	{
+		// 1 - amount, &texture - array of IDs
+		glGenTextures(1, ID);
+		glBindTexture(GL_TEXTURE_2D, *ID);
+		// filtering options for this texture
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		// GL_LINEAR would be the "normal" mode, GL_NEAREST pixel mode
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+		// Upload pixels into texture
+		#if defined(GL_UNPACK_ROW_LENGTH) && !defined(__EMSCRIPTEN__)
+			glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+		#endif
+	}
+
+	if (data)
+	{
+		// generate texture
+		if (filePath.find(".png") != std::string::npos)
+		{
+			if (bind) glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, *width, *height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+		}
+		else if (filePath.find(".jpg") != std::string::npos)
+		{
+			if (bind) glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, *width, *height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+		}
+		else
+		{
+			std::cout << "Unsupported image file type!" << std::endl;
+		}
+	}
+	else
+	{
+		std::cout << "Failed to load texture data at: " << fullPath << std::endl;
+	}
+
+	if (bind)
+	{
+		glBindTexture(GL_TEXTURE_2D, 0);
+	}
+	// download free memory
+	// stbi_image_free(data);
+
+	return data;
+}
+
 unsigned int TextureLoader::loadTexture_ID(const char* fileName, std::string directory, bool flip)
 {
 	std::string filePath = fileName;
@@ -110,65 +189,6 @@ Texture* TextureLoader::loadTexture(const char* fileName, std::string directory,
 	return texture;
 }
 
-unsigned char* TextureLoader::loadTextureData(const char* fileName, int* width, int* height, std::string directory, bool flip, unsigned int* ID, bool bind)
-{
-	std::string filePath = fileName;
-	std::string fullPath = (directory + filePath);
-
-	int nrChannels;
-
-	stbi_set_flip_vertically_on_load(flip);
-	unsigned char* data = stbi_load(fullPath.c_str(), width, height, &nrChannels, 4);
-
-	if (bind)
-	{
-		// 1 - amount, &texture - array of IDs
-		glGenTextures(1, ID);
-		glBindTexture(GL_TEXTURE_2D, *ID);
-		// filtering options for this texture
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		// GL_LINEAR would be the "normal" mode, GL_NEAREST pixel mode
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-		// Upload pixels into texture
-		#if defined(GL_UNPACK_ROW_LENGTH) && !defined(__EMSCRIPTEN__)
-			glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-		#endif
-	}
-
-	if (data)
-	{
-		// generate texture
-		if (filePath.find(".png") != std::string::npos)
-		{
-			if (bind) glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, *width, *height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-		}
-		else if (filePath.find(".jpg") != std::string::npos)
-		{
-			if (bind) glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, *width, *height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-		}
-		else
-		{
-			std::cout << "Unsupported image file type!" << std::endl;
-		}
-	}
-	else
-	{
-		std::cout << "Failed to load texture data at: " << fullPath << std::endl;
-	}
-
-	if (bind)
-	{
-		glBindTexture(GL_TEXTURE_2D, 0);
-	}
-	// download free memory
-	// stbi_image_free(data);
-
-	return data;
-}
-
 std::vector<Texture*>& TextureLoader::loadTextures(std::vector<std::string> fileNames, std::string directory, bool flip)
 {
 	std::vector<Texture*>* textures = new std::vector<Texture*>();
@@ -181,23 +201,6 @@ std::vector<Texture*>& TextureLoader::loadTextures(std::vector<std::string> file
 	return *textures;
 }
 
-GLuint TextureLoader::createEmptyTexture(int* width, int* height)
-{
-	unsigned char *data = new unsigned char[*width * *height];
-
-	GLuint ID;
-
-    for (int i = 0; i < *width * *height; i++)
-        data = 0;
-    glGenTextures(1, &ID);
-    glBindTexture(GL_TEXTURE_2D, ID);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, *width, *height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    delete[] data;
-    return ID;
-}
 
 TextureAtlas* TextureLoader::loadTextureAtlas(std::vector<std::string> fileNames, std::string directory, bool flip)
 {
@@ -234,7 +237,16 @@ TextureAtlas* TextureLoader::loadTextureAtlas(std::vector<std::string> fileNames
 		}
 	}
 
-	std::cout << "LOADED TEXTURE ATLAS: " << "width: " << textureAtlas->width << "; height: " << textureAtlas->height << "; ID: " << textureAtlas->ID << std::endl;
+	if (DEBUG_TEXTURE_LOADING) std::cout << "LOADED TEXTURE ATLAS: " << "width: " << textureAtlas->width << "; height: " << textureAtlas->height << "; ID: " << textureAtlas->ID << std::endl;
 
 	return textureAtlas;
+}
+
+glm::vec2 TextureLoader::getAtlasCoords(TextureAtlas* atlas, int index)
+{
+	// since ive done some weird shit these are actually flipped on the Y axis
+	glm::vec2 pos = glm::vec2(1.0f);
+	pos.y = atlas->height / 16 - 1 - floor(index / (atlas->width / 16));
+	pos.x = index - ((atlas-> height / 16 - 1 - pos.y) * (atlas->width / 16 - 1)) - (atlas->height / 16 - 1 - pos.y);
+	return pos;
 }

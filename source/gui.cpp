@@ -15,7 +15,7 @@ void Gui::guiInit(GLFWwindow* window)
 	IMGUI_CHECKVERSION();
 	// imgui setup
 	ImGui::CreateContext();
-	ImGuiIO& io = ImGui::GetIO();
+	guiIO = &ImGui::GetIO();
 	// set up platform / renderer bindings
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
 	ImGui_ImplOpenGL3_Init("#version 430");
@@ -79,25 +79,36 @@ void Gui::guiInit(GLFWwindow* window)
 
 void Gui::addEditorGui()
 {
-	// Gui rendering
-	ImGui_ImplOpenGL3_NewFrame();
-	ImGui_ImplGlfw_NewFrame();
-	ImGui::NewFrame();
+	// Non-movable level editor panel in the top (or bottom?) middle containing editor tool buttonss
+	ImGui::Begin("Level editor");
+	ImGui::End();
+}
 
+void Gui::addPropertiesGui()
+{
+	// Right side non-movable tab containing properties of selected tile
+	ImGui::SetNextWindowSizeConstraints(ImVec2(0, -1), ImVec2(window->SCREEN_WIDTH, -1));
+	ImGui::SetNextWindowSize(ImVec2(propertiesPaneWidth, window->SCREEN_HEIGHT));
+	ImGui::SetNextWindowPos(ImVec2(window->SCREEN_WIDTH - propertiesPaneWidth, 0.0));
+	ImGui::Begin("Tile properties");
+		propertiesPaneWidth = ImGui::GetWindowSize().x;
+	ImGui::End();
+}
+
+void Gui::addTileSelectorGui()
+{
 	bool p = true;
-	int tilesPerRow = 3;
-	int total = 0;
-	// begin specifying elements
+
 	ImGui::SetNextWindowSize(ImVec2(64.0f * 4 + 32.0f, window->SCREEN_HEIGHT));
 	ImGui::SetNextWindowSizeConstraints(ImVec2(-1, -1), ImVec2(-1, -1));
 	ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f));
 	ImGui::Begin("Tile selector", &p, ImGuiWindowFlags_NoResize); // Left side non-movable tab
-		if (textureAtlas != nullptr)
-		{
-			ImVec2 uv0 = ImVec2(0.0f, 0.0f);                        // UV coordinates for lower-left
-			ImVec2 uv1 = ImVec2(1.0f, 1.0f);
-			ImGui::Image((void*)(intptr_t)textureAtlas->ID, ImVec2(textureAtlas->width, textureAtlas->height) * 4, uv0, uv1);
-		}
+		//~ if (textureAtlas != nullptr)
+		//~ {
+			//~ ImVec2 uv0 = ImVec2(0.0f, 2.0f);                        // UV coordinates for lower-left
+			//~ ImVec2 uv1 = ImVec2(1.0f, 3.0f);
+			//~ ImGui::Image((void*)(intptr_t)textureAtlas->ID, ImVec2(textureAtlas->width, textureAtlas->height) * 4, uv0, uv1);
+		//~ }
 
 		// content selector button
 		if (ImGui::Button("Select content folder", ImVec2(128.0f, 32.0f)))
@@ -108,56 +119,73 @@ void Gui::addEditorGui()
 			ImGuiFileDialog::Instance()->SetExtentionInfos(".", ImVec4(1, 1, 0.5f, 0.9f));
 		}
 		// tile tiles
-		for (int y = 0; y < (int)(tileTextures.size() / tilesPerRow); y++)
+		int tilesPerRow = 3;
+		int total = 0;
+
+		for (int y = 0; y < (int)(tileTextures.size() / tilesPerRow + 1); y++)
 		{
 			for (int x = 0; x < tilesPerRow && total < tileTextures.size(); x++)
 			{
-				ImVec2 pos = ImVec2(16 + ((64 + 16) * x), 32 + ((64 + 16) * y));
-				ImVec2 uv0 = ImVec2(0.0f, 0.0f);                        // UV coordinates for lower-left
-				ImVec2 uv1 = ImVec2(1.0f, 1.0f);
-				ImGui::SetCursorPos(pos);
+				if (x > 0)
+					ImGui::SameLine();
+				ImGui::PushID(y * tilesPerRow + x * 4);
 
-				if (ImGui::ImageButton((void*)(intptr_t)tileTextures[total]->ID, ImVec2(64, 64), uv0, uv1))
+				// check if a tile was selected
+				if (ImGui::ImageButton((void*)(intptr_t)tileTextures[total]->ID, ImVec2(64, 64)))
 				{
-					program.levelView.place->selectedTile = tileTextures[total];
-					program.levelView.select_tool(PLACE);
+					// update (to) place tool
+					program.editor.placementTileTexture = program.textureLoader.getAtlasCoords(program.render.textureAtlas, total);
+					program.editor.setTool(Place);
 				}
+
+				ImGui::PopID();
 				total++;
+				// return so we dont go past the vector size
+				if (total >= tileTextures.size()) { break; }
+
 			}
 		}
 
+		// add 1 to support non-full lines at the end
+		//~ for (int y = 0; y < (int)(tileTextures.size() / tilesPerRow + 1); y++)
+		//~ {
+			//~ for (int x = 0; x < tilesPerRow && total < tileTextures.size(); x++)
+			//~ {
+				//~ ImVec2 pos = ImVec2(16 + ((64 + 16) * x), 32 + ((64 + 16) * y));
+				//~ ImVec2 generalPos = ImVec2(16, 32);
+				//~ ImVec2 uv0 = ImVec2(0.0f, 0.0f);                        // UV coordinates for lower-left
+				//~ ImVec2 uv1 = ImVec2(1.0f, 1.0f);
+				//~ ImGui::SetCursorPos(pos);
+				//~ // check if a tile was selected
+				//~ if (ImGui::ImageButton((void*)(intptr_t)tileTextures[total]->ID, ImVec2(64, 64), uv0, uv1))
+				//~ {
+					//~ // update (to) place tool
+					//~ program.editor.placementTileTexture = program.textureLoader.getAtlasCoords(program.render.textureAtlas, total);
+					//~ program.editor.setTool(Place);
+				//~ }
+				//~ total++;
+				//~ // return so we dont go past the vector size
+				//~ if (total >= tileTextures.size()) { break; }
+			//~ }
+		//}
+
 		ImGui::Text("Whatup yo yo its da windo");
-		// create a slider for a 3D position
-		static float translation[] = { 0.0, 0.0, 0.0 };
-		//ImGui::SliderFloat3("position", nullptr, -2.0, 2.0);
-		// create a slider for a 3D euler rotation
-		static float rotation[] = { 0.0, 0.0, 0.0 };
-		//ImGui::SliderFloat3("rotation", nullptr, -5.0, 5.0);
-
 	ImGui::End();
-
-	// Right side non-movable tab containing properties of selected tile
-	ImGui::SetNextWindowSizeConstraints(ImVec2(0, -1), ImVec2(window->SCREEN_WIDTH, -1));
-	ImGui::SetNextWindowSize(ImVec2(propertiesPaneWidth, window->SCREEN_HEIGHT));
-	ImGui::SetNextWindowPos(ImVec2(window->SCREEN_WIDTH - propertiesPaneWidth, 0.0));
-	ImGui::Begin("Tile properties");
-		propertiesPaneWidth = ImGui::GetWindowSize().x;
-	ImGui::End();
-
-	// Non-movable level editor panel in the top (or bottom?) middle containing editor tool buttonss
-	ImGui::Begin("Level editor");
-	ImGui::End();
-	// Movable info panel showing information such as camera position, placed tile count and FPS (TODO)
-	ImGui::Begin("Info panel");
-		ImGui::Text(("FPS: " + std::to_string(program.render.FPS)).c_str());
-		ImGui::Text(("position: " + (glm::to_string(program.camera.cameraPos))).c_str());
-		ImGui::Text(("tile count: " + std::to_string(program.levelView.currentTiles.size())).c_str());
-	ImGui::End();
-	// check if any window is focused (for input capturing purposes)
-	guiFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_AnyWindow);
 }
 
-void Gui::drawGui()
+void Gui::addPopupGui()
+{
+	// Movable info panel showing information such as camera position, placed tile count and FPS
+	// TODO: toggle
+	ImGui::Begin("Info panel");
+		ImGui::Text(("FPS: " + std::to_string(program.render.FPS)).c_str());
+		ImGui::Text(("tile count: " + std::to_string(program.editor.tiles.size())).c_str());
+		ImGui::Text(("position: " + (glm::to_string(program.camera.cameraPos))).c_str());
+		ImGui::Text(("mouse pos: " + (glm::to_string(program.input.mousePos))).c_str());
+	ImGui::End();
+}
+
+void Gui::checkFileDialog()
 {
 	// size constraints
 	ImVec2 maxSize = ImVec2(window->SCREEN_WIDTH, window->SCREEN_HEIGHT);  // The full display area
@@ -178,11 +206,34 @@ void Gui::drawGui()
 		program.fileSystem.contextOpen = false;
 		ImGuiFileDialog::Instance()->Close();
 	}
+}
 
+void Gui::drawGui()
+{
+	// new frame
+	ImGui_ImplOpenGL3_NewFrame();
+	ImGui_ImplGlfw_NewFrame();
+	ImGui::NewFrame();
+	// add guis to be rendered
+	addEditorGui();
+	addPropertiesGui();
+	addTileSelectorGui();
+	addPopupGui();
+
+	// check if any window is focused and/or hovered (for input capturing purposes)
+	guiHovered = guiIO->WantCaptureMouse;
+	guiFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_AnyWindow);
+
+	checkFileDialog();
+
+	// TEMP
 	ImGui::ShowDemoWindow();
 	ImGui::Render();
 
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
-// TODO: void Gui::getGuiEvents
+void Gui::setStatus(const char* status)
+{
+	statusMessage = status;
+}

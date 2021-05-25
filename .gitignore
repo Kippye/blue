@@ -2,7 +2,8 @@
 .vs\
 blue\
 bin\
-obj\
+obj\ # why this dont work bro
+Debug\
 resources\
 
 # luarocks build files

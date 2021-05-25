@@ -10,6 +10,7 @@
 #include <textures.h>
 #include <window.h>
 #include <vector>
+#include <string>
 
 enum GUI_STYLE
 {
@@ -19,11 +20,15 @@ enum GUI_STYLE
 
 class Gui
 {
+	private:
+		std::string statusMessage = "";
+
 	public:
 		GUI_STYLE guiStyle = DARK;
-		bool guiFocused = false;
+		bool guiFocused = false, guiHovered = false;
 		Texture* textureTest;
 		std::vector<Texture*>& tileTextures = std::vector<Texture*>{};
+		ImGuiIO* guiIO;
 		Window* window;
 		float propertiesPaneWidth = 64.0f * 4 + 32.0f;
 
@@ -31,6 +36,12 @@ class Gui
 
 	public:
 		void guiInit(GLFWwindow* window);
-		void addEditorGui();
 		void drawGui();
+		void setStatus(const char* status);
+	private:
+		void addEditorGui();
+		void addTileSelectorGui();
+		void addPropertiesGui();
+		void addPopupGui();
+		void checkFileDialog();
 };
