@@ -21,6 +21,7 @@ void Render::setup()
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	glGenBuffers(1, &instanceVBO);
+	glGenBuffers(1, &instanceAdditionalVBO);
 
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
@@ -57,7 +58,11 @@ void Render::updateInstanceArray()
 {
 	glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4) * instanceData.size(), instanceData.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4) * instanceTransformData.size(), instanceTransformData.data(), GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, instanceAdditionalVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4) * instanceAdditionalData.size(), instanceAdditionalData.data(), GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 	// also set instance data
@@ -65,6 +70,12 @@ void Render::updateInstanceArray()
     glBindBuffer(GL_ARRAY_BUFFER, instanceVBO); // this attribute comes from a different vertex buffer
     glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
     glVertexAttribDivisor(2, 1); // tell OpenGL this is an instanced vertex attribute.
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	glEnableVertexAttribArray(3);
+    glBindBuffer(GL_ARRAY_BUFFER, instanceAdditionalVBO); // this attribute comes from a different vertex buffer
+    glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+    glVertexAttribDivisor(3, 1); // tell OpenGL this is an instanced vertex attribute.
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
@@ -75,12 +86,17 @@ void Render::render()
 	deltaTime = currentFrame - lastFrame;
 	lastFrame = currentFrame;
 	timeCounter += deltaTime;
-	//~ mouse_button_delay += deltaTime;
+	mouse_button_delay += deltaTime;
 
-	//~ if (mouse_button_delay >= 0.1f)
-	//~ {
-		//~ program.input.mouse_button_repeat(program.windowManager.window);
-	//~ }
+	if (mouse_button_delay >= 0.1f && mouse_button_delay < 100.0f)
+	{
+		mouse_repeat = true;
+		mouse_button_delay = 1000.0f;
+	}
+	else
+	{
+		mouse_repeat = false;
+	}
 	if (timeCounter >= 0.25f)
 	{
 		FPS = (int)((1.0f / deltaTime) + 0.5f);
@@ -115,7 +131,6 @@ void Render::render()
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, textureAtlas->ID);
 		glBindVertexArray(VAO);
-		//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 		glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0, program.editor.tiles.size());
 	}
 
@@ -124,35 +139,39 @@ void Render::render()
 	glfwSwapBuffers(program.windowManager.window);
 }
 
-void Render::add_to_render_list(Tile &tile)
+void Render::add_to_render_list(E_Tile &tile)
 {
-	instanceData.emplace_back(glm::vec4(tile.location.Position.x, tile.location.Position.y, tile.visuals.atlasCoords.x, tile.visuals.atlasCoords.y));
-	tile.visuals.renderIndex = instanceData.size() - 1;
+	//instanceData.emplace_back(glm::vec4(tile.location.Position.x, tile.location.Position.y, tile.visuals.atlasCoords.x, tile.visuals.atlasCoords.y));
+	instanceTransformData.emplace_back(tile.location.Position.x, tile.location.Position.y, tile.location.Size.x, tile.location.Size.y);
+	instanceAdditionalData.emplace_back(tile.visuals.atlasCoords.x, tile.visuals.atlasCoords.y, 0.0f, 0.0f);
+
 	updateInstanceArray();
 }
 
-void Render::add_to_render_list(std::vector<Tile> &tiles)
+void Render::add_to_render_list(std::vector<E_Tile> &tiles)
 {
 	for (int i = 0; i < tiles.size(); i++)
 	{
-		instanceData.emplace_back(glm::vec4(tiles[i].location.Position.x, tiles[i].location.Position.y, tiles[i].visuals.atlasCoords.x, tiles[i].visuals.atlasCoords.y));
-		tiles[i].visuals.renderIndex = instanceData.size() - 1;
+		instanceTransformData.emplace_back(tiles[i].location.Position.x, tiles[i].location.Position.y, tiles[i].location.Size.x, tiles[i].location.Size.y);
+		instanceAdditionalData.emplace_back(tiles[i].visuals.atlasCoords.x, tiles[i].visuals.atlasCoords.y, 0.0f, 0.0f);
 	}
 
 	updateInstanceArray();
 }
 
-void Render::remove_from_render_list(Tile &tile, int index)
+void Render::remove_from_render_list(E_Tile &tile, int index)
 {
-	instanceData.erase(instanceData.begin() + index);
+	instanceTransformData.erase(instanceTransformData.begin() + index);
+	instanceAdditionalData.erase(instanceAdditionalData.begin() + index);
 	updateInstanceArray();
 }
 
-void Render::remove_from_render_list(std::vector<Tile> &tiles, std::vector<int> &indices)
+void Render::remove_from_render_list(std::vector<E_Tile> &tiles, std::vector<int> &indices)
 {
 	for (int i = 0; i < tiles.size(); i++)
 	{
-		instanceData.erase(instanceData.begin() + indices[i]);
+		instanceTransformData.erase(instanceTransformData.begin() + indices[i]);
+		instanceAdditionalData.erase(instanceAdditionalData.begin() + indices[i]);
 	}
 
 	updateInstanceArray();
@@ -165,4 +184,5 @@ void Render::terminate()
 	glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
     glDeleteBuffers(1, &instanceVBO);
+    glDeleteBuffers(1, &instanceAdditionalVBO);
 }

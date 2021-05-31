@@ -6,28 +6,27 @@
 #include <vector>
 #include <map>
 
-class Tile;
+class E_Tile;
 
 enum Tool
 {
-    Select, // select placed tiles by clicking, dragging, or ctrl clicking (multiple selection)
-    Place, // place currently selected tile (only necessary after switching to another tool)
-    Move // moves current selection, can't be selected if nothing is selected
-    //Remove, // simple remove tool allowing for single click or drag removing of tiles
+    SELECT, // select placed tiles by clicking, dragging, or ctrl clicking (multiple selection)
+    PLACE, // place currently selected tile (only necessary after switching to another tool)
+    MOVE // moves current selection, can't be selected if nothing is selected
 };
 
 class Editor
 {
 	private:
-        Tool selectedTool = Select;
+        Tool selectedTool = SELECT;
         //std::map<float[4], Tile*> LocationToTile = {};
     public:
 		// editor data
-        std::vector<Tile> tiles = {};
+        std::vector<E_Tile> tiles = {};
 		// tool data
         glm::vec2& toolPos = glm::vec2(0.0f);
 
-		std::vector<Tile> selection = {};
+		std::vector<E_Tile*> selection = {};
 		glm::vec2 placementTileTexture;
 
 		// tool getter / setter
@@ -37,13 +36,14 @@ class Editor
 		Editor();
 
 		// utility functions
-		Tile* positionToTile(glm::vec4 &pos);
+		E_Tile* positionToTile(glm::vec4 &pos, int &index, bool grid = false);
+		std::vector<E_Tile*>& getTilesInArea(Bounding_Box area, std::vector<int> &indices);
 
 		// tool functions
         void tool_use();
         void tool_use_secondary();
         void updateToolPos(glm::vec2 &mousePos);
 
-        void add_tile(Tile &tile);
-        void remove_tile(Tile &tile, int index = -1);
+        void add_tile(E_Tile &tile);
+        void remove_tile(E_Tile &tile, int index = -1);
 };

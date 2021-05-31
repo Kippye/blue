@@ -19,16 +19,34 @@ void Editor::setTool(Tool tool)
 	selectedTool = tool;
 }
 
-Tile* Editor::positionToTile(glm::vec4 &pos)
+E_Tile* Editor::positionToTile(glm::vec4 &pos, int &index, bool grid)
 {
-	// TODO: function body
-	return nullptr;// LocationToTile[pos];
+	// TODO: use an optimized function when the open blf file is in grid only mode
+	//~ if (grid){}
+
+	// reverse loop so we get the top-most tile and also speed up removing recently placed tiles
+	for (index = tiles.size() - 1; index >= 0; index--)
+	{
+		if (tiles[index].location.box.contains_position(pos))
+		{
+			return &tiles[index]; // return so we only get 1 tile each click, otherwise shit would be pretty weird, innit?
+		}
+	}
+	return nullptr;
+}
+
+// for area tools like box selection
+std::vector<E_Tile*>& Editor::getTilesInArea(Bounding_Box area, std::vector<int> &indices)
+{
+	std::vector<E_Tile*>* tilesInArea = new std::vector<E_Tile*>();
+	// TODO func body
+	return *tilesInArea;
 }
 
 void Editor::updateToolPos(glm::vec2 &mousePos)
 {
 	// TODO: do some shit with the mouse pos (move the "drawing cursor")
-	if (!program.gui.guiHovered && !program.fileSystem.contextOpen)
+	if (!program.gui.guiHovered && !program.file_system.contextOpen)
 	{
 		toolPos = mousePos;
 	}
@@ -36,21 +54,63 @@ void Editor::updateToolPos(glm::vec2 &mousePos)
 
 void Editor::tool_use()
 {
+	if (program.gui.guiHovered || program.file_system.contextOpen) { return; }
+
 	switch(selectedTool)
 	{
-		case (Place):
+		case SELECT:
+		{
+			// TODO: drag select, multi select
+			int index = 0;
+			E_Tile* tile = positionToTile(program.camera.screen_to_world(toolPos), index);
+
+			if (program.input.ctrl_down) // additive selection
+			{
+				std::cout << "what? why?" << std::endl; // DEBUG: so this just runs once fsr?
+				if (tile->selected) // tile was already selected, deselect it
+				{
+					selection.erase(selection.begin() + index);
+					tile->selected = false;
+					return;
+				}
+				// tile wasn't selected before, add to selection
+				selection.push_back(tile);
+				tile->selected = true;
+			}
+			else
+			{
+				if (tile == nullptr) // selected empty space, deselect all tiles
+				{
+					for (int i = selection.size() - 1; i == 0; i++)
+					{
+						selection[i]->selected = false;
+						selection.pop_back();
+					}
+					return;
+				}
+				if (selection.size() == 1) // replace selection
+				{
+					selection[0] = tile;
+				}
+				else // create selection
+				{
+					selection.push_back(tile);
+				}
+				tile->selected = true;
+			}
+			break;
+		}
+		case PLACE:
+		{
 			// place the tile
-			// TODO: drag drawing
 			// TODO: box drawing
 			// TODO: optimize draw updates
-			if (!program.gui.guiHovered && !program.fileSystem.contextOpen)
-			{
-				glm::vec4 pos = program.camera.screen_to_world(toolPos);
-				pos = program.input.ctrl_down ? program.windowManager.round_to_grid(pos) : pos;
-				add_tile(tiles.emplace_back(Location(pos), Visuals(true, placementTileTexture)));
-				std::cout << "used place tool!" << std::endl;
-			}
-		break;
+			glm::vec4 pos = program.camera.screen_to_world(toolPos);
+			pos = program.input.ctrl_down ? program.windowManager.round_to_grid(pos) : pos;
+			add_tile(tiles.emplace_back(Location(pos), Visuals(true, placementTileTexture)));
+			std::cout << "used place tool!" << std::endl;
+			break;
+		}
 	};
 }
 
@@ -58,25 +118,28 @@ void Editor::tool_use_secondary()
 {
 	switch(selectedTool)
 	{
-		case (Place):
-			for (int i = 0; i < tiles.size(); i++)
-			{
-				if (tiles[i].location.box.contains_position(program.camera.screen_to_world(toolPos)))
-				{
-					remove_tile(tiles[i], i);
-					return; // return so we only remove 1 tile each click, otherwise shit would be pretty weird, innit?
-				}
-			}
+		case SELECT:
+		{
+			// TODO: remove a single tile from the selection without affecting the rest
 		break;
+		}
+		case PLACE:
+		{
+			int index = 0;
+			E_Tile* tile = positionToTile(program.camera.screen_to_world(toolPos), index);
+			if (tile != nullptr)
+			remove_tile(*tile, index);
+			break;
+		}
 	};
 }
 
-void Editor::add_tile(Tile &tile)
+void Editor::add_tile(E_Tile &tile)
 {
 	program.render.add_to_render_list(tile);
 }
 
-void Editor::remove_tile(Tile &tile, int index)
+void Editor::remove_tile(E_Tile &tile, int index)
 {
 	program.render.remove_from_render_list(tile, index);
 	// remove from the tiles vector as well

@@ -39,6 +39,7 @@ void Camera::moveCamera(glm::vec3 movement)
 		currentCameraSpeed = CAMERA_SPEED;
 	}
 
+	lastMovement = movement;
 	cameraPos += movement * currentCameraSpeed;
 	cameraPos.z = std::clamp(cameraPos.z, 2.0f, 30.0f);
 }
@@ -117,6 +118,8 @@ glm::vec4 Camera::screen_to_world(glm::vec2 pos)
 	worldRay.length += cameraPos.z;
 	worldRay.traceRay();
 
+	// TEMP: i dunno if anyone would want Z layering but maybe in the future i'll enable this somehow
+	worldRay.endPos.z = 0.0f;
 	// Returning the ending position.
 	return glm::vec4(worldRay.endPos, 1.0f);
 }

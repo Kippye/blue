@@ -1,27 +1,27 @@
 #include <editor_tile.h>
 
 // empty constructor - default tile
-Tile::Tile()
+E_Tile::E_Tile()
 {
 	ID = lastID;
 	lastID++;
 }
 // constructor with transforms
-Tile::Tile(Location _location)
+E_Tile::E_Tile(Location _location)
 {
 	location = _location;
 	ID = lastID;
 	lastID++;
 }
 
-Tile::Tile(Visuals _visuals)
+E_Tile::E_Tile(Visuals _visuals)
 {
 	visuals = _visuals;
 	ID = lastID;
 	lastID++;
 }
 
-Tile::Tile(Location _location, Visuals _visuals)
+E_Tile::E_Tile(Location _location, Visuals _visuals)
 {
 	location = _location;
 	visuals = _visuals;
@@ -31,10 +31,11 @@ Tile::Tile(Location _location, Visuals _visuals)
 
 Location::Location(){}
 // initialize with position
-Location::Location(glm::vec4 _Position)
+Location::Location(glm::vec4 _Position, glm::vec3 _Size)
 {
 	Position = _Position;
-	box = Bounding_Box(glm::vec4(Position.x - 0.5f, Position.y - 0.5f, Position.z, 1.0f), glm::vec4(Position.x + 0.5f, Position.y + 0.5f, Position.z, 1.0f));
+	Size = _Size;
+	box = Bounding_Box(glm::vec4(Position.x - (Size.x / 2), Position.y - (Size.y / 2), Position.z, 1.0f), glm::vec4(Position.x + (Size.x / 2), Position.y + (Size.y / 2), Position.z, 1.0f));
 }
 
 Visuals::Visuals(){}

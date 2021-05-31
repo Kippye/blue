@@ -136,12 +136,12 @@ unsigned int TextureLoader::loadTexture_ID(const char* fileName, std::string dir
 	return texture;
 }
 
-Texture* TextureLoader::loadTexture(const char* fileName, std::string directory, bool flip)
+E_Texture* TextureLoader::loadTexture(const char* fileName, std::string directory, bool flip)
 {
+	if (DEBUG_TEXTURE_LOADING)std::cout << "loadTexture" << std::endl;
 	std::string filePath = fileName;
 	std::string fullPath = (directory + filePath);
-
-	Texture* texture = new Texture();
+	E_Texture* texture = new E_Texture();
 
 	stbi_set_flip_vertically_on_load(flip);
 	unsigned char* data = stbi_load(fullPath.c_str(), &texture->width, &texture->height, NULL, 4);
@@ -186,18 +186,21 @@ Texture* TextureLoader::loadTexture(const char* fileName, std::string directory,
 	// download free memory
 	stbi_image_free(data);
 
+	if (DEBUG_TEXTURE_LOADING)std::cout << "loadTexture end" << std::endl;
 	return texture;
 }
 
-std::vector<Texture*>& TextureLoader::loadTextures(std::vector<std::string> fileNames, std::string directory, bool flip)
+std::vector<E_Texture*>& TextureLoader::loadTextures(std::vector<std::string> fileNames, std::string directory, bool flip)
 {
-	std::vector<Texture*>* textures = new std::vector<Texture*>();
+	if (DEBUG_TEXTURE_LOADING)std::cout << "loadTextures" << std::endl;
+	std::vector<E_Texture*>* textures = new std::vector<E_Texture*>();
 
 	for (int i = 0; i < fileNames.size(); i++)
 	{
 		textures->push_back(loadTexture(fileNames[i].c_str(), directory, flip));
 	}
 
+	if (DEBUG_TEXTURE_LOADING)std::cout << "loadTextures end" << std::endl;
 	return *textures;
 }
 
@@ -227,6 +230,7 @@ TextureAtlas* TextureLoader::loadTextureAtlas(std::vector<std::string> fileNames
 			int width, height;
 			unsigned int ID;
 			unsigned char* texture = loadTextureData(fileNames[total].c_str(), &width, &height, directory, false);
+			textureAtlas->textureFiles.push_back(fileNames[total]);
 
 			// add subtexture to texture atlas
 			glBindTexture(GL_TEXTURE_2D, textureAtlas->ID);
@@ -249,4 +253,34 @@ glm::vec2 TextureLoader::getAtlasCoords(TextureAtlas* atlas, int index)
 	pos.y = atlas->height / 16 - 1 - floor(index / (atlas->width / 16));
 	pos.x = index - ((atlas-> height / 16 - 1 - pos.y) * (atlas->width / 16 - 1)) - (atlas->height / 16 - 1 - pos.y);
 	return pos;
+}
+
+// 14 - total
+
+std::string TextureLoader::getAtlasTexturePath(TextureAtlas* atlas, glm::vec2 coords)
+{
+	//int index = coords.x + ((atlas->height / 16 - 1 - coords.y) * (atlas->width / 16 - 1)) - (atlas->height / 16 - 1 - coords.y);
+	coords.y = atlas->height / 16 - 1 - coords.y;
+	int index = (coords.y * (atlas->width / 16)) + (coords.x);
+	std::cout << "coords: " << coords.x << "; " << coords.y << std::endl;
+	std::cout << "index: " << index << std::endl;
+	//std::cout << atlas->textureFiles[((coords.y) * (atlas->width / 16) + coords.x)] << std::endl;
+	return atlas->textureFiles[index];  //atlas->textureFiles[((coords.y) * (atlas->width / 16) + coords.x)];
+}
+
+glm::vec2 TextureLoader::getAtlasTextureCoords(TextureAtlas* atlas, std::string texturePath)
+{
+	for (int i = 0; i < atlas->textureFiles.size(); i++)
+	{
+		if (atlas->textureFiles[i] == texturePath)
+		{
+			glm::vec2 coords;
+			coords.y = atlas->height / 16 - 1 - floor(i / (atlas->width / 16));
+			coords.x = i - (coords.y * (atlas->width / 16));
+			std::cout << "got atlas coords: " << coords.x << "; " << coords.y << std::endl;
+			return coords;
+		}
+	}
+	std::cerr << "texture path not found in atlas, returning (-1, -1)";
+	return glm::vec2(-1, -1);
 }

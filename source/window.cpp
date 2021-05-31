@@ -75,9 +75,12 @@ void Window::initialize()
 	// linking callback events
 	thisWindow->framebuffer_size_callback = [](auto self, int width, int height)
 	{
-		self->SCREEN_WIDTH = width;
-		self->SCREEN_HEIGHT = height;
-		glViewport(0, 0, width, height);
+		if (width > 0 && height > 0)
+		{
+			self->SCREEN_WIDTH = width;
+			self->SCREEN_HEIGHT = height;
+			glViewport(0, 0, width, height);
+		}
 	};
 
 	thisWindow->window_focus_callback = [](auto self, int focused)
@@ -85,15 +88,11 @@ void Window::initialize()
 		if (focused)
 		{
 			// update the textures from the content folder
-			if (program.fileSystem.contentDir != "")
+			if (program.file_system.contentDir != "")
 			{
-				// TODO: reinstate this stuff when it's no longer annoying
-				//~ std::vector<std::string>& filesInContent = program.fileSystem.getInDir(program.fileSystem.contentDir.c_str());
-				//~ //program.gui.tileTextures = program.textureLoader.loadTextures(filesInContent);
-				//~ program.gui.tileTextures = program.textureLoader.loadTextures(filesInContent, program.fileSystem.contentDir);
-				//~ program.gui.textureAtlas = program.textureLoader.loadTextureAtlas(filesInContent, program.fileSystem.contentDir);
-
-				//~ program.render.textureAtlas = program.gui.textureAtlas;
+				std::vector<std::string>& filesInContent = program.file_system.getInDir(program.file_system.contentDir.c_str());
+				program.gui.tileTextures = program.textureLoader.loadTextures(filesInContent, program.file_system.contentDir);
+				program.render.textureAtlas = program.file_system.loadContentAsAtlas();
 			}
 			//glfwSetInputMode(self->window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 		}

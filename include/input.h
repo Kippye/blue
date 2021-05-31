@@ -8,6 +8,7 @@ class Input
 		bool firstMouseMovement = true;
 	public:
 		glm::vec2 mousePos;
+		glm::vec2 mouseMovement;
 		bool ctrl_down = false, shift_down = false, alt_down = false;
 
 		void setup();

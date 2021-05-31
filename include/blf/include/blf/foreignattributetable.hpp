@@ -9,8 +9,8 @@ namespace blf
 {
 	class ForeignAttributeTable
 	{
-		std::vector<ObjectAttribute> attributes;
 		public:
+			std::vector<ObjectAttribute> attributes;
 			void addDefinition(ObjectAttribute attribute);
 
 			const ObjectAttribute* begin() const
