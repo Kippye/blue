@@ -248,6 +248,8 @@ TextureAtlas* TextureLoader::loadTextureAtlas(std::vector<std::string> fileNames
 
 glm::vec2 TextureLoader::getAtlasCoords(TextureAtlas* atlas, int index)
 {
+	if (atlas == nullptr) { std::cerr << "getAtlasCoords: atlas == nullptr" << std::endl; return glm::vec2(0.0f, 0.0f); }
+	
 	// since ive done some weird shit these are actually flipped on the Y axis
 	glm::vec2 pos = glm::vec2(1.0f);
 	pos.y = atlas->height / 16 - 1 - floor(index / (atlas->width / 16));
@@ -257,17 +259,23 @@ glm::vec2 TextureLoader::getAtlasCoords(TextureAtlas* atlas, int index)
 
 unsigned int TextureLoader::getAtlasTextureIndex(TextureAtlas* atlas, glm::vec2 coords)
 {
+	if (atlas == nullptr) { std::cerr << "getAtlasTextureIndex: atlas == nullptr" << std::endl; return 0; }
+	
 	return (((atlas->height / 16 - 1 - coords.y) * (atlas->width / 16)) + (coords.x));
 }
 
 unsigned int TextureLoader::getAtlasTextureIndex(TextureAtlas* atlas, const char* textureName)
 {
+	if (atlas == nullptr) { std::cerr << "getAtlasTextureIndex: atlas == nullptr" << std::endl; return 0; }
+	
 	glm::vec2 coords = getAtlasTextureCoords(atlas, textureName);
 	return (((atlas->height / 16 - 1 - coords.y) * (atlas->width / 16)) + (coords.x));
 }
 
 std::string TextureLoader::getAtlasTexturePath(TextureAtlas* atlas, glm::vec2 coords)
 {
+	if (atlas == nullptr) { std::cerr << "getAtlasTexturePath: atlas == nullptr" << std::endl; return std::string("N/A"); }
+	
 	if (DEBUG_TEXTURE_LOADING) std::cout << "incoords: " << coords.x << "; " << coords.y << std::endl;
 	coords.y = atlas->height / 16 - 1 - coords.y;
 	int index = (coords.y * (atlas->width / 16)) + (coords.x);
@@ -278,6 +286,8 @@ std::string TextureLoader::getAtlasTexturePath(TextureAtlas* atlas, glm::vec2 co
 
 glm::vec2 TextureLoader::getAtlasTextureCoords(TextureAtlas* atlas, std::string texturePath)
 {
+	if (atlas == nullptr) { std::cerr << "getAtlasTextureCoords: atlas == nullptr" << std::endl; return glm::vec2(0.0f, 0.0f); }
+	
 	if (DEBUG_TEXTURE_LOADING) std::cout << "texPath: " << texturePath << std::endl;
 	for (int i = 0; i < atlas->textureFiles.size(); i++)
 	{

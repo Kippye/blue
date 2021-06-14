@@ -718,7 +718,7 @@ void Gui::drawGui()
 	checkFileDialog();
 
 	// TEMP
-	ImGui::ShowDemoWindow();
+	// ImGui::ShowDemoWindow();
 	ImGui::Render();
 	// check for right / middle click defocus
 	if (gui->HoveredWindow == NULL && gui->NavWindow != NULL && (guiIO->MouseClicked[1] || guiIO->MouseClicked[2]) /* could cause issues, who cares? && GetFrontMostPopupModal() == NULL*/)
