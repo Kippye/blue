@@ -16,7 +16,6 @@ void BLF_Converter::load_file(const char* path)
 	BLFFile readFile;
 
 	ObjectTable objects = {
-		//createDefinition<Texture>(),
 		createDefinition<BLF_Tile>(),
 	};
 
@@ -38,7 +37,8 @@ void BLF_Converter::load_file(const char* path)
 		{
 			// TODO: handle this shit
 		}
-		program.editor.add_tile(program.editor.tiles.emplace_back(Location(glm::vec4(tile->x, tile->y, tile->z, 0.0)), Visuals(true, program.textureLoader.getAtlasTextureCoords(program.render.textureAtlas, texturePath))));
+		// TODO: load more tile options
+		program.editor.add_tile(program.editor.tiles.emplace_back(Location(glm::vec4(tile->x, tile->y, tile->z, 0.0)), Physics(tile->collisionsEnabled, tile->_static), Visuals(program.textureLoader.getAtlasTextureCoords(program.render.textureAtlas, texturePath), texturePath, (TEXTUREMODE)tile->textureMode)));
 	}
 
 	auto end_time = std::chrono::high_resolution_clock::now();
@@ -54,13 +54,14 @@ void BLF_Converter::write_file(const char* path)
 	DataTable data;
 
 	ObjectTable objects = {
-		//createDefinition<Texture>(),
 		createDefinition<BLF_Tile>()
 	};
 
 	std::vector<E_Tile>& editor_tiles = program.editor.tiles;
 
 	std::cout << "Write test started with " << editor_tiles.size() << " tile objects." << std::endl;
+
+	if (editor_tiles.size() == 0) { std::cerr << "tried to save 0 tiles" << std::endl; return; }
 
     tiles.reserve(editor_tiles.size());
 
@@ -71,7 +72,12 @@ void BLF_Converter::write_file(const char* path)
             editor_tiles[i].location.Position.x,
             editor_tiles[i].location.Position.y,
             editor_tiles[i].location.Position.z,
-            program.textureLoader.getAtlasTexturePath(program.render.textureAtlas, editor_tiles[i].visuals.atlasCoords)
+			editor_tiles[i].location.Size.x,
+            editor_tiles[i].location.Size.y,
+            editor_tiles[i].physics.CollisionsEnabled,
+            editor_tiles[i].physics.Static,
+            program.textureLoader.getAtlasTexturePath(program.render.textureAtlas, editor_tiles[i].visuals.atlasCoords),
+            (int)editor_tiles[i].visuals.TextureMode
         );
 
 		data.addObject(&(tiles[i]));
@@ -85,4 +91,5 @@ void BLF_Converter::write_file(const char* path)
 	auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
 
 	std::cout << "Write completed in: " << duration << " milliseconds." << std::endl;
+	program.editor.setDirtiness(false);
 }

@@ -1,10 +1,11 @@
 # folders
-.vs\
-blue\
-bin\
-obj\ # why this dont work bro
-Debug\
-resources\
+.vs/
+blue/
+bin/
+obj/ 
+Debug/
+Release/
+resources/
 
 # luarocks build files
 *.src.rock
@@ -17,14 +18,16 @@ resources\
 *.ko
 *.obj
 *.elf
+*.tlog
+*.idb
 
 # VS project files
 *.exp
 *.filters
 *.ilk
 *.pdb
-*.sln
-*.vcxproj
+#*.sln easier to build when it's included
+#*.vcxproj
 
 # Precompiled Headers
 *.gch
@@ -39,7 +42,7 @@ resources\
 *.lo
 
 # Shared objects (inc. Windows DLLs)
-*.dll
+#*.dll
 *.dylib
 *.so
 *.so.*

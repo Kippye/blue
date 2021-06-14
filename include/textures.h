@@ -48,6 +48,9 @@ class TextureLoader
 		std::vector<E_Texture*>& loadTextures(std::vector<std::string> fileNames, std::string directory = textureFolder, bool flip = false);
 
 		TextureAtlas* loadTextureAtlas(std::vector<std::string> fileNames, std::string directory = textureFolder, bool flip = false);
+
+		unsigned int getAtlasTextureIndex(TextureAtlas* atlas, glm::vec2 coords);
+		unsigned int getAtlasTextureIndex(TextureAtlas* atlas, const char* textureName);
 		glm::vec2 getAtlasCoords(TextureAtlas* atlas, int index);
 		std::string getAtlasTexturePath(TextureAtlas* atlas, glm::vec2 coords);
 		glm::vec2 getAtlasTextureCoords(TextureAtlas* atlas, std::string texturePath);

@@ -1,15 +1,18 @@
 #pragma once
 
 #include <glm/glm.hpp>
+#include <editor.h>
 
 class Input
 {
 	private:
+		Tool ignoreRepeatLMB[1] = { SELECT };
+		Tool ignoreRepeatRMB[1] = {};
 		bool firstMouseMovement = true;
 	public:
 		glm::vec2 mousePos;
 		glm::vec2 mouseMovement;
-		bool ctrl_down = false, shift_down = false, alt_down = false;
+		bool ctrl_down = false, shift_down = false, alt_down = false, lmb_down = false, rmb_down = false;
 
 		void setup();
 		void mouse_button_repeat(GLFWwindow* window);

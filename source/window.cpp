@@ -23,6 +23,9 @@ void Window::initialize()
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
+	glfwWindowHint(GLFW_FOCUS_ON_SHOW, GLFW_TRUE);
+	// glfwWindowHint(GLFW_SCALE_TO_MONITOR, GLFW_TRUE); might be needed for bigger monitors?
+
 	window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "blue", NULL, NULL);
 
 	if (window == NULL)
@@ -36,6 +39,7 @@ void Window::initialize()
 	// make the window current and maximize 8)
 	glfwMakeContextCurrent(window);
 	glfwMaximizeWindow(window);
+	glfwSetWindowSizeLimits(window, 0, 0, GLFW_DONT_CARE, GLFW_DONT_CARE);
 	glfwSetWindowUserPointer(window, thisWindow);
 	// load address of OpenGL function pointers
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
@@ -87,13 +91,7 @@ void Window::initialize()
 	{
 		if (focused)
 		{
-			// update the textures from the content folder
-			if (program.file_system.contentDir != "")
-			{
-				std::vector<std::string>& filesInContent = program.file_system.getInDir(program.file_system.contentDir.c_str());
-				program.gui.tileTextures = program.textureLoader.loadTextures(filesInContent, program.file_system.contentDir);
-				program.render.textureAtlas = program.file_system.loadContentAsAtlas();
-			}
+			program.file_system.updateTextures();
 			//glfwSetInputMode(self->window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 		}
 		else
@@ -130,13 +128,9 @@ void Window::initialize()
 	};
 }
 
-// TODO: move to some kind of math utiliy along with rad2deg, range, etc
-glm::vec4 Window::round_to_grid(glm::vec4 pos)
+void Window::setTitle(const char* title)
 {
-	// TODO: round func
-	pos.x = round(pos.x);
-	pos.y = round(pos.y);
-	return pos;
+	glfwSetWindowTitle(window, title);
 }
 
 void Window::terminate()

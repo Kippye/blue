@@ -21,11 +21,11 @@ class Window
 		bool firstMouseMovement = true;
 		bool hasFocus = true;
 		bool shouldClose = false;
+	// window functions
+	void setTitle(const char* title);
 	// lifecycle functions
 	void initialize();
 	void terminate();
-	// utility functions
-	glm::vec4 round_to_grid(glm::vec4 pos);
 
 	// window events
 	std::function<void(Window*, int, int)> framebuffer_size_callback;

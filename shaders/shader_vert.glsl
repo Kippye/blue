@@ -1,23 +1,27 @@
 #version 430 core
-layout (location = 0) in vec3 aPos;
-layout (location = 1) in vec2 aTexCoord; // texture coordinate
-layout (location = 2) in vec4 aInstanceTransformData; // xPos, yPos, xSize, ySize
-layout (location = 3) in vec4 aInstanceAdditionalData; // texture atlas indices
+layout (location = 0) in vec4 aInstanceTransformData; // xPos / yPos / xSize / ySize
+layout (location = 1) in vec4 aInstanceAdditionalData; // texX / texY / shouldTile / selected
 
-out vec2 TexCoord;
+// to geometry shader
+out VS_OUT
+{
+	vec2 pos;
+	vec2 size;
+	vec2 atlasCoord;
+	int shouldTile;
+	int selected;
+	mat4 matrix;
+} vs_out;
 
 uniform mat4 view; // world to view
 uniform mat4 projection; // view to projection
 
-uniform vec2 atlasSize;
-
 void main()
 {
-	// create the screen image, multiplication is right to left
-	//gl_Position = projection * view * vec4(aPos, 1.0f); // apply our transform matrices
-	// TODO: create a model matrix and transform it
-	gl_Position = projection * view * vec4(aPos.xy + aInstanceTransformData.xy, aPos.z, 1.0f); // apply our transform matrices
-	//TexCoord = aTexCoord;
-	TexCoord = vec2(((aTexCoord.x / atlasSize.x) * 16) + (aInstanceAdditionalData.x / atlasSize.x) * 16,
-	1 - (((aTexCoord.y / atlasSize.y) * 16) + (aInstanceAdditionalData.y / atlasSize.y) * 16));
+	vs_out.pos = aInstanceTransformData.xy;
+	vs_out.size = aInstanceTransformData.zw;
+	vs_out.atlasCoord = aInstanceAdditionalData.xy;
+	vs_out.shouldTile = int(aInstanceAdditionalData.z);
+	vs_out.selected = int(aInstanceAdditionalData.w);
+	vs_out.matrix = (projection * view);
 };

@@ -3,9 +3,11 @@
 
 #include <ImGuiFileDialog.h>
 #include <glm/gtx/string_cast.hpp>
+#include <libconfig.h++>
 
 #include <iostream>
-#include <libconfig.h++>
+#include <iterator>
+#include <algorithm>
 
 class Program;
 extern Program program;
@@ -78,6 +80,8 @@ void Gui::guiInit(Window* windowManager)
 	colors[ImGuiCol_NavWindowingHighlight]  = ImVec4(1.00f, 1.00f, 1.00f, 0.70f);
 	colors[ImGuiCol_NavWindowingDimBg]      = ImVec4(0.80f, 0.80f, 0.80f, 0.20f);
 	colors[ImGuiCol_ModalWindowDimBg]       = ImVec4(0.80f, 0.80f, 0.80f, 0.35f);
+
+	gd.normalButtonColor = colors[ImGuiCol_Button];
 }
 
 void Gui::addEditorGui()
@@ -97,85 +101,106 @@ void Gui::addEditorGui()
 		ImGui::SetCursorPos(ImVec2(currentToolButtonX, 0.0f));
 
 		// select tool button
+		if (program.editor.getTool() == SELECT)
+		{
+			ImGui::PushStyleColor(ImGuiCol_Button, gd.selectedButtonColor);
+		}
+		else
+		{
+			ImGui::PushStyleColor(ImGuiCol_Button, gd.normalButtonColor);
+		}
 		if (ImGui::ImageButton((void*)(intptr_t)guiTextures["select"], s.editorButtonSize))
 		{
 			// update (to) select tool
 			program.editor.setTool(SELECT);
 		}
+		ImGui::PopStyleColor();
 
 		if (ImGui::IsItemHovered())
 		{
 			ImGui::BeginTooltip();
 				ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+				ImGui::Text("select tool ");
 				ImGui::BulletText("select tiles with LMB ");
-				ImGui::BulletText("multiselect by holding CTRL ");
+				ImGui::BulletText("multiselect with RMB ");
 				ImGui::BulletText("box select by dragging ");
 				ImGui::BulletText("single tiles' properties will be shown in the properties tab ");
 				ImGui::PopTextWrapPos();
 			ImGui::EndTooltip();
 		}
 
-		currentToolButtonX += 66.0f;
+		currentToolButtonX += s.editorButtonDistance + s.editorButtonOffset;
 
 		ImGui::SetCursorPos(ImVec2(currentToolButtonX, 0.0f));
 		// place/remove tool button
+		if (program.editor.getTool() == PLACE)
+		{
+			ImGui::PushStyleColor(ImGuiCol_Button, gd.selectedButtonColor);
+		}
+		else
+		{
+			ImGui::PushStyleColor(ImGuiCol_Button, gd.normalButtonColor);
+		}
 		if (ImGui::ImageButton((void*)(intptr_t)guiTextures["place"], s.editorButtonSize))
 		{
 			// update (to) place tool
 			// not selecting a new texture since none was selected, so just reusing the last one
 			program.editor.setTool(PLACE);
 		}
+		ImGui::PopStyleColor();
 
 		if (ImGui::IsItemHovered())
 		{
 			ImGui::BeginTooltip();
 				ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+				ImGui::Text("place/remove tool ");
 				ImGui::BulletText("place tiles with LMB or drag to draw ");
+				ImGui::BulletText("remove tiles with RMB or drag to remove ");
 				ImGui::BulletText("hold left CTRL to place on a grid ");
-				ImGui::BulletText("right click to remove tiles ");
 				ImGui::PopTextWrapPos();
 			ImGui::EndTooltip();
 		}
-		// and so on... currentToolButtonX += 64.0f;
 
 		/// editor toggles section
-		ImGui::SetCursorPos(ImVec2(ImGui::GetWindowWidth() - (64 * 2), 0.0f));
-		// grid toggle button
-		// TODO: texture
-		if (ImGui::ImageButton((void*)(intptr_t)guiTextures["place"], s.editorButtonSize))
+
+		ImGui::SetCursorPos(ImVec2(ImGui::GetWindowWidth() - 256, 0.0f));
+		ImGui::SetNextItemWidth(s.editorComboWidth);
+		// overlap switch dropdown
+		if (ImGui::Combo("", &(int)se.currentGridModeSelection, se.gridModeOptions, 3))
 		{
-			// TODO: toggle grid
+			program.editor.setGridMode((GRID_MODE)se.currentGridModeSelection);
 		}
 
 		if (ImGui::IsItemHovered())
 		{
 			ImGui::BeginTooltip();
 				ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
-				ImGui::BulletText("toggle visible grid ");
-				ImGui::BulletText("shortcut: left CTRL + G ");
+				ImGui::Text("grid mode ");
+				ImGui::BulletText("normal: tiles can be placed anywhere and snapped with left CTRL ");
+				ImGui::BulletText("auto: tiles will only be placed on the grid, existing tiles won't be affected ");
+				ImGui::BulletText("full: tiles will only be placed on the grid, existing tiles will be snapped to the grid ");
+				ImGui::BulletText("shortcut: left CTRL + G to switch ");
 				ImGui::PopTextWrapPos();
 			ImGui::EndTooltip();
 		}
 
-		ImGui::SetCursorPos(ImVec2(ImGui::GetWindowWidth() - 64, 0.0f));
-		// overlap toggle button
-		// TODO: texture
-		if (ImGui::ImageButton((void*)(intptr_t)guiTextures["place"], s.editorButtonSize))
-		{
-			// TODO: toggle overlap
-		}
+		ImGui::SetCursorPos(ImVec2(ImGui::GetWindowWidth() - 128, 0.0f));
+		ImGui::SetNextItemWidth(s.editorComboWidth);
+		// overlap switch dropdown
+		ImGui::Combo(" ", &(int)program.editor.overlapMode, se.tileOverlapModeOptions, 3);
 
 		if (ImGui::IsItemHovered())
 		{
 			ImGui::BeginTooltip();
 				ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
-				ImGui::BulletText("toggle overlapping tiles ");
-				ImGui::BulletText("when enabled, tiles won't be placed if they intersect another ");
-				ImGui::BulletText("shortcut: left CTRL + L ");
+				ImGui::Text("tile overlap mode ");
+				ImGui::BulletText("none: tiles won't be placed if they intersect another ");
+				ImGui::BulletText("free: only tiles placed on the grid can't overlap (recommended) ");
+				ImGui::BulletText("always: no overlap checks will be performed ");
+				ImGui::BulletText("shortcut: left CTRL + L to switch ");
 				ImGui::PopTextWrapPos();
 			ImGui::EndTooltip();
 		}
-
 
 		ImGui::PopStyleVar(ImGuiStyleVar_WindowPadding);
 	ImGui::End();
@@ -190,20 +215,137 @@ void Gui::addPropertiesGui()
 	ImGui::SetNextWindowPos(ImVec2(window->SCREEN_WIDTH - s.propertiesPaneWidth, 0.0));
 	ImGui::Begin("Tile properties", p_close);
 		s.propertiesPaneWidth = ImGui::GetWindowWidth();
-		if (program.editor.selection.size() == 1) // single tile
+		guiWantKeyboard = ImGui::IsWindowFocused() ? true : guiWantKeyboard;
+
+		/// SELECTION SECTION
+		std::vector<E_Tile*>& selection = program.editor.selection;
+		if (selection.size() == 1) // single tile
 		{
-			ImGui::Text(glm::to_string(program.editor.selection[0]->location.Position).c_str());
+			/// location
+			float pos[2] = { selection[0]->location.Position.x, selection[0]->location.Position.y };
+			// position
+			if (ImGui::InputFloat2("Position", pos))
+			{
+				program.editor.moveTile(selection[0]->ID, glm::vec2(pos[0], pos[1]));
+			}
+			float size[2] = { selection[0]->location.Size.x, selection[0]->location.Size.y };
+			// size
+			if (ImGui::InputFloat2("Size ", size))
+			{
+				program.editor.resizeTile(selection[0]->ID, glm::vec2(size[0], size[1]));
+			}
+			/// physics
+			ImGui::Separator();
+			ImGui::Dummy(ImVec2(0.0f, 20.0f));
+			// colls
+			ImGui::Checkbox("CollisionsEnabled", &selection[0]->physics.CollisionsEnabled);
+			// static
+			ImGui::Checkbox("Static", &selection[0]->physics.Static);
+			/// visual
+			ImGui::Separator();
+			ImGui::Dummy(ImVec2(0.0f, 20.0f));
+			// texture name
+			ImGui::Text(("Texture: " + selection[0]->visuals.textureName).c_str());
+			// texturemode
+			if (ImGui::Combo("TextureMode", &(int)selection[0]->visuals.TextureMode, se.tileTextureModeOptions, 2))
+			{
+				program.editor.changeTileVisuals(selection[0]->ID, Visuals(selection[0]->visuals.atlasCoords, selection[0]->visuals.textureName, selection[0]->visuals.TextureMode));
+			}
 		}
-		else if (program.editor.selection.size() > 0) // multiselect
+		else if (selection.size() > 0) // multiselect
 		{
-			// TODO
+			// TODO i guess just run the above for every selected tile but with one UI element? i have no idea...
+			/// TEMP
 			ImGui::Text(("selected tile count: " + std::to_string(program.editor.selection.size())).c_str());
+			/// location
+			float pos[2] = { 0.0f, 0.0f };
+			// position
+			if (ImGui::InputFloat2("Offset", pos, "", ImGuiInputTextFlags_EnterReturnsTrue))
+			{
+				// add this offset to every selected tile's position
+				for (int i = 0; i < selection.size(); i++)
+				{
+					program.editor.moveTile(selection[i]->ID, selection[i]->location.Position + glm::vec4(pos[0] - lastPos[0], pos[1] - lastPos[1], 0.0f, 0.0f));
+				}
+
+				pos[0] = 0.0f, pos[1] = 0.0f;
+			}
+			float size[2] = { selection[0]->location.Size.x, selection[0]->location.Size.y };
+			// size
+			if (ImGui::InputFloat2("Size ", size))
+			{
+				for (int i = 0; i < selection.size(); i++)
+				{
+					program.editor.resizeTile(selection[i]->ID, glm::vec2(size[0], size[1]));
+				}
+			}
+			/// physics
+			ImGui::Separator();
+			ImGui::Dummy(ImVec2(0.0f, 20.0f));
+			// colls
+			if (ImGui::Checkbox("CollisionsEnabled", &selection[0]->physics.CollisionsEnabled))
+			{
+				for (int i = 0; i < selection.size(); i++)
+				{
+					selection[i]->physics.CollisionsEnabled = selection[0]->physics.CollisionsEnabled;
+				}
+			}
+
+			// static
+			if (ImGui::Checkbox("Static", &selection[0]->physics.Static))
+			{
+				for (int i = 0; i < selection.size(); i++)
+				{
+					selection[i]->physics.Static = selection[0]->physics.Static;
+				}
+			}
+			/// visual
+			ImGui::Separator();
+			ImGui::Dummy(ImVec2(0.0f, 20.0f));
+
+			// texturemode
+			if (ImGui::Combo("TextureMode", &(int)selection[0]->visuals.TextureMode, se.tileTextureModeOptions, 2))
+			{
+				for (int i = 0; i < selection.size(); i++)
+				{
+					program.editor.changeTileVisuals(selection[i]->ID, Visuals(selection[i]->visuals.atlasCoords, selection[i]->visuals.textureName, selection[0]->visuals.TextureMode));
+				}
+			}
 		}
-		ImGui::Text(std::to_string(program.input.ctrl_down).c_str());
+		/// SEPARATOR
+		ImGui::Dummy(ImVec2(0.0f, 40.0f));
+		/// OPTIONS SECTION
+		ImGui::SetNextItemOpen(true);
+		if (ImGui::CollapsingHeader("New tile options"))//, ImGuiTreeNodeFlags_
+		{
+			/// location
+			float size[2] = { program.editor.nextTile.location.Size.x, program.editor.nextTile.location.Size.y };
+			// size
+			if (ImGui::DragFloat2("Size", size))
+			{
+				program.editor.nextTile.location.Size.x = size[0];
+				program.editor.nextTile.location.Size.y = size[1];
+			}
+			/// physics
+			ImGui::Separator();
+			ImGui::Dummy(ImVec2(0.0f, 20.0f));
+			// colls
+			ImGui::Checkbox("CollisionsEnabled", &program.editor.nextTile.physics.CollisionsEnabled);
+			// static
+			ImGui::Checkbox("Static", &program.editor.nextTile.physics.Static);
+			/// visual
+			ImGui::Separator();
+			ImGui::Dummy(ImVec2(0.0f, 20.0f));
+			// texture name
+			ImGui::Text(("Texture: " + program.textureLoader.getAtlasTexturePath(program.render.textureAtlas, program.editor.nextTile.visuals.atlasCoords)).c_str());
+			// texturemode
+			ImGui::Combo("TextureMode", &se.currentTextureModeSelection, se.tileTextureModeOptions, 2);
+			program.editor.nextTile.visuals.TextureMode = (TEXTUREMODE)se.currentTextureModeSelection;
+		}
 	ImGui::End();
 }
 
-void Gui::addTileSelectorGui()
+void Gui::addTextureSelectorGui()
 {
 	bool* p_close = NULL;
 
@@ -211,9 +353,9 @@ void Gui::addTileSelectorGui()
 	ImGui::SetNextWindowSizeConstraints(ImVec2(-1, -1), ImVec2(-1, -1));
 	ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f));
 
-	ImGui::Begin("Tile selector", p_close, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove); // Left side non-movable tab
+	ImGui::Begin("Texture selector", p_close, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove); // Left side non-movable tab
 		s.tileSelectorPaneWidth = ImGui::GetWindowWidth();
-
+		std::vector<E_Tile*>& selection = program.editor.selection;
 		// content selector button
 		if (ImGui::Button("Select content folder", ImVec2(232.0f, 32.0f)))
 		{
@@ -234,14 +376,43 @@ void Gui::addTileSelectorGui()
 						ImGui::SameLine();
 					ImGui::PushID(y * tilesPerRow + x * tilesPerRow);
 
+					// add highlight to see which is selected
+					se.currentTextureSelection = program.textureLoader.getAtlasTextureIndex(program.render.textureAtlas, program.editor.nextTile.visuals.atlasCoords);
+					std::cout << "total: " << total << "cts: " << se.currentTextureSelection << std::endl;
+
+					if (se.currentTextureSelection == total)
+					{
+						ImGui::PushStyleColor(ImGuiCol_Button, gd.selectedButtonColor);
+					}
+					else
+					{
+						ImGui::PushStyleColor(ImGuiCol_Button, gd.normalButtonColor);
+					}
+
 					// check if a tile was selected
 					if (ImGui::ImageButton((void*)(intptr_t)tileTextures[total]->ID, ImVec2(64, 64)))
 					{
-						// update (to) place tool
-						program.editor.placementTileTexture = program.textureLoader.getAtlasCoords(program.render.textureAtlas, total);
-						program.editor.setTool(PLACE);
+						glm::vec2 atCoords = program.textureLoader.getAtlasCoords(program.render.textureAtlas, total);
+						std::string textureName = program.textureLoader.getAtlasTexturePath(program.render.textureAtlas, atCoords);
+
+						if (program.editor.getTool() == SELECT)
+						{
+							program.editor.select_by_texture(textureName);
+						}
+						else if (program.editor.getTool() == PLACE)
+						{
+							// change texture of selection (pretty crappy but works ig)
+							for (int i = 0; i < selection.size(); i++)
+							{
+								program.editor.changeTileVisuals(selection[i]->ID, Visuals(atCoords, textureName, selection[i]->visuals.TextureMode));
+							}
+						}
+						// update nexttile regardless
+						program.editor.nextTile.visuals.atlasCoords = atCoords;
+						program.editor.nextTile.visuals.textureName = textureName;
 					}
 
+					ImGui::PopStyleColor();
 					ImGui::PopID();
 					total++;
 					// return so we dont go past the vector size
@@ -249,8 +420,6 @@ void Gui::addTileSelectorGui()
 				}
 			}
 		}
-
-		ImGui::Text("Whatup yo yo its da windo");
 	ImGui::End();
 }
 
@@ -272,7 +441,7 @@ void Gui::addBottomBarGui()
 		{
 			ImGui::BeginTooltip();
 				ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
-				ImGui::BulletText("open a BLF file to edit ");
+				ImGui::Text("open a BLF file to edit ");
 				ImGui::BulletText("shortcut: left CTRL + I ");
 				ImGui::PopTextWrapPos();
 			ImGui::EndTooltip();
@@ -287,7 +456,7 @@ void Gui::addBottomBarGui()
 		{
 			ImGui::BeginTooltip();
 				ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
-				ImGui::BulletText("save changes to current file ");
+				ImGui::Text("save changes to current file ");
 				ImGui::BulletText("shortcut: left CTRL + O ");
 				ImGui::PopTextWrapPos();
 			ImGui::EndTooltip();
@@ -302,10 +471,17 @@ void Gui::addBottomBarGui()
 		{
 			ImGui::BeginTooltip();
 				ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
-				ImGui::BulletText("save currently open blur level as a file ");
+				ImGui::Text("save currently open blur level as a file ");
 				ImGui::BulletText("shortcut: left CTRL + left SHIFT + I ");
 				ImGui::PopTextWrapPos();
 			ImGui::EndTooltip();
+		}
+
+		ImGui::SetCursorPos(ImVec2(window->SCREEN_WIDTH - ((s.bottomBarButtonWidth * 2) + 20), 0.0f));
+		if (ImGui::Button("Ignore list", ImVec2(s.bottomBarButtonWidth, s.bottomBarHeight)))
+		{
+			program.file_system.vectorToIgnoreBuffer();
+			popupToggles[IGNORE_LIST] = !popupToggles[IGNORE_LIST];
 		}
 
 		ImGui::SetCursorPos(ImVec2(window->SCREEN_WIDTH - s.bottomBarButtonWidth, 0.0f));
@@ -322,14 +498,49 @@ void Gui::addPopupGui()
 	// TODO: enable using close button (ImGui::CloseButton?)
 	if (popupToggles[STATUS])
 	{
-		bool p_close = true;
+		if (ImGui::Begin("Info panel", &popupToggles[STATUS]))
+		{
+			guiWantKeyboard = ImGui::IsWindowFocused() ? true : guiWantKeyboard;
 
-		ImGui::Begin("Info panel", &p_close);
 			ImGui::Text(("FPS: " + std::to_string(program.render.FPS)).c_str());
 			ImGui::Text(("tile count: " + std::to_string(program.editor.tiles.size())).c_str());
 			ImGui::Text(("position: " + (glm::to_string(program.camera.cameraPos))).c_str());
 			ImGui::Text(("mouse pos: " + (glm::to_string(program.input.mousePos))).c_str());
-		ImGui::End();
+			ImGui::End();
+		}
+		else
+		{
+			ImGui::End();
+		}
+	}
+	if (popupToggles[IGNORE_LIST])
+	{
+		if (ImGui::Begin("Ignore list", &popupToggles[IGNORE_LIST], ImGuiWindowFlags_AlwaysAutoResize))
+		{
+			guiWantKeyboard = ImGui::IsWindowFocused() ? true : guiWantKeyboard;
+
+			ImGui::InputTextMultiline("filenames & directories to ignore", program.file_system.ignoreListBuffer, IM_ARRAYSIZE(program.file_system.ignoreListBuffer), ImVec2(600, 400));
+			if (ImGui::Button("Save", ImVec2(s.bottomBarButtonWidth, s.bottomBarHeight)))
+			{
+				program.file_system.ignore_buffer_to_vector();
+				program.file_system.updateTextures();
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Default", ImVec2(s.bottomBarButtonWidth, s.bottomBarHeight)))
+			{
+				std::copy(std::begin(program.file_system.defaultIgnoreListBuffer), std::end(program.file_system.defaultIgnoreListBuffer), std::begin(program.file_system.ignoreListBuffer));
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Clear", ImVec2(s.bottomBarButtonWidth, s.bottomBarHeight)))
+			{
+				std::fill(std::begin(program.file_system.ignoreListBuffer), std::end(program.file_system.ignoreListBuffer), '\0');
+			}
+			ImGui::End();
+		}
+		else
+		{
+			ImGui::End();
+		}
 	}
 	// bla bla bla
 }
@@ -415,9 +626,7 @@ void Gui::checkFileDialog()
 					program.file_system.contentDir = ImGuiFileDialog::Instance()->GetCurrentPath() + "\\";
 					program.file_system.changeSetting<std::string>("dirs.content", program.file_system.contentDir, libconfig::Setting::TypeString);
 					// load textures from freshly selected directory
-					std::vector<std::string>& filesInContent = program.file_system.getInDir(program.file_system.contentDir.c_str());
-					tileTextures = program.textureLoader.loadTextures(filesInContent, program.file_system.contentDir);
-					program.render.textureAtlas = program.file_system.loadContentAsAtlas();
+					program.file_system.updateTextures();
 				}
 
 				// close
@@ -490,6 +699,7 @@ void Gui::checkFileDialog()
 
 void Gui::drawGui()
 {
+	guiWantKeyboard = false;
 	// new frame
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
@@ -497,7 +707,7 @@ void Gui::drawGui()
 	// add guis to be rendered
 	addEditorGui();
 	addPropertiesGui();
-	addTileSelectorGui();
+	addTextureSelectorGui();
 	addBottomBarGui();
 	addPopupGui();
 

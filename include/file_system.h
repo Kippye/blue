@@ -13,15 +13,31 @@ class FileSystem
 	private:
 		Config config;
 		static const inline char *config_file = "user.cfg";
+		static const inline char *ignore_file = "ignore.cfg";
+		std::vector<std::string> ignoreList = {};
 
 	public:
 		// TEMP save this in config file instead
 		std::string contentDir = "";
 		std::string blfDir = "";
+
+		char defaultIgnoreListBuffer[1024] = { "scripts, shaders, logo.png, logograss.png, resizedragger.png" };
+		char ignoreListBuffer[1024] = {}; // TODO: populate this when loading ignore list, later save it
+
 		bool contextOpen = false;
-		std::vector<std::string>& getInDir(const char* directory, bool filesOnly = true, bool fullPath = false, bool extension = true);
+
+		bool check_if_is_ignored(std::string name);
+		void ignore_buffer_to_vector();
+		void vectorToIgnoreBuffer();
+
+		std::vector<std::string>& getInDir(const char* directory, bool useIgnoreList = true, bool filesOnly = true, bool fullPath = false, bool extension = true);
+		std::vector<std::string>& getInDirRecursive(const char* directory, bool useIgnoreList = true, bool filesOnly = true, bool fullPath = false, bool extension = true);
+
+		void updateTextures();
+
 		void loadGUITextures();
 		TextureAtlas* loadContentAsAtlas();
+
 		void tryLoadConfigs();
 		void trySaveConfigs();
 

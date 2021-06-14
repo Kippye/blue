@@ -35,48 +35,40 @@ void Render::setup()
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-	// set vertex attribute pointers
-	// this is the "stride" value, aka sum of position, normal and texcoords
-	int stride = 5;
-	// position attribute	std::cout << glGetError() << std::endl;
-
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-	// texture coord attribute
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride * sizeof(float), (void*)(3 * sizeof(float)));
-	glEnableVertexAttribArray(1);
-
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	// every shader and render call will now use this shader program
-	shader = Shader("shaders/shader_vert.glsl", "shaders/shader_frag.glsl");
+	shader = Shader("shaders/shader_vert.glsl", "shaders/shader_geom.glsl", "shaders/shader_frag.glsl");
 
 	shader.use();
 	shader.setInt("texture1", 0);
 }
 
-void Render::updateInstanceArray()
+void Render::updateInstanceArray(INSTANCE_ARRAY_UPDATE type)
 {
 	glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4) * instanceTransformData.size(), instanceTransformData.data(), GL_STATIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-	glBindBuffer(GL_ARRAY_BUFFER, instanceAdditionalVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4) * instanceAdditionalData.size(), instanceAdditionalData.data(), GL_STATIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+	if (type == INSTANCE_ARRAY_UPDATE_ALL || type & INSTANCE_ARRAY_UPDATE_1)
+	{
+		glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4) * instanceTransformData.size(), instanceTransformData.data(), GL_STATIC_DRAW);
 
-	// also set instance data
-    glEnableVertexAttribArray(2);
-    glBindBuffer(GL_ARRAY_BUFFER, instanceVBO); // this attribute comes from a different vertex buffer
-    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
-    glVertexAttribDivisor(2, 1); // tell OpenGL this is an instanced vertex attribute.
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+		// also set instance data
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+		glVertexAttribDivisor(0, 1); // tell OpenGL this is an instanced vertex attribute.
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+	}
 
-	glEnableVertexAttribArray(3);
-    glBindBuffer(GL_ARRAY_BUFFER, instanceAdditionalVBO); // this attribute comes from a different vertex buffer
-    glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
-    glVertexAttribDivisor(3, 1); // tell OpenGL this is an instanced vertex attribute.
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+	if (type == INSTANCE_ARRAY_UPDATE_ALL || type & INSTANCE_ARRAY_UPDATE_2)
+	{
+		glBindBuffer(GL_ARRAY_BUFFER, instanceAdditionalVBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4) * instanceAdditionalData.size(), instanceAdditionalData.data(), GL_STATIC_DRAW);
+
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+		glVertexAttribDivisor(1, 1); // tell OpenGL this is an instanced vertex attribute.
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+	}
 }
 
 void Render::render()
@@ -131,7 +123,7 @@ void Render::render()
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, textureAtlas->ID);
 		glBindVertexArray(VAO);
-		glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0, program.editor.tiles.size());
+		glDrawElementsInstanced(GL_POINTS, 1, GL_UNSIGNED_INT, 0, program.editor.tiles.size());
 	}
 
 	program.gui.drawGui();
@@ -139,12 +131,37 @@ void Render::render()
 	glfwSwapBuffers(program.windowManager.window);
 }
 
+void Render::set_tile_selection(int index, bool to)
+{
+	instanceAdditionalData[index].w = float(to);
+	updateInstanceArray(INSTANCE_ARRAY_UPDATE_2);
+}
+
+void Render::set_tile_selection(std::vector<int> &indices, bool to)
+{
+	for (int i = 0; i < indices.size(); i++)
+	{
+		instanceAdditionalData[indices[i]].w = float(to);
+	}
+
+	updateInstanceArray(INSTANCE_ARRAY_UPDATE_2);
+}
+
+void Render::add_to_instance_data(E_Tile &tile)
+{
+	instanceTransformData.emplace_back(tile.location.Position.x, tile.location.Position.y, tile.location.Size.x, tile.location.Size.y);
+	instanceAdditionalData.emplace_back(tile.visuals.atlasCoords.x, tile.visuals.atlasCoords.y, tile.visuals.TextureMode == TEXTUREMODE_TILE, tile.selected);
+}
+
+void Render::erase_from_instance_data(int index)
+{
+	instanceTransformData.erase(instanceTransformData.begin() + index);
+	instanceAdditionalData.erase(instanceAdditionalData.begin() + index);
+}
+
 void Render::add_to_render_list(E_Tile &tile)
 {
-	//instanceData.emplace_back(glm::vec4(tile.location.Position.x, tile.location.Position.y, tile.visuals.atlasCoords.x, tile.visuals.atlasCoords.y));
-	instanceTransformData.emplace_back(tile.location.Position.x, tile.location.Position.y, tile.location.Size.x, tile.location.Size.y);
-	instanceAdditionalData.emplace_back(tile.visuals.atlasCoords.x, tile.visuals.atlasCoords.y, 0.0f, 0.0f);
-
+	add_to_instance_data(tile);
 	updateInstanceArray();
 }
 
@@ -152,26 +169,26 @@ void Render::add_to_render_list(std::vector<E_Tile> &tiles)
 {
 	for (int i = 0; i < tiles.size(); i++)
 	{
-		instanceTransformData.emplace_back(tiles[i].location.Position.x, tiles[i].location.Position.y, tiles[i].location.Size.x, tiles[i].location.Size.y);
-		instanceAdditionalData.emplace_back(tiles[i].visuals.atlasCoords.x, tiles[i].visuals.atlasCoords.y, 0.0f, 0.0f);
+		add_to_instance_data(tiles[i]);
 	}
 
 	updateInstanceArray();
 }
 
-void Render::remove_from_render_list(E_Tile &tile, int index)
+// TODO: more functions with fucking pointer vectors cus this shit sucky af
+
+void Render::remove_from_render_list(int index)
 {
-	instanceTransformData.erase(instanceTransformData.begin() + index);
-	instanceAdditionalData.erase(instanceAdditionalData.begin() + index);
+	erase_from_instance_data(index);
 	updateInstanceArray();
 }
 
-void Render::remove_from_render_list(std::vector<E_Tile> &tiles, std::vector<int> &indices)
+void Render::remove_from_render_list(std::vector<int> &indices)
 {
-	for (int i = 0; i < tiles.size(); i++)
+	for (int i = indices.size() - 1; i >= 0; i--)
 	{
-		instanceTransformData.erase(instanceTransformData.begin() + indices[i]);
-		instanceAdditionalData.erase(instanceAdditionalData.begin() + indices[i]);
+		std::cout << "index: " << indices[i] << std::endl;
+		erase_from_instance_data(indices[i]);
 	}
 
 	updateInstanceArray();

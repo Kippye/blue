@@ -255,29 +255,38 @@ glm::vec2 TextureLoader::getAtlasCoords(TextureAtlas* atlas, int index)
 	return pos;
 }
 
-// 14 - total
+unsigned int TextureLoader::getAtlasTextureIndex(TextureAtlas* atlas, glm::vec2 coords)
+{
+	return (((atlas->height / 16 - 1 - coords.y) * (atlas->width / 16)) + (coords.x));
+}
+
+unsigned int TextureLoader::getAtlasTextureIndex(TextureAtlas* atlas, const char* textureName)
+{
+	glm::vec2 coords = getAtlasTextureCoords(atlas, textureName);
+	return (((atlas->height / 16 - 1 - coords.y) * (atlas->width / 16)) + (coords.x));
+}
 
 std::string TextureLoader::getAtlasTexturePath(TextureAtlas* atlas, glm::vec2 coords)
 {
-	//int index = coords.x + ((atlas->height / 16 - 1 - coords.y) * (atlas->width / 16 - 1)) - (atlas->height / 16 - 1 - coords.y);
+	if (DEBUG_TEXTURE_LOADING) std::cout << "incoords: " << coords.x << "; " << coords.y << std::endl;
 	coords.y = atlas->height / 16 - 1 - coords.y;
 	int index = (coords.y * (atlas->width / 16)) + (coords.x);
-	std::cout << "coords: " << coords.x << "; " << coords.y << std::endl;
-	std::cout << "index: " << index << std::endl;
-	//std::cout << atlas->textureFiles[((coords.y) * (atlas->width / 16) + coords.x)] << std::endl;
-	return atlas->textureFiles[index];  //atlas->textureFiles[((coords.y) * (atlas->width / 16) + coords.x)];
+	if (DEBUG_TEXTURE_LOADING) std::cout << "coords: " << coords.x << "; " << coords.y << std::endl;
+	if (DEBUG_TEXTURE_LOADING) std::cout << "index: " << index << std::endl;
+	return atlas->textureFiles[index];
 }
 
 glm::vec2 TextureLoader::getAtlasTextureCoords(TextureAtlas* atlas, std::string texturePath)
 {
+	if (DEBUG_TEXTURE_LOADING) std::cout << "texPath: " << texturePath << std::endl;
 	for (int i = 0; i < atlas->textureFiles.size(); i++)
 	{
 		if (atlas->textureFiles[i] == texturePath)
 		{
 			glm::vec2 coords;
-			coords.y = atlas->height / 16 - 1 - floor(i / (atlas->width / 16));
-			coords.x = i - (coords.y * (atlas->width / 16));
-			std::cout << "got atlas coords: " << coords.x << "; " << coords.y << std::endl;
+			coords.y = (atlas->height / 16 - 1) - floor(i / (atlas->width / 16));
+			coords.x = i - ((atlas->height / 16 - 1 - coords.y) * (atlas->width / 16 - 1)) - (atlas->height / 16 - 1 - coords.y);
+
 			return coords;
 		}
 	}

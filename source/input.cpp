@@ -12,23 +12,15 @@ void Input::setup(){ /* nothing to see here */ }
 void Input::processInput(GLFWwindow* window)
 {
 	if (program.file_system.contextOpen) { return; }
-	/// modifiers, wait why do i even have these? oh right cus there aint no modifiers here...
-	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
-	{
-		if (program.gui.guiHovered) { return; }
-		shift_down = true;
-	}
-	if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
-	{
-		if (program.gui.guiHovered) { return; }
-		ctrl_down = true;
-	}
-	if (glfwGetKey(window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS)
-	{
-		if (program.gui.guiHovered) { return; }
-		alt_down = true;
-	}
 
+	/// bools
+	// modifiers, wait why do i even have these? oh right cus there aint no modifiers here...
+	shift_down = (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS);
+	ctrl_down = (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS);
+	alt_down = (glfwGetKey(window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS);
+
+	lmb_down = (!program.gui.guiHovered && glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS);
+	rmb_down = (!program.gui.guiHovered && glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS);
 	/// drawing
 	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
 	{
@@ -38,7 +30,15 @@ void Input::processInput(GLFWwindow* window)
 			// has the repetition delay passed?
 			if (program.render.mouse_repeat)
 			{
-				program.editor.tool_use();
+				// not using a tool that shouldnt be repeated
+				for (Tool tool : ignoreRepeatLMB)
+				{
+					if (tool != program.editor.getTool())
+					{
+						program.editor.tool_use();
+					}
+				}
+
 				program.render.mouse_button_delay = 0.0f;
 			}
 			// if the cursor stopped for a while and then moved again, restart the delay
@@ -57,7 +57,15 @@ void Input::processInput(GLFWwindow* window)
 			// has the repetition delay passed?
 			if (program.render.mouse_repeat)
 			{
-				program.editor.tool_use_secondary();
+				// not using a tool that shouldnt be repeated
+				for (Tool tool : ignoreRepeatRMB)
+				{
+					if (tool != program.editor.getTool())
+					{
+						program.editor.tool_use_secondary();
+					}
+				}
+
 				program.render.mouse_button_delay = 0.0f;
 			}
 			// if the cursor stopped for a while and then moved again, restart the delay
@@ -69,7 +77,7 @@ void Input::processInput(GLFWwindow* window)
 	}
 
 	/// check any situations in which we would not want to control the camera or send inputs to other listeners
-	if (program.gui.guiFocused) { return; }
+	if (program.gui.guiWantKeyboard) { return; }
 
 	// TODO: make arrow keys move selected tiles instead
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) // forwards
@@ -94,36 +102,36 @@ void Input::key_event(GLFWwindow* window, int key, int scancode, int action, int
 {
 	if (action == GLFW_PRESS)
 	{
+		if (program.file_system.contextOpen) { return; }
 		switch (key)
 		{
 			/// select tools with keys
 			case GLFW_KEY_1:
+				if (program.gui.guiWantKeyboard) { return; }
 				program.editor.setTool(SELECT);
 			break;
 			case GLFW_KEY_2:
+				if (program.gui.guiWantKeyboard) { return; }
 				program.editor.setTool(PLACE);
 			break;
 			// and so on...
-			/// program manipulators
-			case GLFW_KEY_ESCAPE: // free mikey maus
-				if (program.file_system.contextOpen || program.gui.guiFocused) { return; }
-				glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-				program.windowManager.hasFocus = false;
+			case GLFW_KEY_BACKSPACE: // delete
+				if (program.gui.guiFocused) { return; }
+				program.editor.delete_selection();
 			break;
-			case GLFW_KEY_BACKSPACE: // exit the program
-				if (program.file_system.contextOpen || program.gui.guiFocused) { return; }
+			/// program manipulators
+			case GLFW_KEY_ESCAPE: // exit the program
+				if (program.gui.guiFocused) { return; }
 				glfwSetWindowShouldClose(window, true);
 			break;
 			/// shortcut keys that should work even when UI is focused
 			case GLFW_KEY_I:
-				if (program.file_system.contextOpen) { return; }
 				if (ctrl_down) // pop up open dialog
 				{
 					program.gui.openFileDialog(OPEN);
 				}
 			break;
 			case GLFW_KEY_O:
-				if (program.file_system.contextOpen) { return; }
 				if (ctrl_down) // save
 				{
 					if (shift_down) // save as
@@ -131,6 +139,19 @@ void Input::key_event(GLFWwindow* window, int key, int scancode, int action, int
 						program.gui.openFileDialog(SAVE_AS);
 					}
 					program.gui.openFileDialog(SAVE);
+				}
+			break;
+			case GLFW_KEY_G:
+				if (ctrl_down) // switch grid mode
+				{
+					program.gui.se.currentGridModeSelection = program.gui.se.currentGridModeSelection == 2 ? 0 : program.gui.se.currentGridModeSelection + 1;
+					program.editor.setGridMode((GRID_MODE)program.gui.se.currentGridModeSelection);
+				}
+			break;
+			case GLFW_KEY_L:
+				if (ctrl_down) // switch overlap mode
+				{
+					program.editor.overlapMode = (int)program.editor.overlapMode == 2 ? OVERLAP_NEVER : (OVERLAP_MODE)((int)program.editor.overlapMode + 1);
 				}
 			break;
 		}
@@ -141,16 +162,19 @@ void Input::key_event(GLFWwindow* window, int key, int scancode, int action, int
 		switch (key)
 		{
 			case (GLFW_KEY_LEFT_SHIFT):
-			//if (program.file_system.contextOpen || program.gui.guiHovered) { return; }
 			shift_down = false;
 			break;
 			case (GLFW_KEY_LEFT_CONTROL):
-			//if (program.file_system.contextOpen || program.gui.guiHovered) { return; }
 			ctrl_down = false;
 			break;
 			case (GLFW_KEY_LEFT_ALT):
-			//if (program.file_system.contextOpen || program.gui.guiHovered) { return; }
 			alt_down = false;
+			break;
+			case (GLFW_MOUSE_BUTTON_LEFT):
+			lmb_down = false;
+			break;
+			case (GLFW_MOUSE_BUTTON_RIGHT):
+			rmb_down = false;
 			break;
 		}
 	}

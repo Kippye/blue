@@ -3,6 +3,7 @@
 #include <blf.hpp>
 using namespace blf;
 
+/*
 class Texture : public blf::TemplateObject
 {
 	public:
@@ -37,6 +38,7 @@ class Texture : public blf::TemplateObject
 			}
 		}
 };
+*/
 
 class BLF_Tile : public TemplateObject
 {
@@ -44,16 +46,26 @@ class BLF_Tile : public TemplateObject
 		double x;
 		double y;
 		double z;
+		double sizeX;
+		double sizeY;
+		bool collisionsEnabled;
+		bool _static;
 		String texture;
+		int textureMode;
 
 		BLF_Tile() {}
 
-		BLF_Tile(double x, double y, double z, String texture)
+		BLF_Tile(double x, double y, double z, double sizeX, double sizeY, bool collisionsEnabled, bool _static, String texture, int textureMode)
 		{
 			this->x = x;
 			this->y = y;
 			this->z = z;
+			this->sizeX = sizeX;
+			this->sizeY = sizeY;
+			this->collisionsEnabled = collisionsEnabled;
+			this->_static = _static;
 			this->texture = texture;
+			this->textureMode = textureMode;
 		}
 
 		const char* getObjectName() const override
@@ -68,7 +80,12 @@ class BLF_Tile : public TemplateObject
 				{"X", &x, TYPE_DOUBLE},
 				{"Y", &y, TYPE_DOUBLE},
 				{"Z", &z, TYPE_DOUBLE},
-				{"Texture", &texture, TYPE_STRING}
+				{"SizeX", &sizeX, TYPE_DOUBLE},
+				{"SizeY", &sizeY, TYPE_DOUBLE},
+				{"CollisionsEnabled", &collisionsEnabled, TYPE_BOOL},
+				{"Static", &_static, TYPE_BOOL},
+				{"Texture", &texture, TYPE_STRING},
+				{"TextureMode", &textureMode, TYPE_INT}
 			};
 		}
 

@@ -2,63 +2,75 @@
 
 #include <glm.hpp>
 
-// shits weird
-//~ template <class T>
-//~ class Range
-//~ {
-	//~ public:
-		//~ T minimum, maximum;
-
-		//~ Range (T min, T max)
-		//~ {
-			//~ if (is_valid())
-			//~ {
-				//~ minimum = min;
-				//~ maximum = max;
-			//~ }
-		//~ }
-
-		//~ bool is_valid()
-		//~ {
-			//~ return minimum - maximum <= 0;
-		//~ }
-
-		//~ bool contains_value(T value)
-		//~ {
-			//~ return minimum - value <= 0 && value - maximum <= 0;
-		//~ }
-
-		//~ bool is_inside_range(Range range)
-		//~ {
-			//~ return is_valid() && range.is_valid() && range.contains_value(minimum) && range.contains_value(maximum)
-		//~ }
-
-		//~ bool contains_range(Range range)
-		//~ {
-			//~ return is_valid() && range.is_valid() && contains_value(range.minimum) && contains_value(range.maximum);
-		//~ }
-//~ };
+class mymath
+{
+	public:
+		static glm::vec2 round_to_grid(glm::vec2 pos)
+		{
+			pos.x = floor(pos.x);
+			pos.y = floor(pos.y);
+			return pos;
+		}
+		static glm::vec4 round_to_grid(glm::vec4 pos)
+		{
+			pos.x = floor(pos.x);
+			pos.y = floor(pos.y);
+			return pos;
+		}
+};
 
 class Bounding_Box
 {
-	glm::vec4 minimum, maximum;
+	public:
+		glm::vec2 minimum, maximum;
+		glm::vec2 size;
 
 	public:
 		Bounding_Box()
 		{
-			minimum = glm::vec4(1.0f);
-			maximum = glm::vec4(1.0f);
+			size = glm::vec2(1.0f);
 		}
 
-		Bounding_Box(glm::vec4 min, glm::vec4 max)
+		Bounding_Box(glm::vec2 size)
 		{
-			minimum = min;
-			maximum = max;
+			update_size(size);
 		}
 
-		bool contains_position(glm::vec4 pos)
+		void update_size(glm::vec2 size)
 		{
-			return pos.x >= minimum.x && pos.y >= minimum.y
-			&& pos.x <= maximum.x && pos.y <= maximum.y;
+			this->size = size;
+			// handle negative sizes correctly as well
+			minimum.x = size.x > 0 ? 0.0f : size.x;
+			minimum.y = size.y > 0 ? 0.0f : size.y;
+			maximum.x = size.x > 0 ? size.x : 0.0f;
+			maximum.y = size.y > 0 ? size.y : 0.0f;
+		}
+
+		bool contains_position(glm::vec4 &boxPos, glm::vec4 &sourcePos)
+		{
+			return sourcePos.x >= (minimum.x + boxPos.x) && sourcePos.y >= (minimum.y + boxPos.y)
+			&& sourcePos.x <= (maximum.x + boxPos.x) && sourcePos.y <= (maximum.y + boxPos.y);
+		}
+
+		bool overlaps(glm::vec4 &boxPos, glm::vec4 &sourcePos, Bounding_Box &sourceBox)
+		{
+			return
+			(
+				contains_position(boxPos, sourcePos + glm::vec4(sourceBox.minimum + glm::vec2(0.01f), 0.0f, 1.0f)) ||
+				contains_position(boxPos, sourcePos + glm::vec4(sourceBox.minimum.x + sourceBox.size.x - 0.01f, sourceBox.minimum.y + 0.01f, 0.0f, 1.0f)) ||
+				contains_position(boxPos, sourcePos + glm::vec4(sourceBox.minimum.x + 0.01f, sourceBox.minimum.y + sourceBox.size.y - 0.01f, 0.0f, 1.0f)) ||
+				contains_position(boxPos, sourcePos + glm::vec4(sourceBox.maximum - glm::vec2(0.01f), 0.0f, 1.0f))
+			);
+		}
+
+		bool contains(glm::vec4 &boxPos, glm::vec4 &sourcePos, Bounding_Box &sourceBox)
+		{
+			return
+			(
+				contains_position(boxPos, sourcePos + glm::vec4(sourceBox.minimum + glm::vec2(0.01f), 0.0f, 1.0f)) &&
+				contains_position(boxPos, sourcePos + glm::vec4(sourceBox.minimum.x + sourceBox.size.x - 0.01f, sourceBox.minimum.y + 0.01f, 0.0f, 1.0f)) &&
+				contains_position(boxPos, sourcePos + glm::vec4(sourceBox.minimum.x + 0.01f, sourceBox.minimum.y + sourceBox.size.y - 0.01f, 0.0f, 1.0f)) &&
+				contains_position(boxPos, sourcePos + glm::vec4(sourceBox.maximum - glm::vec2(0.01f), 0.0f, 1.0f))
+			);
 		}
 };
