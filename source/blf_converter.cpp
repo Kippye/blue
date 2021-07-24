@@ -8,7 +8,7 @@ extern Program program;
 
 void BLF_Converter::load_file(const char* path)
 {
-	std::cout << "loading of file at " << path << " requested!" << std::endl;
+	std::cout << "(BLF) Loading of file at " << path << " requested." << std::endl;
 
 	// READING
 	auto start_time = std::chrono::high_resolution_clock::now();
@@ -32,7 +32,7 @@ void BLF_Converter::load_file(const char* path)
 	for (BLF_Tile* tile : tiles)
 	{
 		std::string texturePath = tile->texture;
-		std::cout << texturePath << std::endl;
+		//std::cout << texturePath << std::endl;
 		if (program.textureLoader.getAtlasTextureCoords(program.render.textureAtlas, texturePath) == glm::vec2(-1, -1))
 		{
 			// TODO: handle this shit
@@ -43,7 +43,7 @@ void BLF_Converter::load_file(const char* path)
 
 	auto end_time = std::chrono::high_resolution_clock::now();
 	auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
-	std::cout << "read completed in: " << duration << " milliseconds." << std::endl;
+	std::cout << "(BLF) File read in: " << duration << " milliseconds." << std::endl;
 }
 
 void BLF_Converter::write_file(const char* path)
@@ -59,9 +59,9 @@ void BLF_Converter::write_file(const char* path)
 
 	std::vector<E_Tile>& editor_tiles = program.editor.tiles;
 
-	std::cout << "Write test started with " << editor_tiles.size() << " tile objects." << std::endl;
+	std::cout << "(BLF) Writing " << editor_tiles.size() << " tiles." << std::endl;
 
-	if (editor_tiles.size() == 0) { std::cerr << "tried to save 0 tiles" << std::endl; return; }
+	// dunno if i need this: if (editor_tiles.size() == 0) { std::cerr << "Tried to write 0 tiles" << std::endl; return; }
 
     tiles.reserve(editor_tiles.size());
 

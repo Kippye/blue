@@ -32,6 +32,8 @@ class Program
 		Editor editor = *(new Editor());
 		Gui& gui = *(new Gui());
 
+		bool quitProgram = false;
+
 		Program(const Program&) = default;
 		Program& operator=(const Program&) = default;
 		Program();

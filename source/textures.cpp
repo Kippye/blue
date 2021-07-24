@@ -300,6 +300,6 @@ glm::vec2 TextureLoader::getAtlasTextureCoords(TextureAtlas* atlas, std::string 
 			return coords;
 		}
 	}
-	std::cerr << "texture path not found in atlas, returning (-1, -1)";
+	std::cerr << "Texture path not found in atlas, returning (-1, -1)" << std::endl;
 	return glm::vec2(-1, -1);
 }

@@ -64,10 +64,12 @@ void FileSystem::ignore_buffer_to_vector()
 		i++;
 	}
 
+	std::cout << "Updated ignore list:" << std::endl;
 	for (std::string s : ignoreList)
 	{
-		std::cout << s << std::endl;
+		std::cout << s << ", ";
 	}
+	std::cout << std::endl;
 }
 
 void FileSystem::vectorToIgnoreBuffer()
@@ -100,14 +102,14 @@ std::vector<std::string>& FileSystem::getInDir(const char* directory, bool useIg
 {
 	std::vector<std::string>* fileNames = new std::vector<std::string>();
 
-	if (directory == "") { if (DEBUG_FILE_LOADING) std::cout << "Tried loading without dir being set" << std::endl; return *fileNames; }
+	if (directory == "") { if (DEBUG_FILE_LOADING) std::cout << "Tried getting a directory without dir being set" << std::endl; return *fileNames; }
 
 	for (const auto& entry : std::filesystem::directory_iterator(directory))
 	{
 		if (useIgnoreList && check_if_is_ignored(entry.path().filename().string())) { continue; } // on the ignore list, ignore
 		if (filesOnly && entry.path().extension().string() == "") { continue; } // we only want files, not directories
 
-		if (DEBUG_FILE_LOADING) std::cout << "found file: " << entry.path() << std::endl;
+		if (DEBUG_FILE_LOADING) std::cout << "Found file: " << entry.path() << "in " << directory << std::endl;
 
 		if (fullPath) // dir/fn.ext
 		{
@@ -221,7 +223,7 @@ void FileSystem::loadGUITextures()
 
 TextureAtlas* FileSystem::loadContentAsAtlas()
 {
-	if (contentDir == "") { std::cout << "tried to load content without the folder being set" << std::endl; return nullptr; }
+	if (contentDir == "") { std::cout << "Tried to load content without the folder being set" << std::endl; return nullptr; }
 	program.gui.setStatus("loading textures from content folder...");
 	std::vector<std::string>& filesInContent = getInDirRecursive(contentDir.c_str());
 	TextureAtlas* atlas = program.textureLoader.loadTextureAtlas(filesInContent, contentDir);

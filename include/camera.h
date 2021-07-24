@@ -20,12 +20,13 @@ class Camera
 {
 	public:
 		static const inline float CAMERA_SPEED = 14.0f;
+		float blurZoomLevel = 15.0f;
 		glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
 		glm::vec3 cameraRight = glm::vec3(1.0f, 0.0f, 0.0f);
 		glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 		glm::vec3 movementFront = glm::vec3(0.0f, 0.0f, -1.0f);
 		glm::vec3 worldUp = glm::vec3(0.0f, 1.0f, 0.0f);
-		glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
+		glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, blurZoomLevel);
 		glm::vec3 lastMovement = glm::vec3(0.0f);
 		glm::mat4 view, projection;
 		float yaw = -90.0f, pitch = 0.0f;

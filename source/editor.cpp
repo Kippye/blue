@@ -107,8 +107,6 @@ std::vector<E_Tile*>* Editor::getTilesInArea(Bounding_Box area, glm::vec4 &pos, 
 		}
 	}
 
-	std::cout << "gtia size: " << tilesInArea->size() << std::endl;
-
 	return tilesInArea;
 }
 
@@ -153,6 +151,21 @@ void Editor::select_by_texture(std::string textureName)
 	}
 }
 
+void Editor::push_selection_to_back()
+{
+	for (int i = selection.size() - 1; i >= 0; i--)
+	{
+		int index = 0;
+		ID_to_tile(selection[i]->ID, index);
+
+		std::rotate(tiles.begin(), tiles.begin() + index, tiles.end());
+		std::rotate(program.render.instanceTransformData.begin(), program.render.instanceTransformData.begin() + index, program.render.instanceTransformData.end());
+		std::rotate(program.render.instanceAdditionalData.begin(), program.render.instanceAdditionalData.begin() + index, program.render.instanceAdditionalData.end());
+	}
+
+	program.render.updateInstanceArray();
+}
+
 void Editor::deselect_all()
 {
 	if (selection.size() == 0) { return; } // don't waste time if we've got nothing to find
@@ -188,7 +201,6 @@ void Editor::delete_selection()
 	{
 		int index = 0;
 		ID_to_tile(IDs[j], index);
-		//std::cout << "deleting: " << tiles[index].ID << std::endl;
 		remove_tile(index);
 	}
 
@@ -231,7 +243,6 @@ void Editor::update_atlas_coords(TextureAtlas* atlas)
 {
 	for (int i = 0; i < tiles.size(); i++)
 	{
-		//std::cout << "texname: " << tiles[i].visuals.textureName << std::endl;
 		glm::vec2 atCoords = program.textureLoader.getAtlasTextureCoords(atlas, tiles[i].visuals.textureName);
 		// i really dont know how to handle it being -1 but this will do for now...
 		if (atCoords != glm::vec2(-1.0f))
@@ -379,7 +390,6 @@ void Editor::tool_use()
 			if (tile == nullptr || selection.size() > 1) // selected empty space, deselect all tiles (select tile if not null)
 			{
 				deselect_all();
-				std::cout << "single deselect all" << std::endl;
 				if (tile != nullptr) // select the tile instead
 				{
 					selection.push_back(tile);
@@ -388,7 +398,6 @@ void Editor::tool_use()
 			}
 			if (selection.size() == 1) // replace selection
 			{
-				std::cout << "single replace selection" << std::endl;
 				// deselect last tile
 				update_tile_selection(selection[0]->ID, false);
 				// select new tile
@@ -396,7 +405,6 @@ void Editor::tool_use()
 			}
 			else if (selection.size() == 0) // create selection
 			{
-				std::cout << "single create selection" << std::endl;
 				selection.push_back(tile);
 			}
 			update_tile_selection(tile, index, true);

@@ -103,15 +103,7 @@ void Render::render()
 	// use the general purpose shader
 	shader.use();
 
-	// TODO? orthographic projection
-	/* glm::mat4 projection = glm::ortho
-	(
-		0.0f, program.windowManager.SCREEN_WIDTH, 0.0f, program.windowManager.SCREEN_HEIGHT,
-		-1000.0f, 1000.0f	std::cout << glGetError() << std::endl;
-
-	);*/
 	// set uniforms
-
 	shader.setMat4("view", program.camera.view);
 	shader.setMat4("projection", program.camera.projection);
 
@@ -187,7 +179,6 @@ void Render::remove_from_render_list(std::vector<int> &indices)
 {
 	for (int i = indices.size() - 1; i >= 0; i--)
 	{
-		std::cout << "index: " << indices[i] << std::endl;
 		erase_from_instance_data(indices[i]);
 	}
 

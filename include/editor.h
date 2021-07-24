@@ -75,6 +75,7 @@ class Editor
 		void Editor::update_tile_selection(int ID, bool to);
 	public:
 		void select_by_texture(std::string textureName);
+		void push_selection_to_back();
 		void deselect_all();
 		void delete_selection();
 

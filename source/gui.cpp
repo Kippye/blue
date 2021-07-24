@@ -94,7 +94,7 @@ void Gui::addEditorGui()
 	ImGui::SetNextWindowSizeConstraints(ImVec2(-1, 64.0f), ImVec2(window->SCREEN_WIDTH - (s.tileSelectorPaneWidth + s.propertiesPaneWidth), window->SCREEN_HEIGHT / 8));
 	ImGui::SetNextWindowSize(ImVec2(window->SCREEN_WIDTH - (s.tileSelectorPaneWidth + s.propertiesPaneWidth), s.editorPaneHeight));
 	ImGui::SetNextWindowPos(ImVec2(s.tileSelectorPaneWidth, 0.0f));
-	ImGui::Begin("Level editor", p_close, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar || ImGuiWindowFlags_NoScrollbar);
+	ImGui::Begin("Level editor", p_close, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoNav);
 		s.editorPaneHeight = ImGui::GetWindowHeight();
 		/// add tool buttons
 		float currentToolButtonX = 0.0f;
@@ -161,6 +161,46 @@ void Gui::addEditorGui()
 			ImGui::EndTooltip();
 		}
 
+		/// editor buttons section
+		if (program.editor.getTool() == SELECT)
+		{
+			ImGui::SetCursorPos(ImVec2(ImGui::GetWindowWidth() - 512 - 32 - 20, 0.0f));
+			ImGui::SetNextItemWidth(s.editorComboWidth);
+			// texture select button
+			if (ImGui::Button("Select by texture", ImVec2(s.editorComboWidth, s.bottomBarHeight)))
+			{
+				program.editor.select_by_texture(program.editor.nextTile.visuals.textureName);
+			}
+
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::BeginTooltip();
+				ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+				ImGui::Text("select by texture ");
+				ImGui::BulletText("selects every tile with the current texture ");
+				ImGui::PopTextWrapPos();
+				ImGui::EndTooltip();
+			}
+		}
+
+		ImGui::SetCursorPos(ImVec2(ImGui::GetWindowWidth() - 384 - 32, 0.0f));
+		ImGui::SetNextItemWidth(s.editorComboWidth);
+		// push to back button
+		if (ImGui::Button("Push to back", ImVec2(s.editorComboWidth, s.bottomBarHeight)))
+		{
+			program.editor.push_selection_to_back();
+		}
+
+		if (ImGui::IsItemHovered())
+		{
+			ImGui::BeginTooltip();
+			ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+			ImGui::Text("push back ");
+			ImGui::BulletText("pushes every selected tile to the background ");
+			ImGui::PopTextWrapPos();
+			ImGui::EndTooltip();
+		}
+
 		/// editor toggles section
 
 		ImGui::SetCursorPos(ImVec2(ImGui::GetWindowWidth() - 256, 0.0f));
@@ -213,9 +253,9 @@ void Gui::addPropertiesGui()
 	ImGui::SetNextWindowSizeConstraints(ImVec2(0, -1), ImVec2(window->SCREEN_WIDTH / 4, -1));
 	ImGui::SetNextWindowSize(ImVec2(s.propertiesPaneWidth, window->SCREEN_HEIGHT - s.bottomBarHeight));
 	ImGui::SetNextWindowPos(ImVec2(window->SCREEN_WIDTH - s.propertiesPaneWidth, 0.0));
-	ImGui::Begin("Tile properties", p_close);
+	ImGui::Begin("Tile properties", p_close, ImGuiWindowFlags_NoNav);
 		s.propertiesPaneWidth = ImGui::GetWindowWidth();
-		guiWantKeyboard = ImGui::IsWindowFocused() ? true : guiWantKeyboard;
+		guiWantKeyboard = guiIO->WantCaptureKeyboard ? true : guiWantKeyboard;
 
 		/// SELECTION SECTION
 		std::vector<E_Tile*>& selection = program.editor.selection;
@@ -353,7 +393,7 @@ void Gui::addTextureSelectorGui()
 	ImGui::SetNextWindowSizeConstraints(ImVec2(-1, -1), ImVec2(-1, -1));
 	ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f));
 
-	ImGui::Begin("Texture selector", p_close, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove); // Left side non-movable tab
+	ImGui::Begin("Texture selector", p_close, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav); // Left side non-movable tab
 		s.tileSelectorPaneWidth = ImGui::GetWindowWidth();
 		std::vector<E_Tile*>& selection = program.editor.selection;
 		// content selector button
@@ -378,7 +418,7 @@ void Gui::addTextureSelectorGui()
 
 					// add highlight to see which is selected
 					se.currentTextureSelection = program.textureLoader.getAtlasTextureIndex(program.render.textureAtlas, program.editor.nextTile.visuals.atlasCoords);
-					std::cout << "total: " << total << "cts: " << se.currentTextureSelection << std::endl;
+					//std::cout << "total: " << total << "cts: " << se.currentTextureSelection << std::endl;
 
 					if (se.currentTextureSelection == total)
 					{
@@ -433,6 +473,7 @@ void Gui::addBottomBarGui()
 	ImGui::SetNextWindowPos(ImVec2(0.0, window->SCREEN_HEIGHT - s.bottomBarHeight));
 	ImGui::Begin("Bottom bar", p_close, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
 		ImGui::SetCursorPos(ImVec2(0.0f, 0.0f));
+		
 		if (ImGui::Button("Load", ImVec2(s.bottomBarButtonWidth, s.bottomBarHeight)))
 		{
 			openFileDialog(OPEN);
@@ -477,6 +518,12 @@ void Gui::addBottomBarGui()
 			ImGui::EndTooltip();
 		}
 
+		ImGui::SetCursorPos(ImVec2(window->SCREEN_WIDTH - ((s.bottomBarButtonWidth * 3) + 40), 0.0f));
+		if (ImGui::Button("Reset camera", ImVec2(s.bottomBarButtonWidth, s.bottomBarHeight)))
+		{
+			program.camera.cameraPos = glm::vec3(program.camera.cameraPos.x, program.camera.cameraPos.y, program.camera.blurZoomLevel);
+		}
+
 		ImGui::SetCursorPos(ImVec2(window->SCREEN_WIDTH - ((s.bottomBarButtonWidth * 2) + 20), 0.0f));
 		if (ImGui::Button("Ignore list", ImVec2(s.bottomBarButtonWidth, s.bottomBarHeight)))
 		{
@@ -495,12 +542,11 @@ void Gui::addBottomBarGui()
 void Gui::addPopupGui()
 {
 	// Movable info panel showing information such as camera position, placed tile count and FPS
-	// TODO: enable using close button (ImGui::CloseButton?)
 	if (popupToggles[STATUS])
 	{
 		if (ImGui::Begin("Info panel", &popupToggles[STATUS]))
 		{
-			guiWantKeyboard = ImGui::IsWindowFocused() ? true : guiWantKeyboard;
+			guiWantKeyboard = guiIO->WantCaptureKeyboard ? true : guiWantKeyboard;
 
 			ImGui::Text(("FPS: " + std::to_string(program.render.FPS)).c_str());
 			ImGui::Text(("tile count: " + std::to_string(program.editor.tiles.size())).c_str());
@@ -517,7 +563,7 @@ void Gui::addPopupGui()
 	{
 		if (ImGui::Begin("Ignore list", &popupToggles[IGNORE_LIST], ImGuiWindowFlags_AlwaysAutoResize))
 		{
-			guiWantKeyboard = ImGui::IsWindowFocused() ? true : guiWantKeyboard;
+			guiWantKeyboard = guiIO->WantCaptureKeyboard ? true : guiWantKeyboard;
 
 			ImGui::InputTextMultiline("filenames & directories to ignore", program.file_system.ignoreListBuffer, IM_ARRAYSIZE(program.file_system.ignoreListBuffer), ImVec2(600, 400));
 			if (ImGui::Button("Save", ImVec2(s.bottomBarButtonWidth, s.bottomBarHeight)))
@@ -534,6 +580,29 @@ void Gui::addPopupGui()
 			if (ImGui::Button("Clear", ImVec2(s.bottomBarButtonWidth, s.bottomBarHeight)))
 			{
 				std::fill(std::begin(program.file_system.ignoreListBuffer), std::end(program.file_system.ignoreListBuffer), '\0');
+			}
+			ImGui::End();
+		}
+		else
+		{
+			ImGui::End();
+		}
+	}
+	if (popupToggles[SAVE_CONTEXT])
+	{
+		if (ImGui::Begin("Unsaved changes", &popupToggles[SAVE_CONTEXT], ImGuiWindowFlags_AlwaysAutoResize))
+		{
+			guiWantKeyboard = guiIO->WantCaptureKeyboard ? true : guiWantKeyboard;
+
+			if (ImGui::Button("Save and exit", ImVec2(s.bottomBarButtonWidth, s.bottomBarHeight)))
+			{
+				openFileDialog(SAVE);
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Exit", ImVec2(s.bottomBarButtonWidth, s.bottomBarHeight)))
+			{
+				popupToggles[SAVE_CONTEXT] = false;
+				program.quitProgram = true;
 			}
 			ImGui::End();
 		}
@@ -678,12 +747,17 @@ void Gui::checkFileDialog()
 						// change currently selected blf
 						program.file_system.blfDir = ImGuiFileDialog::Instance()->GetFilePathName();
 						program.file_system.changeSetting<std::string>("dirs.blf", program.file_system.blfDir, libconfig::Setting::TypeString);
-						// try to load the file
+						// try to save the file
 						program.blf_converter.write_file(ImGuiFileDialog::Instance()->GetFilePathName().c_str());
 
 						// close
 						program.file_system.contextOpen = false;
 						ImGuiFileDialog::Instance()->Close();
+						// close the program if this was our last save
+						if (glfwWindowShouldClose(program.windowManager.window))
+						{
+							program.quitProgram = true;
+						}
 					}
 				}
 				else

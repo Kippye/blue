@@ -104,7 +104,7 @@ void Window::initialize()
 	thisWindow->window_close_callback = [](auto self)
 	{
 		self->shouldClose = true;
-		std::cout << "window close" << std::endl;
+		std::cout << "Program close requested." << std::endl;
 	};
 
 	thisWindow->key_callback = [](auto self, int key, int scancode, int action, int mods)

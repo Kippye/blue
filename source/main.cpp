@@ -78,44 +78,36 @@ Program::Program()
 	render.setup();
 
 	// load UI textures
+	std::cout << "Loading GUI textures..." << std::endl;
 	file_system.loadGUITextures();
-	std::cout << "checking content dir, which is: " << file_system.contentDir << std::endl;
-
+	std::cout << "Updating textures..." << std::endl;
 	file_system.updateTextures();
-
+	std::cout << "Initializing GUI..." << std::endl;
 	gui.guiInit(&windowManager);
-
-	// TEMP all testing stuff
-	std::vector<E_Tile>& _tiles = editor.tiles;
-
-	//~ for (int y = 0; y < 4; y++)
-	//~ {
-		//~ for (int x = 0; x < 4; x++)
-		//~ {
-			//~ _tiles.emplace_back(Location(glm::vec4(x * 12, y * 12, 0.0, 0.0), glm::vec3(size, size, 1.0f)), Physics(), Visuals(glm::vec2(x, y), TEXTUREMODE_TILE));
-			//~ size = size == 10 ? 1 : size + 1;
-		//~ }
-	//~ }
-	//~ render.add_to_render_list(_tiles);
-	//~ for (int x = 0; x < 10; x++)
-	//~ {
-		//~ _tiles.emplace_back(Location(glm::vec4(x, 0.0, 0.0, 0.0), glm::vec3(1.0f, 1.0f, 1.0f)), Physics(false, true), Visuals(textureLoader.getAtlasTextureCoords(render.textureAtlas, "box.png"), "box.png", TEXTUREMODE_TILE));
-		//~ //_tiles.emplace_back(Location(glm::vec4(x, 0.0, 0.0, 0.0), glm::vec3(1.0f, 1.0f, 1.0f)), Physics(false, true), Visuals(textureLoader.getAtlasCoords(render.textureAtlas, 0), render.textureAtlas->textureFiles[0], TEXTUREMODE_TILE));
-	//~ }
-	//~ render.add_to_render_list(_tiles);
 }
 
 void Program::loop()
 {
-	while (!glfwWindowShouldClose(windowManager.window))
+	while (quitProgram == false)
 	{
 		input.processInput(windowManager.window);
 		// update the camera view direction (not really needed but eh)
 		camera.updateView();
+		if (glfwWindowShouldClose(windowManager.window))
+		{
+			quitProgram = true;
+			// show a confirmation window if unsaved progress exists
+			if (program.editor.getDirtiness() == true)
+			{
+				quitProgram = false;
+				program.gui.popupToggles[SAVE_CONTEXT] = true;
+			}
+		}
 		render.render();
 		glfwPollEvents();
 	}
-
+	
+	std::cout << "Terminating program..." << std::endl;
 	render.terminate();
 	windowManager.terminate();
 	file_system.trySaveConfigs();

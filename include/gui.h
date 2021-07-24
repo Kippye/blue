@@ -18,7 +18,8 @@
 enum GUI_POPUP
 {
 	STATUS,
-	IGNORE_LIST
+	IGNORE_LIST,
+	SAVE_CONTEXT
 };
 
 enum GUI_PROMPT
@@ -42,7 +43,7 @@ struct GuiSizes
 		float
 		propertiesPaneWidth = 64.0f * 4,
 		tileSelectorPaneWidth = 64.0f * 4,
-		bottomBarButtonWidth = 80.0f,
+		bottomBarButtonWidth = 100.0f,
 		bottomBarHeight = 32.0f,
 		editorPaneHeight = 64.0f,
 		editorButtonDistance = 66.0f,
@@ -92,7 +93,8 @@ class Gui
 		std::map<GUI_POPUP, bool> popupToggles =
 		{
 			{ STATUS, false },
-			{ IGNORE_LIST, false }
+			{ IGNORE_LIST, false },
+			{ SAVE_CONTEXT, false}
 		};
 
 		std::vector<E_Texture*>& tileTextures = std::vector<E_Texture*>{};
