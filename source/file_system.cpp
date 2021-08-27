@@ -98,7 +98,7 @@ void FileSystem::vectorToIgnoreBuffer()
 	}
 }
 
-std::vector<std::string>& FileSystem::getInDir(const char* directory, bool useIgnoreList, bool filesOnly, bool fullPath, bool extension)
+std::vector<std::string>& FileSystem::getInDir(const char* directory, bool useIgnoreList, bool filesOnly, bool fullPath, bool extension, std::vector<std::string> acceptedExtensions)
 {
 	std::vector<std::string>* fileNames = new std::vector<std::string>();
 
@@ -108,6 +108,25 @@ std::vector<std::string>& FileSystem::getInDir(const char* directory, bool useIg
 	{
 		if (useIgnoreList && check_if_is_ignored(entry.path().filename().string())) { continue; } // on the ignore list, ignore
 		if (filesOnly && entry.path().extension().string() == "") { continue; } // we only want files, not directories
+
+		if (acceptedExtensions.size() > 0)
+		{
+			bool isAcceptedExtension = false;
+
+			for (int i = 0; i < acceptedExtensions.size(); i++)
+			{
+				if (entry.path().extension().string() == acceptedExtensions[i])
+				{
+					isAcceptedExtension = true;
+					break;
+				}
+			}
+			// this file does not have an accepted extension
+			if (!isAcceptedExtension)
+			{
+				continue;
+			}
+		}
 
 		if (DEBUG_FILE_LOADING) std::cout << "Found file: " << entry.path() << "in " << directory << std::endl;
 
@@ -143,7 +162,7 @@ std::vector<std::string>& FileSystem::getInDir(const char* directory, bool useIg
 	return *fileNames;
 }
 
-std::vector<std::string>& FileSystem::getInDirRecursive(const char* directory, bool useIgnoreList, bool filesOnly, bool fullPath, bool extension)
+std::vector<std::string>& FileSystem::getInDirRecursive(const char* directory, bool useIgnoreList, bool filesOnly, bool fullPath, bool extension, std::vector<std::string> acceptedExtensions)
 {
 	std::vector<std::string>* fileNames = new std::vector<std::string>();
 
@@ -153,6 +172,25 @@ std::vector<std::string>& FileSystem::getInDirRecursive(const char* directory, b
 	{
 		if (useIgnoreList && check_if_is_ignored(entry.path().filename().string())) { continue; } // on the ignore list, ignore
 		if (filesOnly && entry.path().extension().string() == "") { continue; } // we only want files, ignore it
+
+		if (acceptedExtensions.size() > 0)
+		{
+			bool isAcceptedExtension = false;
+
+			for (int i = 0; i < acceptedExtensions.size(); i++)
+			{
+				if (entry.path().extension().string() == acceptedExtensions[i])
+				{
+					isAcceptedExtension = true;
+					break;
+				}
+			}
+			// this file does not have an accepted extension
+			if (!isAcceptedExtension)
+			{
+				continue;
+			}
+		}
 
 		if (DEBUG_FILE_LOADING) std::cout << "found file: " << entry.path() << std::endl;
 
@@ -195,11 +233,11 @@ void FileSystem::updateTextures()
 	// update the textures from the content folder
 	if (contentDir != "")
 	{
-		std::vector<std::string>& filesInContent = getInDirRecursive(contentDir.c_str());
-		program.gui.tileTextures = program.textureLoader.loadTextures(filesInContent, contentDir);
+		std::vector<std::string>& filesInContent = getInDirRecursive(contentDir.c_str(), true, true, true, true, imageExtensions);
+		program.gui.tileTextures = program.textureLoader.loadTextures(filesInContent, false);
 		program.render.textureAtlas = loadContentAsAtlas();
 		// only waste time on updating these if they're already something else
-		if (firstUpdate)
+		if (!firstUpdate)
 		{
 			program.editor.update_atlas_coords(program.render.textureAtlas);
 		}
@@ -210,8 +248,8 @@ void FileSystem::loadGUITextures()
 {
 	if (DEBUG_FILE_LOADING) std::cout << "loading GUI textures" << std::endl;
 	std::string guiTextureFolder = program.textureLoader.textureFolder + "gui/";
-	std::vector<std::string>& filesInFolder = getInDirRecursive(guiTextureFolder.c_str());
-	std::vector<std::string>& fileNames = getInDirRecursive(guiTextureFolder.c_str(), false, true, false, false);
+	std::vector<std::string>& filesInFolder = getInDirRecursive(guiTextureFolder.c_str(), true, true, false, true, imageExtensions);
+	std::vector<std::string>& fileNames = getInDirRecursive(guiTextureFolder.c_str(), false, true, false, false, imageExtensions);
 	std::vector<E_Texture*>& textures = program.textureLoader.loadTextures(filesInFolder, guiTextureFolder);
 
 	for (int i = 0; i < fileNames.size(); i++)
@@ -224,10 +262,8 @@ void FileSystem::loadGUITextures()
 TextureAtlas* FileSystem::loadContentAsAtlas()
 {
 	if (contentDir == "") { std::cout << "Tried to load content without the folder being set" << std::endl; return nullptr; }
-	program.gui.setStatus("loading textures from content folder...");
-	std::vector<std::string>& filesInContent = getInDirRecursive(contentDir.c_str());
-	TextureAtlas* atlas = program.textureLoader.loadTextureAtlas(filesInContent, contentDir);
-	program.gui.setStatus("");
+	std::vector<std::string>& filesInContent = getInDirRecursive(contentDir.c_str(), true, true, true, true, imageExtensions);
+	TextureAtlas* atlas = program.textureLoader.loadTextureAtlas(filesInContent, false);
 	return atlas;
 }
 

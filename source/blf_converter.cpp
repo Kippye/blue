@@ -38,7 +38,7 @@ void BLF_Converter::load_file(const char* path)
 			// TODO: handle this shit
 		}
 		// TODO: load more tile options
-		program.editor.add_tile(program.editor.tiles.emplace_back(Location(glm::vec4(tile->x, tile->y, tile->z, 0.0)), Physics(tile->collisionsEnabled, tile->_static), Visuals(program.textureLoader.getAtlasTextureCoords(program.render.textureAtlas, texturePath), texturePath, (TEXTUREMODE)tile->textureMode)));
+		program.editor.add_tile(program.editor.tiles.emplace_back(Location(glm::vec4(tile->x, tile->y, tile->z, 0.0), glm::vec3(tile->sizeX, tile->sizeY, 1.0f)), Physics(tile->collisionsEnabled, tile->_static), Visuals(program.textureLoader.getAtlasTextureCoords(program.render.textureAtlas, texturePath), texturePath, (TEXTUREMODE)tile->textureMode)));
 	}
 
 	auto end_time = std::chrono::high_resolution_clock::now();

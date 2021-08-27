@@ -217,7 +217,7 @@ void Input::cursor_pos_event(GLFWwindow* window, double xPos, double yPos)
 
 void Input::scroll_event(GLFWwindow* window, double xOffset, double yOffset)
 {
-	if (program.file_system.contextOpen || program.gui.guiFocused) { return; }
+	if (program.file_system.contextOpen || program.gui.guiHovered) { return; }
 
 	program.camera.moveCamera(program.camera.movementFront * (float)(yOffset * program.camera.zoomSpeed * program.render.deltaTime));
 }

@@ -513,7 +513,7 @@ void Gui::addBottomBarGui()
 			ImGui::BeginTooltip();
 				ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
 				ImGui::Text("save currently open blur level as a file ");
-				ImGui::BulletText("shortcut: left CTRL + left SHIFT + I ");
+				ImGui::BulletText("shortcut: left CTRL + left SHIFT + O ");
 				ImGui::PopTextWrapPos();
 			ImGui::EndTooltip();
 		}

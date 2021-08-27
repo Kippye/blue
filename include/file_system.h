@@ -15,6 +15,7 @@ class FileSystem
 		static const inline char *config_file = "user.cfg";
 		static const inline char *ignore_file = "ignore.cfg";
 		std::vector<std::string> ignoreList = {};
+		std::vector<std::string> imageExtensions = {".png", ".jpg", ".jpeg"};
 
 	public:
 		// TEMP save this in config file instead
@@ -22,7 +23,7 @@ class FileSystem
 		std::string blfDir = "";
 
 		char defaultIgnoreListBuffer[1024] = { "scripts, shaders, logo.png, logograss.png, resizedragger.png" };
-		char ignoreListBuffer[1024] = {}; // TODO: populate this when loading ignore list, later save it
+		char ignoreListBuffer[1024] = {};
 
 		bool contextOpen = false;
 
@@ -30,8 +31,8 @@ class FileSystem
 		void ignore_buffer_to_vector();
 		void vectorToIgnoreBuffer();
 
-		std::vector<std::string>& getInDir(const char* directory, bool useIgnoreList = true, bool filesOnly = true, bool fullPath = false, bool extension = true);
-		std::vector<std::string>& getInDirRecursive(const char* directory, bool useIgnoreList = true, bool filesOnly = true, bool fullPath = false, bool extension = true);
+		std::vector<std::string>& getInDir(const char* directory, bool useIgnoreList = true, bool filesOnly = true, bool fullPath = false, bool extension = true, std::vector<std::string> acceptedExtensions = {});
+		std::vector<std::string>& getInDirRecursive(const char* directory, bool useIgnoreList = true, bool filesOnly = true, bool fullPath = false, bool extension = true, std::vector<std::string> acceptedExtensions = {});
 
 		void updateTextures();
 

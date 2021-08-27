@@ -4,6 +4,7 @@ extern "C" {
 }
 #include <GLFW/glfw3.h>
 #include <iostream>
+#include <filesystem>
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 #include <cmath>
@@ -64,6 +65,62 @@ unsigned char* TextureLoader::loadTextureData(const char* fileName, int* width, 
 			if (bind) glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, *width, *height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 		}
 		else if (filePath.find(".jpg") != std::string::npos)
+		{
+			if (bind) glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, *width, *height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+		}
+		else
+		{
+			std::cout << "Unsupported image file type!" << std::endl;
+		}
+	}
+	else
+	{
+		std::cout << "Failed to load texture data at: " << fullPath << std::endl;
+	}
+
+	if (bind)
+	{
+		glBindTexture(GL_TEXTURE_2D, 0);
+	}
+	// download free memory
+	// stbi_image_free(data);
+
+	return data;
+}
+
+unsigned char* TextureLoader::loadTextureData(std::string fullPath, int* width, int* height, bool flip, unsigned int* ID, bool bind)
+{
+	int nrChannels;
+
+	stbi_set_flip_vertically_on_load(flip);
+	unsigned char* data = stbi_load(fullPath.c_str(), width, height, &nrChannels, 4);
+
+	if (bind)
+	{
+		// 1 - amount, &texture - array of IDs
+		glGenTextures(1, ID);
+		glBindTexture(GL_TEXTURE_2D, *ID);
+		// filtering options for this texture
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		// GL_LINEAR would be the "normal" mode, GL_NEAREST pixel mode
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+		// Upload pixels into texture
+#if defined(GL_UNPACK_ROW_LENGTH) && !defined(__EMSCRIPTEN__)
+		glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+#endif
+	}
+
+	if (data)
+	{
+		// generate texture
+		if (fullPath.find(".png") != std::string::npos)
+		{
+			if (bind) glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, *width, *height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+		}
+		else if (fullPath.find(".jpg") != std::string::npos)
 		{
 			if (bind) glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, *width, *height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
 		}
@@ -190,6 +247,60 @@ E_Texture* TextureLoader::loadTexture(const char* fileName, std::string director
 	return texture;
 }
 
+E_Texture* TextureLoader::loadTexture(std::string fullPath, bool flip)
+{
+	if (DEBUG_TEXTURE_LOADING)std::cout << "loadTexture" << std::endl;
+	E_Texture* texture = new E_Texture();
+
+	std::filesystem::path fileName = std::filesystem::path(fullPath).filename();
+
+	stbi_set_flip_vertically_on_load(flip);
+	unsigned char* data = stbi_load(fullPath.c_str(), &texture->width, &texture->height, NULL, 4);
+
+	// 1 - amount, &texture - array of IDs
+	glGenTextures(1, &texture->ID);
+	glBindTexture(GL_TEXTURE_2D, texture->ID);
+	// filtering options for this texture
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	// GL_LINEAR would be the "normal" mode, GL_NEAREST pixel mode
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	// Upload pixels into texture
+#if defined(GL_UNPACK_ROW_LENGTH) && !defined(__EMSCRIPTEN__)
+	glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+#endif
+
+	if (data)
+	{
+		// generate texture
+		if (fileName.extension().string() == ".png")
+		{
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texture->width, texture->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+		}
+		else if (fileName.extension().string() == ".jpg")
+		{
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, texture->width, texture->height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+		}
+		else
+		{
+			std::cout << "Unsupported image file type!" << std::endl;
+		}
+	}
+	else
+	{
+		std::cout << "Failed to load texture at: " << fullPath << std::endl;
+	}
+
+	glBindTexture(GL_TEXTURE_2D, 0);
+	// download free memory
+	stbi_image_free(data);
+
+	if (DEBUG_TEXTURE_LOADING)std::cout << "loadTexture end" << std::endl;
+	return texture;
+}
+
 std::vector<E_Texture*>& TextureLoader::loadTextures(std::vector<std::string> fileNames, std::string directory, bool flip)
 {
 	if (DEBUG_TEXTURE_LOADING)std::cout << "loadTextures" << std::endl;
@@ -204,13 +315,26 @@ std::vector<E_Texture*>& TextureLoader::loadTextures(std::vector<std::string> fi
 	return *textures;
 }
 
+std::vector<E_Texture*>& TextureLoader::loadTextures(std::vector<std::string> fullPaths, bool flip)
+{
+	if (DEBUG_TEXTURE_LOADING)std::cout << "loadTextures" << std::endl;
+	std::vector<E_Texture*>* textures = new std::vector<E_Texture*>();
+
+	for (int i = 0; i < fullPaths.size(); i++)
+	{
+		textures->push_back(loadTexture(fullPaths[i], flip));
+	}
+
+	if (DEBUG_TEXTURE_LOADING)std::cout << "loadTextures end" << std::endl;
+	return *textures;
+}
 
 TextureAtlas* TextureLoader::loadTextureAtlas(std::vector<std::string> fileNames, std::string directory, bool flip)
 {
 	TextureAtlas* textureAtlas = new TextureAtlas();
 
-	int tilesPerRow = ceil(sqrt(fileNames.size()));
-	int tilesPerColumn = ceil(sqrt(fileNames.size() - tilesPerRow));
+	int tilesPerRow = ceil(sqrt(fileNames.size())) + 1;
+	int tilesPerColumn = ceil(sqrt(fileNames.size() - tilesPerRow)) + 1;
 
 	int atlasDataSize = ((16 * 16) * (tilesPerRow * tilesPerColumn));
 	unsigned char* textureAtlasData = new unsigned char[atlasDataSize];
@@ -226,11 +350,54 @@ TextureAtlas* TextureLoader::loadTextureAtlas(std::vector<std::string> fileNames
 		for (int x = 0; x < tilesPerRow; x++)
 		{
 			if (total >= fileNames.size()){ break; }
-
+	
 			int width, height;
 			unsigned int ID;
 			unsigned char* texture = loadTextureData(fileNames[total].c_str(), &width, &height, directory, false);
 			textureAtlas->textureFiles.push_back(fileNames[total]);
+
+			// add subtexture to texture atlas
+			glBindTexture(GL_TEXTURE_2D, textureAtlas->ID);
+			glTexSubImage2D(GL_TEXTURE_2D, 0, 16 * x, 16 * y, 16, 16, GL_RGBA, GL_UNSIGNED_BYTE, texture);
+			glBindTexture(GL_TEXTURE_2D, 0);
+
+			total++;
+		}
+	}
+
+	if (DEBUG_TEXTURE_LOADING) std::cout << "LOADED TEXTURE ATLAS: " << "width: " << textureAtlas->width << "; height: " << textureAtlas->height << "; ID: " << textureAtlas->ID << std::endl;
+
+	return textureAtlas;
+}
+
+TextureAtlas* TextureLoader::loadTextureAtlas(std::vector<std::string> fullPaths, bool flip)
+{
+	TextureAtlas* textureAtlas = new TextureAtlas();
+
+	int tilesPerRow = ceil(sqrt(fullPaths.size())) + 1;
+	int tilesPerColumn = ceil(sqrt(fullPaths.size() - tilesPerRow)) + 1;
+
+	int atlasDataSize = ((16 * 16) * (tilesPerRow * tilesPerColumn));
+	unsigned char* textureAtlasData = new unsigned char[atlasDataSize];
+	// create an empty texture for the atlas
+	textureAtlas->width = tilesPerRow * 16;
+	textureAtlas->height = tilesPerColumn * 16;
+	textureAtlas->ID = createEmptyTexture(&textureAtlas->width, &textureAtlas->height);
+
+	int total = 0;
+
+	for (int y = 0; y < tilesPerColumn; y++)
+	{
+		for (int x = 0; x < tilesPerRow; x++)
+		{
+
+			if (total >= fullPaths.size()) { break; }
+
+			int width, height;
+			unsigned int ID;
+			unsigned char* texture = loadTextureData(fullPaths[total], &width, &height, false);
+			std::filesystem::path fileName = std::filesystem::path(fullPaths[total]).filename();
+			textureAtlas->textureFiles.push_back(fileName.string());
 
 			// add subtexture to texture atlas
 			glBindTexture(GL_TEXTURE_2D, textureAtlas->ID);
@@ -288,11 +455,13 @@ glm::vec2 TextureLoader::getAtlasTextureCoords(TextureAtlas* atlas, std::string 
 {
 	if (atlas == nullptr) { std::cerr << "getAtlasTextureCoords: atlas == nullptr" << std::endl; return glm::vec2(0.0f, 0.0f); }
 	
-	if (DEBUG_TEXTURE_LOADING) std::cout << "texPath: " << texturePath << std::endl;
+ //std::cout << "texPath: " << texturePath << std::endl;
 	for (int i = 0; i < atlas->textureFiles.size(); i++)
 	{
+			 //std::cout << atlas->textureFiles[i] << std::endl;
 		if (atlas->textureFiles[i] == texturePath)
 		{
+
 			glm::vec2 coords;
 			coords.y = (atlas->height / 16 - 1) - floor(i / (atlas->width / 16));
 			coords.x = i - ((atlas->height / 16 - 1 - coords.y) * (atlas->width / 16 - 1)) - (atlas->height / 16 - 1 - coords.y);
@@ -300,6 +469,7 @@ glm::vec2 TextureLoader::getAtlasTextureCoords(TextureAtlas* atlas, std::string 
 			return coords;
 		}
 	}
-	std::cerr << "Texture path not found in atlas, returning (-1, -1)" << std::endl;
+	if (DEBUG_TEXTURE_LOADING) std::cerr << "Texture path not found in atlas, returning (-1, -1)" << std::endl;
+
 	return glm::vec2(-1, -1);
 }

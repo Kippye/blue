@@ -43,11 +43,15 @@ class TextureLoader
 		GLuint createEmptyTexture(int* width, int* height);
 		unsigned int loadTexture_ID(const char* fileName, std::string directory = textureFolder, bool flip = true);
 		unsigned char* loadTextureData(const char* fileName, int* width, int* height, std::string directory = textureFolder, bool flip = true, unsigned int* ID = nullptr, bool bind = false);
+		unsigned char* loadTextureData(std::string fullPath, int* width, int* height, bool flip = true, unsigned int* ID = nullptr, bool bind = false);
 
 		E_Texture* loadTexture(const char* fileName, std::string directory = textureFolder, bool flip = false);
+		E_Texture* loadTexture(std::string fullPath, bool flip = false);
 		std::vector<E_Texture*>& loadTextures(std::vector<std::string> fileNames, std::string directory = textureFolder, bool flip = false);
+		std::vector<E_Texture*>& loadTextures(std::vector<std::string> fullPaths, bool flip = false);
 
 		TextureAtlas* loadTextureAtlas(std::vector<std::string> fileNames, std::string directory = textureFolder, bool flip = false);
+		TextureAtlas* loadTextureAtlas(std::vector<std::string> fullPaths, bool flip = false);
 
 		unsigned int getAtlasTextureIndex(TextureAtlas* atlas, glm::vec2 coords);
 		unsigned int getAtlasTextureIndex(TextureAtlas* atlas, const char* textureName);
