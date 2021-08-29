@@ -234,7 +234,7 @@ void FileSystem::updateTextures()
 	if (contentDir != "")
 	{
 		std::vector<std::string>& filesInContent = getInDirRecursive(contentDir.c_str(), true, true, true, true, imageExtensions);
-		program.gui.tileTextures = program.textureLoader.loadTextures(filesInContent, false);
+		program.gui.tileTextures = program.textureLoader.loadTextures(filesInContent, false, true);
 		program.render.textureAtlas = loadContentAsAtlas();
 		// only waste time on updating these if they're already something else
 		if (!firstUpdate)
@@ -250,7 +250,7 @@ void FileSystem::loadGUITextures()
 	std::string guiTextureFolder = program.textureLoader.textureFolder + "gui/";
 	std::vector<std::string>& filesInFolder = getInDirRecursive(guiTextureFolder.c_str(), true, true, false, true, imageExtensions);
 	std::vector<std::string>& fileNames = getInDirRecursive(guiTextureFolder.c_str(), false, true, false, false, imageExtensions);
-	std::vector<E_Texture*>& textures = program.textureLoader.loadTextures(filesInFolder, guiTextureFolder);
+	std::vector<E_Texture*>& textures = program.textureLoader.loadTextures(filesInFolder, guiTextureFolder, false, true);
 
 	for (int i = 0; i < fileNames.size(); i++)
 	{

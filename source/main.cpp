@@ -24,6 +24,7 @@
  * [C] beautify file dialog
  * [C] set default file dialog sort mode to name ascending
  * // EDITOR //
+ * [ ] dragger thing (fuck u bart)
  * [X] only listen to editor movement commands when no imgui window is focused
  * [X] basic drawing of tiles on a grid
  * [X] non-snapped drawing?
@@ -42,6 +43,7 @@
  * [C] undo, redo, if at all doable
  * [C] move tool (with arrow keys & move camera with it)
  * // OTHER //
+ * [X] replace all texture loading functions with just an E_Texture return
  * [X] fix up editor tile class
  * [X] only recreate transforms array when a tile is modified (use some kind of event system)
  * [X] really just fix the fucking texture loading system

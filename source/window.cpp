@@ -50,7 +50,7 @@ void Window::initialize()
 
 	// load and set the window's icon
 	GLFWimage images[1];
-	images[0].pixels = program.textureLoader.loadTextureData("icon.png", &images[0].width, &images[0].height, program.textureLoader.textureFolder, false);
+	images[0].pixels = program.textureLoader.loadTexture(program.textureLoader.textureFolder + "icon.png", false)->data;
 	glfwSetWindowIcon(window, 1, images);
 
 	// set up the viewport (xpos, ypos, w, h)
