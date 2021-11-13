@@ -24,6 +24,7 @@
  * [C] beautify file dialog
  * [C] set default file dialog sort mode to name ascending
  * // EDITOR //
+ * [X] box draw tool: shortcut 3, click to select start and end point, will use the texturemode of the next tile, right click to fill the area with 1x1 tiles
  * [X] only listen to editor movement commands when no imgui window is focused
  * [X] basic drawing of tiles on a grid
  * [X] non-snapped drawing?
@@ -72,17 +73,15 @@ Program::Program()
 {
 	// setup and initialize components
 	file_system.tryLoadConfigs();
+	file_system.tryOpenLastFile();
 
 	windowManager.initialize();
 	input.setup();
 	render.setup();
 
 	// load UI textures
-	std::cout << "Loading GUI textures..." << std::endl;
 	file_system.loadGUITextures();
-	std::cout << "Updating textures..." << std::endl;
 	file_system.updateTextures();
-	std::cout << "Initializing GUI..." << std::endl;
 	gui.guiInit(&windowManager);
 }
 
@@ -90,12 +89,16 @@ void Program::loop()
 {
 	while (quitProgram == false)
 	{
+		//std::cout << "Loop" << std::endl;
+
 		input.processInput(windowManager.window);
+		//std::cout << "Processed input" << std::endl;
 		// update the camera view direction (not really needed but eh)
 		camera.updateView();
+		//std::cout << "Updated camera view" << std::endl;
 		if (glfwWindowShouldClose(windowManager.window))
 		{
-			quitProgram = true;
+			programWillClose = quitProgram = true;
 			// show a confirmation window if unsaved progress exists
 			if (program.editor.getDirtiness() == true)
 			{
@@ -104,7 +107,9 @@ void Program::loop()
 			}
 		}
 		render.render();
+		//std::cout << "Rendered" << std::endl;
 		glfwPollEvents();
+		//std::cout << "Polled GLFW events" << std::endl;
 	}
 	
 	std::cout << "Terminating program..." << std::endl;

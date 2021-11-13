@@ -21,6 +21,7 @@ class FileSystem
 		// TEMP save this in config file instead
 		std::string contentDir = "";
 		std::string blfDir = "";
+		std::string blfFile = "";
 
 		char defaultIgnoreListBuffer[1024] = { "scripts, shaders, logo.png, logograss.png, resizedragger.png" };
 		char ignoreListBuffer[1024] = {};
@@ -41,6 +42,8 @@ class FileSystem
 
 		void tryLoadConfigs();
 		void trySaveConfigs();
+		void startNewFile();
+		void tryOpenLastFile();
 
 		template <typename T> void changeSetting(const char* setting_name, T new_value, Setting::Type type, bool add_if_NA = true)
 		{

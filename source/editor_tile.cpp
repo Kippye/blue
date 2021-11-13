@@ -43,7 +43,7 @@ Location::Location(glm::vec4 _Position, glm::vec3 _Size)
 {
 	Position = _Position;
 	Size = _Size;
-	box = Bounding_Box(glm::vec2(Size));
+	box = Bounding_Box(glm::vec2(Size.x, Size.y));
 	//box = Bounding_Box(glm::vec4(Position.x - (Size.x / 2), Position.y - (Size.y / 2), Position.z, 1.0f), glm::vec4(Position.x + (Size.x / 2), Position.y + (Size.y / 2), Position.z, 1.0f));
 }
 
@@ -55,7 +55,7 @@ Physics::Physics(bool _CollisionsEnabled, bool _Static)
 	Static = _Static;
 }
 
-Visuals::Visuals(){}
+Visuals::Visuals() {}
 // initialize with visibility setting and atlas coordinates
 Visuals::Visuals(glm::vec2 _atlasCoords) { atlasCoords = _atlasCoords; } // only texture set by default
 Visuals::Visuals(glm::vec2 _atlasCoords, std::string _textureName, TEXTUREMODE _TextureMode) // every setting cus too lazy to make 1 by 1

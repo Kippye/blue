@@ -10,11 +10,22 @@ extern "C" {
 #include <glm.hpp>
 #include <gtc/matrix_transform.hpp>
 #include <gtc/type_ptr.hpp>
+#include <string>
+
+enum CURSOR_TYPE
+{
+	NORMAL,
+	DRAW
+};
 
 class Window
 {
 	public:
 		GLFWwindow* window;
+		const char* titleBase = "blue";
+		std::string title = "";
+		CURSOR_TYPE cursor = NORMAL;
+		GLFWcursor* cursors[2] = {};
 		float SCREEN_WIDTH = 800.0f;
 		float SCREEN_HEIGHT = 600.0f;
 		float lastX = SCREEN_WIDTH / 2, lastY = SCREEN_HEIGHT / 2;
@@ -22,7 +33,8 @@ class Window
 		bool hasFocus = true;
 		bool shouldClose = false;
 	// window functions
-	void setTitle(const char* title);
+	void setCursor(CURSOR_TYPE _cursor);
+	void setTitle(const char* _title);
 	// lifecycle functions
 	void initialize();
 	void terminate();

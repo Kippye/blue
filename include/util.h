@@ -1,20 +1,35 @@
 #pragma once
 
 #include <glm.hpp>
+#include <stdio.h>
+#include <iostream>
+#include <glm/gtx/string_cast.hpp>
 
 class mymath
 {
 	public:
-		static glm::vec2 round_to_grid(glm::vec2 pos)
+		static glm::vec2 floor_to_grid(glm::vec2 pos)
 		{
 			pos.x = floor(pos.x);
 			pos.y = floor(pos.y);
 			return pos;
 		}
-		static glm::vec4 round_to_grid(glm::vec4 pos)
+		static glm::vec4 floor_to_grid(glm::vec4 pos)
 		{
 			pos.x = floor(pos.x);
 			pos.y = floor(pos.y);
+			return pos;
+		}
+		static glm::vec2 round_to_grid(glm::vec2 pos)
+		{
+			pos.x = round(pos.x);
+			pos.y = round(pos.y);
+			return pos;
+		}
+		static glm::vec4 round_to_grid(glm::vec4 pos)
+		{
+			pos.x = round(pos.x);
+			pos.y = round(pos.y);
 			return pos;
 		}
 };
@@ -48,7 +63,7 @@ class Bounding_Box
 
 		bool contains_position(glm::vec4 &boxPos, glm::vec4 &sourcePos)
 		{
-			return sourcePos.x >= (minimum.x + boxPos.x) && sourcePos.y >= (minimum.y + boxPos.y)
+			return sourcePos.x >= (boxPos.x) && sourcePos.y >= (boxPos.y)
 			&& sourcePos.x <= (maximum.x + boxPos.x) && sourcePos.y <= (maximum.y + boxPos.y);
 		}
 
@@ -56,10 +71,10 @@ class Bounding_Box
 		{
 			return
 			(
-				contains_position(boxPos, sourcePos + glm::vec4(sourceBox.minimum + glm::vec2(0.01f), 0.0f, 1.0f)) ||
-				contains_position(boxPos, sourcePos + glm::vec4(sourceBox.minimum.x + sourceBox.size.x - 0.01f, sourceBox.minimum.y + 0.01f, 0.0f, 1.0f)) ||
-				contains_position(boxPos, sourcePos + glm::vec4(sourceBox.minimum.x + 0.01f, sourceBox.minimum.y + sourceBox.size.y - 0.01f, 0.0f, 1.0f)) ||
-				contains_position(boxPos, sourcePos + glm::vec4(sourceBox.maximum - glm::vec2(0.01f), 0.0f, 1.0f))
+				contains_position(boxPos, sourcePos + glm::vec4(sourceBox.minimum + glm::vec2(0.01f), 0.0f, 1.0f)) && // contains BL
+				contains_position(boxPos, sourcePos + glm::vec4(sourceBox.minimum.x + sourceBox.size.x - 0.01f, sourceBox.minimum.y + 0.01f, 0.0f, 1.0f)) || // BR
+				contains_position(boxPos, sourcePos + glm::vec4(sourceBox.minimum.x + 0.01f, sourceBox.minimum.y + sourceBox.size.y - 0.01f, 0.0f, 1.0f)) || // TL
+				contains_position(boxPos, sourcePos + glm::vec4(sourceBox.maximum - glm::vec2(0.01f), 0.0f, 1.0f)) // TR
 			);
 		}
 
@@ -67,10 +82,10 @@ class Bounding_Box
 		{
 			return
 			(
-				contains_position(boxPos, sourcePos + glm::vec4(sourceBox.minimum + glm::vec2(0.01f), 0.0f, 1.0f)) &&
-				contains_position(boxPos, sourcePos + glm::vec4(sourceBox.minimum.x + sourceBox.size.x - 0.01f, sourceBox.minimum.y + 0.01f, 0.0f, 1.0f)) &&
-				contains_position(boxPos, sourcePos + glm::vec4(sourceBox.minimum.x + 0.01f, sourceBox.minimum.y + sourceBox.size.y - 0.01f, 0.0f, 1.0f)) &&
-				contains_position(boxPos, sourcePos + glm::vec4(sourceBox.maximum - glm::vec2(0.01f), 0.0f, 1.0f))
+				contains_position(boxPos, sourcePos + glm::vec4(sourceBox.minimum + glm::vec2(0.01f), 0.0f, 1.0f)) && // contains BL
+				contains_position(boxPos, sourcePos + glm::vec4(sourceBox.minimum.x + sourceBox.size.x - 0.01f, sourceBox.minimum.y + 0.01f, 0.0f, 1.0f)) && // contains BR
+				contains_position(boxPos, sourcePos + glm::vec4(sourceBox.minimum.x + 0.01f, sourceBox.minimum.y + sourceBox.size.y - 0.01f, 0.0f, 1.0f)) && // contains TL
+				contains_position(boxPos, sourcePos + glm::vec4(sourceBox.maximum - glm::vec2(0.01f), 0.0f, 1.0f)) // containts TR
 			);
 		}
 };

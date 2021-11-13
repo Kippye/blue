@@ -32,6 +32,7 @@ class Program
 		Editor editor = *(new Editor());
 		Gui& gui = *(new Gui());
 
+		bool programWillClose = false;
 		bool quitProgram = false;
 
 		Program(const Program&) = default;

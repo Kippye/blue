@@ -26,6 +26,7 @@ enum Tool
 {
     SELECT, // select placed tiles by clicking, dragging, or ctrl clicking (multiple selection)
     PLACE, // place currently selected tile (only necessary after switching to another tool)
+	BOX, // box draw tiles or a single tile, or delete tiles in a box area
     MOVE // moves current selection, can't be selected if nothing is selected
 };
 
@@ -78,6 +79,7 @@ class Editor
 		void push_selection_to_back();
 		void deselect_all();
 		void delete_selection();
+		void delete_all();
 
 		// tool functions
         void tool_use();

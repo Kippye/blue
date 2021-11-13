@@ -49,9 +49,15 @@ void Window::initialize()
 	}
 
 	// load and set the window's icon
-	GLFWimage images[1];
+	GLFWimage images[1] = { GLFWimage() } ;
 	images[0].pixels = program.textureLoader.loadTextureData("icon.png", &images[0].width, &images[0].height, program.textureLoader.textureFolder, false);
 	glfwSetWindowIcon(window, 1, images);
+
+	// load and create cursors
+	cursors[NORMAL] = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
+	GLFWimage drawCursor = GLFWimage();
+	drawCursor.pixels = program.textureLoader.loadTextureData("cursor_draw.png", &drawCursor.width, &drawCursor.height, program.textureLoader.textureFolder, false);
+	cursors[DRAW] = glfwCreateCursor(&drawCursor, 8, 8);
 
 	// set up the viewport (xpos, ypos, w, h)
 	int currentWidth, currentHeight;
@@ -128,9 +134,27 @@ void Window::initialize()
 	};
 }
 
-void Window::setTitle(const char* title)
+void Window::setCursor(CURSOR_TYPE cursor)
 {
-	glfwSetWindowTitle(window, title);
+	glfwSetCursor(window, cursors[cursor]);
+}
+
+void Window::setTitle(const char* _title)
+{
+	title = _title;
+
+	// no file is opened, just show "blue"
+	if (title == "")
+	{
+		glfwSetWindowTitle(window, titleBase);
+	}
+	else
+	{
+		if (program.editor.getDirtiness())
+			glfwSetWindowTitle(window, (title + "*" + " - " + titleBase).c_str());
+		else
+			glfwSetWindowTitle(window, (title + " - " + titleBase).c_str());
+	}
 }
 
 void Window::terminate()

@@ -25,13 +25,13 @@ uniform vec2 atlasSize;
 vec2 getTexCoord(vec2 atlasPos)
 {
 	return vec2(((atlasPos.x / atlasSize.x) * 16) + (gs_in[0].atlasCoord.x / atlasSize.x) * 16,
-	1 - (((atlasPos.y / atlasSize.y) * 16) + (gs_in[0].atlasCoord.y / atlasSize.y) * 16));
+	1 - (((atlasPos.y / atlasSize.y) * 16) + (((atlasSize.y / 16 - 1) - gs_in[0].atlasCoord.y) / atlasSize.y) * 16));
 }
 
 vec2 getBottomLeftTexCoord()
 {
 	return vec2(((0 / atlasSize.x) * 16) + (gs_in[0].atlasCoord.x / atlasSize.x) * 16,
-	1 - (((0 / atlasSize.y) * 16) + (gs_in[0].atlasCoord.y / atlasSize.y) * 16));
+	1 - (((0 / atlasSize.y) * 16) + (((atlasSize.y / 16 - 1) - gs_in[0].atlasCoord.y) / atlasSize.y) * 16));
 }
 
 void main() {

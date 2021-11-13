@@ -6,13 +6,13 @@
 class Input
 {
 	private:
-		Tool ignoreRepeatLMB[1] = { SELECT };
-		Tool ignoreRepeatRMB[1] = {};
+		Tool ignoreRepeatLMB[2] = { SELECT, BOX };
+		Tool ignoreRepeatRMB[2] = { SELECT, BOX };
 		bool firstMouseMovement = true;
 	public:
 		glm::vec2 mousePos;
 		glm::vec2 mouseMovement;
-		bool ctrl_down = false, shift_down = false, alt_down = false, lmb_down = false, rmb_down = false;
+		bool ctrl_down = false, shift_down = false, alt_down = false, lmb_down = false, rmb_down = false, lmb_down_last = false, rmb_down_last = false;
 
 		void setup();
 		void mouse_button_repeat(GLFWwindow* window);

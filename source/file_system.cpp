@@ -228,6 +228,8 @@ std::vector<std::string>& FileSystem::getInDirRecursive(const char* directory, b
 
 void FileSystem::updateTextures()
 {
+	std::cout << "Updating textures..." << std::endl;
+
 	bool firstUpdate = program.render.textureAtlas == nullptr;
 
 	// update the textures from the content folder
@@ -242,10 +244,14 @@ void FileSystem::updateTextures()
 			program.editor.update_atlas_coords(program.render.textureAtlas);
 		}
 	}
+
+	std::cout << "Textures updated" << std::endl;
 }
 
 void FileSystem::loadGUITextures()
 {
+	std::cout << "Loading GUI textures..." << std::endl;
+
 	if (DEBUG_FILE_LOADING) std::cout << "loading GUI textures" << std::endl;
 	std::string guiTextureFolder = program.textureLoader.textureFolder + "gui/";
 	std::vector<std::string>& filesInFolder = getInDirRecursive(guiTextureFolder.c_str(), true, true, false, true, imageExtensions);
@@ -257,18 +263,23 @@ void FileSystem::loadGUITextures()
 		program.gui.guiTextures.insert({fileNames[i], textures[i]->ID});
 	}
 	if (DEBUG_FILE_LOADING) std::cout << "GUI textures successfully loaded" << std::endl;
+	std::cout << "GUI textures loaded" << std::endl;
 }
 
 TextureAtlas* FileSystem::loadContentAsAtlas()
 {
+	std::cout << "Loading textures from content..." << std::endl;
 	if (contentDir == "") { std::cout << "Tried to load content without the folder being set" << std::endl; return nullptr; }
 	std::vector<std::string>& filesInContent = getInDirRecursive(contentDir.c_str(), true, true, true, true, imageExtensions);
 	TextureAtlas* atlas = program.textureLoader.loadTextureAtlas(filesInContent, false);
+	std::cout << "Textures loaded from content" << std::endl;
 	return atlas;
 }
 
 void FileSystem::tryLoadConfigs()
 {
+	std::cout << "Loading configuration files..." << std::endl;
+
 	/// set file format options
 	config.setOptions
 	(
@@ -309,6 +320,11 @@ void FileSystem::tryLoadConfigs()
 		dirs.add("content", Setting::TypeString);
 		dirs["content"] = "";
 	}
+	if (!dirs.exists("blfDir"))
+	{
+		dirs.add("blfDir", Setting::TypeString);
+		dirs["blfDir"] = "";
+	}
 	if (!dirs.exists("blf"))
 	{
 		dirs.add("blf", Setting::TypeString);
@@ -327,23 +343,35 @@ void FileSystem::tryLoadConfigs()
 	}
 	contentDir = stringContent;
 
+	std::string stringBlfDir = dirs["blfDir"].c_str();
+	if (!std::filesystem::exists(std::filesystem::path(stringBlfDir)))
+	{
+		dirs["blfDir"] = "";
+		stringBlfDir = "";
+	}
+	blfDir = stringBlfDir;
+
 	std::string stringBlf = dirs["blf"].c_str();
 	if (!std::filesystem::exists(std::filesystem::path(stringBlf)))
 	{
 		dirs["blf"] = "";
 		stringBlf = "";
 	}
-	blfDir = stringBlf;
+	blfFile = stringBlf;
 
 	for (int i = 0; i < dirs["ignores"].getLength(); i++)
 	{
 		std::string ignorePathString = dirs["ignores"][i].c_str();
 		ignoreList.push_back(ignorePathString);
 	}
+
+	std::cout << "Configuration files loaded" << std::endl;
 }
 
 void FileSystem::trySaveConfigs()
 {
+	std::cout << "Saving configuration files..." << std::endl;
+
 	// Write out the updated configuration.
 	try
 	{
@@ -354,5 +382,22 @@ void FileSystem::trySaveConfigs()
 	{
 		std::cerr << "I/O error while writing file: " << config_file << std::endl;
 		return;
+	}
+
+	std::cout << "Configuration files saved" << std::endl;
+}
+
+void FileSystem::startNewFile()
+{
+	program.editor.delete_all();
+	blfFile = "";
+	program.windowManager.setTitle("untitled.blf");
+}
+
+void FileSystem::tryOpenLastFile()
+{
+	if (blfFile != "")
+	{
+		program.gui.popupToggles[REOPEN_CONTEXT] = true;
 	}
 }

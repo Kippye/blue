@@ -390,8 +390,7 @@ TextureAtlas* TextureLoader::loadTextureAtlas(std::vector<std::string> fullPaths
 	{
 		for (int x = 0; x < tilesPerRow; x++)
 		{
-
-			if (total >= fullPaths.size()) { break; }
+			if (total >= fullPaths.size()){ break; }
 
 			int width, height;
 			unsigned int ID;
@@ -418,17 +417,24 @@ glm::vec2 TextureLoader::getAtlasCoords(TextureAtlas* atlas, int index)
 	if (atlas == nullptr) { std::cerr << "getAtlasCoords: atlas == nullptr" << std::endl; return glm::vec2(0.0f, 0.0f); }
 	
 	// since ive done some weird shit these are actually flipped on the Y axis
-	glm::vec2 pos = glm::vec2(1.0f);
-	pos.y = atlas->height / 16 - 1 - floor(index / (atlas->width / 16));
-	pos.x = index - ((atlas-> height / 16 - 1 - pos.y) * (atlas->width / 16 - 1)) - (atlas->height / 16 - 1 - pos.y);
-	return pos;
+	glm::vec2 coords;
+	// 3 - (floor(10 / 5)) = 1
+	coords.y = floor(index / (atlas->width / 16));
+	//coords.y = (atlas->height / 16 - 1) + floor(i / (atlas->width / 16));
+	// 10 - ((3 - 2) * 4) - (3 - 2) = 4 - 1 = 3
+	//coords.x = i - ((atlas->height / 16 - 1 - coords.y) * (atlas->width / 16 - 1)) - (atlas->height / 16 - 1 - coords.y);
+	// 10 - (2 * 5) = 10 - 10 = 0
+	coords.x = index - (floor(index / (atlas->width / 16)) * (atlas->width / 16));
+
+	std::cout << coords.x << "; " << coords.y << std::endl;
+	return coords;
 }
 
 unsigned int TextureLoader::getAtlasTextureIndex(TextureAtlas* atlas, glm::vec2 coords)
 {
 	if (atlas == nullptr) { std::cerr << "getAtlasTextureIndex: atlas == nullptr" << std::endl; return 0; }
 	
-	return (((atlas->height / 16 - 1 - coords.y) * (atlas->width / 16)) + (coords.x));
+	return (coords.y * (atlas->width / 16)) + coords.x;
 }
 
 unsigned int TextureLoader::getAtlasTextureIndex(TextureAtlas* atlas, const char* textureName)
@@ -436,18 +442,24 @@ unsigned int TextureLoader::getAtlasTextureIndex(TextureAtlas* atlas, const char
 	if (atlas == nullptr) { std::cerr << "getAtlasTextureIndex: atlas == nullptr" << std::endl; return 0; }
 	
 	glm::vec2 coords = getAtlasTextureCoords(atlas, textureName);
-	return (((atlas->height / 16 - 1 - coords.y) * (atlas->width / 16)) + (coords.x));
+	return (coords.y * (atlas->width / 16)) + coords.x;
 }
 
 std::string TextureLoader::getAtlasTexturePath(TextureAtlas* atlas, glm::vec2 coords)
 {
 	if (atlas == nullptr) { std::cerr << "getAtlasTexturePath: atlas == nullptr" << std::endl; return std::string("N/A"); }
 	
-	if (DEBUG_TEXTURE_LOADING) std::cout << "incoords: " << coords.x << "; " << coords.y << std::endl;
-	coords.y = atlas->height / 16 - 1 - coords.y;
-	int index = (coords.y * (atlas->width / 16)) + (coords.x);
-	if (DEBUG_TEXTURE_LOADING) std::cout << "coords: " << coords.x << "; " << coords.y << std::endl;
-	if (DEBUG_TEXTURE_LOADING) std::cout << "index: " << index << std::endl;
+	int index = (coords.y * (atlas->width / 16)) + coords.x;
+	int unitWidth = atlas->width / 16;
+	int unitHeight = atlas->height / 16;
+
+	//std::cout << "|| getAtlasTexturePath ||" << std::endl;
+	//std::cout << "Atlas size:" << atlas->width << "; " << atlas->height << std::endl;
+	//std::cout << "In coords: " << coords.x << "; " << coords.y << std::endl;
+	//std::cout << "Texture file count:" << atlas->textureFiles.size() << std::endl;
+	//std::cout << "Calculated index: " << index << std::endl;
+	//std::cout << "Texture at index: " << atlas->textureFiles[index] << std::endl;
+
 	return atlas->textureFiles[index];
 }
 
@@ -458,13 +470,11 @@ glm::vec2 TextureLoader::getAtlasTextureCoords(TextureAtlas* atlas, std::string 
  //std::cout << "texPath: " << texturePath << std::endl;
 	for (int i = 0; i < atlas->textureFiles.size(); i++)
 	{
-			 //std::cout << atlas->textureFiles[i] << std::endl;
+		glm::vec2 coords = getAtlasCoords(atlas, i);
+
 		if (atlas->textureFiles[i] == texturePath)
 		{
 
-			glm::vec2 coords;
-			coords.y = (atlas->height / 16 - 1) - floor(i / (atlas->width / 16));
-			coords.x = i - ((atlas->height / 16 - 1 - coords.y) * (atlas->width / 16 - 1)) - (atlas->height / 16 - 1 - coords.y);
 
 			return coords;
 		}

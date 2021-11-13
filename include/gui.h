@@ -19,7 +19,8 @@ enum GUI_POPUP
 {
 	STATUS,
 	IGNORE_LIST,
-	SAVE_CONTEXT
+	SAVE_CONTEXT,
+	REOPEN_CONTEXT
 };
 
 enum GUI_PROMPT
@@ -58,7 +59,7 @@ struct GuiSelections
 {
 	public:
 		int currentTextureSelection = 0;
-		int currentTextureModeSelection = 0;
+		int currentTextureModeSelection = 1;
 		int currentTileOverlapModeSelection = 1;
 		int currentGridModeSelection = 0;
 		const char* tileTextureModeOptions[2] = { "stretch", "tile" };

@@ -13,14 +13,23 @@ void Input::processInput(GLFWwindow* window)
 {
 	if (program.file_system.contextOpen) { return; }
 
+	if (program.windowManager.hasFocus)
+		program.editor.updateToolPos(mousePos);
+	if (program.gui.guiHovered)
+		program.windowManager.setCursor(NORMAL);
+	else
+		program.windowManager.setCursor(DRAW);
+
 	/// bools
 	// modifiers, wait why do i even have these? oh right cus there aint no modifiers here...
 	shift_down = (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS);
 	ctrl_down = (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS);
 	alt_down = (glfwGetKey(window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS);
 
+	lmb_down_last = lmb_down;
 	lmb_down = (!program.gui.guiHovered && glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS);
-	rmb_down = (!program.gui.guiHovered && glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS);
+	rmb_down_last = rmb_down;
+	rmb_down = (!program.gui.guiHovered && glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS);
 	/// drawing
 	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
 	{
@@ -30,14 +39,18 @@ void Input::processInput(GLFWwindow* window)
 			// has the repetition delay passed?
 			if (program.render.mouse_repeat)
 			{
+				bool isToolIgnored = false;
 				// not using a tool that shouldnt be repeated
 				for (Tool tool : ignoreRepeatLMB)
 				{
-					if (tool != program.editor.getTool())
+					if (tool == program.editor.getTool())
 					{
-						program.editor.tool_use();
+						isToolIgnored = true;
 					}
 				}
+
+				if (!isToolIgnored)
+				program.editor.tool_use();
 
 				program.render.mouse_button_delay = 0.0f;
 			}
@@ -57,14 +70,18 @@ void Input::processInput(GLFWwindow* window)
 			// has the repetition delay passed?
 			if (program.render.mouse_repeat)
 			{
+				bool isToolIgnored = false;
 				// not using a tool that shouldnt be repeated
 				for (Tool tool : ignoreRepeatRMB)
 				{
-					if (tool != program.editor.getTool())
+					if (tool == program.editor.getTool())
 					{
-						program.editor.tool_use_secondary();
+						isToolIgnored = true;
 					}
 				}
+
+				if (!isToolIgnored)
+				program.editor.tool_use_secondary();
 
 				program.render.mouse_button_delay = 0.0f;
 			}
@@ -114,9 +131,17 @@ void Input::key_event(GLFWwindow* window, int key, int scancode, int action, int
 				if (program.gui.guiWantKeyboard) { return; }
 				program.editor.setTool(PLACE);
 			break;
+			case GLFW_KEY_3:
+				if (program.gui.guiWantKeyboard) { return; }
+				program.editor.setTool(BOX);
+				break;
 			// and so on...
 			case GLFW_KEY_BACKSPACE: // delete
-				if (program.gui.guiFocused) { return; }
+				if (program.gui.guiWantKeyboard) { return; }
+				program.editor.delete_selection();
+			break;
+			case GLFW_KEY_DELETE: // delete
+				if (program.gui.guiWantKeyboard) { return; }
 				program.editor.delete_selection();
 			break;
 			/// program manipulators
@@ -125,6 +150,20 @@ void Input::key_event(GLFWwindow* window, int key, int scancode, int action, int
 				glfwSetWindowShouldClose(window, true);
 			break;
 			/// shortcut keys that should work even when UI is focused
+			case GLFW_KEY_N: 
+				if (ctrl_down) // create a new empty file
+				{
+					// save changes first?
+					if (program.editor.getDirtiness())
+					{
+						program.gui.popupToggles[SAVE_CONTEXT] = true;
+					}
+					else
+					{
+						program.file_system.startNewFile();
+					}
+				}
+			break;
 			case GLFW_KEY_I:
 				if (ctrl_down) // pop up open dialog
 				{

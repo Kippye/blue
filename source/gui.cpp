@@ -8,6 +8,7 @@
 #include <iostream>
 #include <iterator>
 #include <algorithm>
+#include <filesystem>
 
 class Program;
 extern Program program;
@@ -15,6 +16,8 @@ extern Program program;
 // ran only once when either program starts
 void Gui::guiInit(Window* windowManager)
 {
+	std::cout << "Initializing program GUI..." << std::endl;
+
 	window = windowManager;
 
 	IMGUI_CHECKVERSION();
@@ -82,6 +85,8 @@ void Gui::guiInit(Window* windowManager)
 	colors[ImGuiCol_ModalWindowDimBg]       = ImVec4(0.80f, 0.80f, 0.80f, 0.35f);
 
 	gd.normalButtonColor = colors[ImGuiCol_Button];
+
+	std::cout << "Program GUI initialized" << std::endl;
 }
 
 void Gui::addEditorGui()
@@ -124,7 +129,7 @@ void Gui::addEditorGui()
 				ImGui::BulletText("select tiles with LMB ");
 				ImGui::BulletText("multiselect with RMB ");
 				ImGui::BulletText("box select by dragging ");
-				ImGui::BulletText("single tiles' properties will be shown in the properties tab ");
+				ImGui::BulletText("selected tiles' properties will be shown in the properties tab ");
 				ImGui::PopTextWrapPos();
 			ImGui::EndTooltip();
 		}
@@ -149,14 +154,34 @@ void Gui::addEditorGui()
 		}
 		ImGui::PopStyleColor();
 
+		currentToolButtonX += s.editorButtonDistance + s.editorButtonOffset;
+
+		ImGui::SetCursorPos(ImVec2(currentToolButtonX, 0.0f));
+		// box draw tool button
+		if (program.editor.getTool() == BOX)
+		{
+			ImGui::PushStyleColor(ImGuiCol_Button, gd.selectedButtonColor);
+		}
+		else
+		{
+			ImGui::PushStyleColor(ImGuiCol_Button, gd.normalButtonColor);
+		}
+		if (ImGui::ImageButton((void*)(intptr_t)guiTextures["box"], s.editorButtonSize))
+		{
+			// update (to) place tool
+			// not selecting a new texture since none was selected, so just reusing the last one
+			program.editor.setTool(BOX);
+		}
+		ImGui::PopStyleColor();
+
 		if (ImGui::IsItemHovered())
 		{
 			ImGui::BeginTooltip();
 				ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
-				ImGui::Text("place/remove tool ");
-				ImGui::BulletText("place tiles with LMB or drag to draw ");
-				ImGui::BulletText("remove tiles with RMB or drag to remove ");
-				ImGui::BulletText("hold left CTRL to place on a grid ");
+				ImGui::Text("box draw tool ");
+				ImGui::BulletText("drag a box with lmb to create a tile that size ");
+				ImGui::BulletText("drag a box with rmb to fill the area with 1x1 tiles ");
+				ImGui::BulletText("hold left CTRL to snap the box start and end points to the grid ");
 				ImGui::PopTextWrapPos();
 			ImGui::EndTooltip();
 		}
@@ -253,6 +278,7 @@ void Gui::addPropertiesGui()
 	ImGui::SetNextWindowSizeConstraints(ImVec2(0, -1), ImVec2(window->SCREEN_WIDTH / 4, -1));
 	ImGui::SetNextWindowSize(ImVec2(s.propertiesPaneWidth, window->SCREEN_HEIGHT - s.bottomBarHeight));
 	ImGui::SetNextWindowPos(ImVec2(window->SCREEN_WIDTH - s.propertiesPaneWidth, 0.0));
+
 	ImGui::Begin("Tile properties", p_close, ImGuiWindowFlags_NoNav);
 		s.propertiesPaneWidth = ImGui::GetWindowWidth();
 		guiWantKeyboard = guiIO->WantCaptureKeyboard ? true : guiWantKeyboard;
@@ -268,6 +294,7 @@ void Gui::addPropertiesGui()
 			{
 				program.editor.moveTile(selection[0]->ID, glm::vec2(pos[0], pos[1]));
 			}
+
 			float size[2] = { selection[0]->location.Size.x, selection[0]->location.Size.y };
 			// size
 			if (ImGui::InputFloat2("Size ", size))
@@ -294,7 +321,7 @@ void Gui::addPropertiesGui()
 		}
 		else if (selection.size() > 0) // multiselect
 		{
-			// TODO i guess just run the above for every selected tile but with one UI element? i have no idea...
+			// TODO: i guess just run the above for every selected tile but with one UI element? i have no idea...
 			/// TEMP
 			ImGui::Text(("selected tile count: " + std::to_string(program.editor.selection.size())).c_str());
 			/// location
@@ -434,6 +461,7 @@ void Gui::addTextureSelectorGui()
 					{
 						glm::vec2 atCoords = program.textureLoader.getAtlasCoords(program.render.textureAtlas, total);
 						std::string textureName = program.textureLoader.getAtlasTexturePath(program.render.textureAtlas, atCoords);
+						std::cout << "AFDSFSAD"<<textureName << std::endl;
 
 						if (program.editor.getTool() == SELECT)
 						{
@@ -474,6 +502,29 @@ void Gui::addBottomBarGui()
 	ImGui::Begin("Bottom bar", p_close, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
 		ImGui::SetCursorPos(ImVec2(0.0f, 0.0f));
 		
+		if (ImGui::Button("New", ImVec2(s.bottomBarButtonWidth, s.bottomBarHeight)))
+		{
+			// save changes first?
+			if (program.editor.getDirtiness())
+			{
+				program.gui.popupToggles[SAVE_CONTEXT] = true;
+			}
+			else
+			{
+				program.file_system.startNewFile();
+			}
+		}
+		if (ImGui::IsItemHovered())
+		{
+			ImGui::BeginTooltip();
+			ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+			ImGui::Text("start a new unsaved BLF file ");
+			ImGui::BulletText("shortcut: left CTRL + N ");
+			ImGui::PopTextWrapPos();
+			ImGui::EndTooltip();
+		}
+
+		ImGui::SetCursorPos(ImVec2(s.bottomBarButtonWidth + 20.0f, 0.0f));
 		if (ImGui::Button("Load", ImVec2(s.bottomBarButtonWidth, s.bottomBarHeight)))
 		{
 			openFileDialog(OPEN);
@@ -488,7 +539,7 @@ void Gui::addBottomBarGui()
 			ImGui::EndTooltip();
 		}
 
-		ImGui::SetCursorPos(ImVec2(s.bottomBarButtonWidth + 20.0f, 0.0f));
+		ImGui::SetCursorPos(ImVec2((s.bottomBarButtonWidth + 20.0f) * 2, 0.0f));
 		if (ImGui::Button("Save", ImVec2(s.bottomBarButtonWidth, s.bottomBarHeight)))
 		{
 			openFileDialog(SAVE);
@@ -503,7 +554,7 @@ void Gui::addBottomBarGui()
 			ImGui::EndTooltip();
 		}
 
-		ImGui::SetCursorPos(ImVec2((s.bottomBarButtonWidth + 20.0f) * 2, 0.0f));
+		ImGui::SetCursorPos(ImVec2((s.bottomBarButtonWidth + 20.0f) * 3, 0.0f));
 		if (ImGui::Button("Save as", ImVec2(s.bottomBarButtonWidth, s.bottomBarHeight)))
 		{
 			openFileDialog(SAVE_AS);
@@ -521,7 +572,7 @@ void Gui::addBottomBarGui()
 		ImGui::SetCursorPos(ImVec2(window->SCREEN_WIDTH - ((s.bottomBarButtonWidth * 3) + 40), 0.0f));
 		if (ImGui::Button("Reset camera", ImVec2(s.bottomBarButtonWidth, s.bottomBarHeight)))
 		{
-			program.camera.cameraPos = glm::vec3(program.camera.cameraPos.x, program.camera.cameraPos.y, program.camera.blurZoomLevel);
+			program.camera.cameraPos = glm::vec3(0, 0, program.camera.blurZoomLevel);
 		}
 
 		ImGui::SetCursorPos(ImVec2(window->SCREEN_WIDTH - ((s.bottomBarButtonWidth * 2) + 20), 0.0f));
@@ -541,6 +592,8 @@ void Gui::addBottomBarGui()
 
 void Gui::addPopupGui()
 {
+	ImVec2 centeredPos = ImVec2(program.windowManager.SCREEN_WIDTH / 2, program.windowManager.SCREEN_HEIGHT / 2);
+
 	// Movable info panel showing information such as camera position, placed tile count and FPS
 	if (popupToggles[STATUS])
 	{
@@ -590,19 +643,68 @@ void Gui::addPopupGui()
 	}
 	if (popupToggles[SAVE_CONTEXT])
 	{
-		if (ImGui::Begin("Unsaved changes", &popupToggles[SAVE_CONTEXT], ImGuiWindowFlags_AlwaysAutoResize))
+		ImGui::SetNextWindowPos(centeredPos);
+		if (ImGui::Begin("Unsaved changes", &popupToggles[SAVE_CONTEXT], ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings))
 		{
 			guiWantKeyboard = guiIO->WantCaptureKeyboard ? true : guiWantKeyboard;
 
-			if (ImGui::Button("Save and exit", ImVec2(s.bottomBarButtonWidth, s.bottomBarHeight)))
+			if (program.programWillClose)
 			{
-				openFileDialog(SAVE);
+				if (ImGui::Button("Save and exit", ImVec2(s.bottomBarButtonWidth, s.bottomBarHeight)))
+				{
+					openFileDialog(SAVE);
+				}
+			}
+			else
+			{
+				if (ImGui::Button("Save", ImVec2(s.bottomBarButtonWidth, s.bottomBarHeight)))
+				{
+					openFileDialog(SAVE);
+				}
 			}
 			ImGui::SameLine();
-			if (ImGui::Button("Exit", ImVec2(s.bottomBarButtonWidth, s.bottomBarHeight)))
+			// clicking the exit button will cause the program to close.
+			if (program.programWillClose)
 			{
-				popupToggles[SAVE_CONTEXT] = false;
-				program.quitProgram = true;
+				if (ImGui::Button("Exit", ImVec2(s.bottomBarButtonWidth, s.bottomBarHeight)))
+				{
+					popupToggles[SAVE_CONTEXT] = false;
+					program.quitProgram = true;
+				}
+			}
+			else
+			{
+				if (ImGui::Button("Discard", ImVec2(s.bottomBarButtonWidth, s.bottomBarHeight)))
+				{
+					popupToggles[SAVE_CONTEXT] = false;
+					program.file_system.startNewFile();
+				}
+			}
+			ImGui::End();
+		}
+		else
+		{
+			ImGui::End();
+		}
+	}
+	if (popupToggles[REOPEN_CONTEXT])
+	{
+		ImGui::SetNextWindowPos(centeredPos);
+		if (ImGui::Begin("Reload last opened file?", &popupToggles[REOPEN_CONTEXT], ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings))
+		{
+			guiWantKeyboard = guiIO->WantCaptureKeyboard ? true : guiWantKeyboard;
+
+			if (ImGui::Button("Yes", ImVec2(s.bottomBarButtonWidth, s.bottomBarHeight)))
+			{
+				popupToggles[REOPEN_CONTEXT] = false;
+				program.blf_converter.load_file(program.file_system.blfFile.c_str());
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("No", ImVec2(s.bottomBarButtonWidth, s.bottomBarHeight)))
+			{
+				popupToggles[REOPEN_CONTEXT] = false;
+				program.file_system.startNewFile();
+				program.file_system.trySaveConfigs();
 			}
 			ImGui::End();
 		}
@@ -622,7 +724,7 @@ void Gui::openFileDialog(GUI_PROMPT type)
 		{
 			promptType = DIR;
 			program.file_system.contextOpen = true;
-			ImGuiFileDialog::Instance()->OpenDialog("ChooseContentFolder", "Select the content folder", nullptr, "C:\\", 1);
+			ImGuiFileDialog::Instance()->OpenDialog("ChooseContentFolder", "Select the content folder", nullptr, program.file_system.contentDir == "" ? "C:\\" : program.file_system.contentDir, 1);
 			// visual settings
 			ImGuiFileDialog::Instance()->SetExtentionInfos(".", ImVec4(1, 1, 0.5f, 0.9f));
 			break;
@@ -632,7 +734,11 @@ void Gui::openFileDialog(GUI_PROMPT type)
 		{
 			promptType = OPEN;
 			std::string startDir = "C:\\";
-			if (program.file_system.blfDir != "")
+			if (program.file_system.blfFile != "")
+			{
+				startDir = program.file_system.blfFile;
+			}
+			else if (program.file_system.blfDir != "")
 			{
 				startDir = program.file_system.blfDir;
 			}
@@ -646,9 +752,9 @@ void Gui::openFileDialog(GUI_PROMPT type)
 
 		case SAVE:
 		{
-			if (program.file_system.blfDir != "") // we have a file open, save changes to it
+			if (program.file_system.blfFile != "") // we have a file open, save changes to it
 			{
-				program.blf_converter.write_file(program.file_system.blfDir.c_str());
+				program.blf_converter.write_file(program.file_system.blfFile.c_str());
 			}
 			else // we need to create a new file, open Save as dialog
 			{
@@ -715,8 +821,11 @@ void Gui::checkFileDialog()
 					if (selectedFilename.substr(selectedFilename.length() - 4, selectedFilename.length() - 3) != "." && selectedFilename.substr(selectedFilename.length() - 4) == ".blf")
 					{
 						// change currently selected blf
-						program.file_system.blfDir = ImGuiFileDialog::Instance()->GetFilePathName();
-						program.file_system.changeSetting<std::string>("dirs.blf", program.file_system.blfDir, libconfig::Setting::TypeString);
+						program.file_system.blfFile = ImGuiFileDialog::Instance()->GetFilePathName();
+						program.file_system.blfDir = std::filesystem::path(ImGuiFileDialog::Instance()->GetFilePathName()).parent_path().string() + "\\";
+
+						program.file_system.changeSetting<std::string>("dirs.blf", program.file_system.blfFile, libconfig::Setting::TypeString);
+						program.file_system.changeSetting<std::string>("dirs.blfDir", program.file_system.blfDir, libconfig::Setting::TypeString);
 						// try to load the file
 						program.blf_converter.load_file(ImGuiFileDialog::Instance()->GetFilePathName().c_str());
 
@@ -745,10 +854,17 @@ void Gui::checkFileDialog()
 					if (selectedFilename.substr(selectedFilename.length() - 4, selectedFilename.length() - 3) != "." && selectedFilename.substr(selectedFilename.length() - 4) == ".blf")
 					{
 						// change currently selected blf
-						program.file_system.blfDir = ImGuiFileDialog::Instance()->GetFilePathName();
-						program.file_system.changeSetting<std::string>("dirs.blf", program.file_system.blfDir, libconfig::Setting::TypeString);
+						program.file_system.blfFile = ImGuiFileDialog::Instance()->GetFilePathName();
+						program.file_system.blfDir = std::filesystem::path(ImGuiFileDialog::Instance()->GetFilePathName()).parent_path().string() + "\\";
+
+						program.file_system.changeSetting<std::string>("dirs.blf", program.file_system.blfFile, libconfig::Setting::TypeString);
+						program.file_system.changeSetting<std::string>("dirs.blfDir", program.file_system.blfDir, libconfig::Setting::TypeString);
 						// try to save the file
 						program.blf_converter.write_file(ImGuiFileDialog::Instance()->GetFilePathName().c_str());
+
+						// update title
+						std::filesystem::path blfPath = std::filesystem::path(ImGuiFileDialog::Instance()->GetFilePathName());
+						program.windowManager.setTitle(blfPath.filename().string().c_str());
 
 						// close
 						program.file_system.contextOpen = false;
@@ -778,6 +894,7 @@ void Gui::drawGui()
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
+
 	// add guis to be rendered
 	addEditorGui();
 	addPropertiesGui();

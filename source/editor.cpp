@@ -4,13 +4,13 @@
 #include <algorithm>
 #include <iterator>
 
-// TEMP
+// unneeded yet still here
 #include <glm/gtx/string_cast.hpp>
 
 class Program;
 extern Program program;
 
-Editor::Editor(){}
+Editor::Editor() {}
 
 Tool Editor::getTool()
 {
@@ -40,7 +40,7 @@ void Editor::setGridMode(GRID_MODE newGridMode)
 	{
 		for (int i = tiles.size() - 1; i >= 0; i--)
 		{
-			glm::vec4 newPos = mymath::round_to_grid(tiles[i].location.Position);
+			glm::vec4 newPos = mymath::floor_to_grid(tiles[i].location.Position);
 			tiles[i].location.Position = newPos;
 			// update visuals
 			program.render.instanceTransformData[i].x = newPos.x;
@@ -62,14 +62,14 @@ void Editor::setDirtiness(bool to)
 {
 	dirty = to;
 
-	program.windowManager.setTitle(dirty == true ? "blue *" : "blue");
+	program.windowManager.setTitle(program.windowManager.title.c_str());
 }
 
 bool Editor::checkForOverlaps(Bounding_Box &box, glm::vec4 &pos)
 {
 	for (int index = tiles.size() - 1; index >= 0; index--)
 	{
-		if (box.overlaps(pos, tiles[index].location.Position, tiles[index].location.box))
+		if (tiles[index].location.box.overlaps(tiles[index].location.Position, pos, box))
 		{
 			return true;
 		}
@@ -184,6 +184,19 @@ void Editor::deselect_all()
 	program.render.set_tile_selection(indices, false);
 }
 
+void Editor::delete_all()
+{
+	std::vector<int> IDs = {};
+
+	selection.clear();
+
+	for (int i = tiles.size() - 1; i >= 0; i--)
+	{
+		tiles[i];
+		remove_tile(i);
+	}
+}
+
 void Editor::delete_selection()
 {
 	if (selection.size() == 0) { return; }
@@ -213,14 +226,30 @@ void Editor::updateToolPos(glm::vec2 &mousePos)
 
 	if (!program.gui.guiHovered && !program.file_system.contextOpen)
 	{
-		if (selectedTool == SELECT && program.input.lmb_down)
+		if (selectedTool == SELECT && program.input.lmb_down && program.input.lmb_down_last)
 		{
 			glm::vec4 worldMousePos = program.camera.screen_to_world(mousePos);
 			glm::vec4 worldCachedMousePos = program.camera.screen_to_world(cachedToolPos);
-			deselect_all();
+			//deselect_all();
 
 			std::vector<int> indices = {};
-			std::vector<E_Tile*>& tilesInArea = *getTilesInArea(Bounding_Box(glm::vec2(worldMousePos.x - worldCachedMousePos.x, worldMousePos.y - worldCachedMousePos.y)), worldCachedMousePos, indices);
+			
+			glm::vec2 dragArea = glm::vec2(worldMousePos.x - worldCachedMousePos.x, worldMousePos.y - worldCachedMousePos.y);
+			glm::vec4 boundingBoxPos = worldCachedMousePos;
+
+			if (worldMousePos.x < worldCachedMousePos.x)
+			{
+				dragArea.x = worldCachedMousePos.x - worldMousePos.x;
+				boundingBoxPos.x -= worldCachedMousePos.x - worldMousePos.x;
+			}
+
+			if (worldMousePos.y < worldCachedMousePos.y)
+			{
+				dragArea.y = worldCachedMousePos.y - worldMousePos.y;
+				boundingBoxPos.y -= worldCachedMousePos.y - worldMousePos.y;
+			}
+
+			std::vector<E_Tile*>& tilesInArea = *getTilesInArea(Bounding_Box(dragArea), boundingBoxPos, indices);
 
 			if (tilesInArea.size() > 0)
 			{
@@ -234,6 +263,87 @@ void Editor::updateToolPos(glm::vec2 &mousePos)
 				program.render.set_tile_selection(indices, true);
 			}
 		}
+		else if (selectedTool == BOX)
+		{
+			// just released lmb, draw the tile(s)
+			if (program.input.lmb_down == false && program.input.lmb_down_last == true)
+			{
+				glm::vec4 worldMousePos = program.camera.screen_to_world(mousePos);
+				glm::vec4 worldCachedMousePos = program.camera.screen_to_world(cachedToolPos);
+
+				// get area size
+				glm::vec2 areaSize = glm::vec2(abs(worldMousePos.x - worldCachedMousePos.x), abs(worldMousePos.y - worldCachedMousePos.y));
+				// find the start position depending on drag start and end positions (because size be retarded like that)
+				glm::vec4 startPos = glm::vec4(0.0f);
+				startPos.x = std::min(worldMousePos.x, worldCachedMousePos.x);
+				startPos.y = std::min(worldMousePos.y, worldCachedMousePos.y);
+
+				// apply snapping if needed
+				startPos = program.input.ctrl_down || gridMode != GRID_MODE_NORMAL ? mymath::round_to_grid(startPos) : startPos;
+				areaSize = program.input.ctrl_down || gridMode != GRID_MODE_NORMAL ? mymath::round_to_grid(areaSize) : areaSize;
+
+				// create tile or tiles
+				std::cout << nextTile.visuals.textureName << std::endl;
+				if (nextTile.visuals.textureName == "" || areaSize == glm::vec2(0.0f, 0.0f)) return;
+
+				// check for overlaps if required
+				if (overlapMode == OVERLAP_NEVER || (overlapMode == OVERLAP_FREE && (program.input.ctrl_down || gridMode != GRID_MODE_NORMAL)))
+				{
+					// overlapping when not supposed to, don't place a tile
+					if (checkForOverlaps(Bounding_Box(areaSize), startPos)) { return; }
+				}
+
+				// place the tile
+				add_tile(tiles.emplace_back(Location(startPos, glm::vec3(areaSize, 1.0f)), nextTile.physics, nextTile.visuals));
+			}
+			// just released rmb, draw the tiles
+			else if (program.input.rmb_down == false && program.input.rmb_down_last == true)
+			{
+				glm::vec4 worldMousePos = program.camera.screen_to_world(mousePos);
+				glm::vec4 worldCachedMousePos = program.camera.screen_to_world(cachedToolPos);
+
+				// get area size
+				glm::vec2 areaSize = glm::vec2(abs(worldMousePos.x - worldCachedMousePos.x), abs(worldMousePos.y - worldCachedMousePos.y));
+				// find the start position depending on drag start and end positions (because size be retarded like that)
+				glm::vec4 startPos = glm::vec4(0.0f);
+				startPos.x = std::min(worldMousePos.x, worldCachedMousePos.x);
+				startPos.y = std::min(worldMousePos.y, worldCachedMousePos.y);
+
+				// apply snapping if needed
+				startPos = program.input.ctrl_down || gridMode != GRID_MODE_NORMAL ? mymath::round_to_grid(startPos) : startPos;
+				areaSize = mymath::round_to_grid(areaSize);
+
+				// create tile or tiles
+				if (nextTile.visuals.textureName == "" || areaSize == glm::vec2(0.0f, 0.0f)) return;
+
+				std::vector<E_Tile> tilesToPlace = {};
+
+				for (int y = 0; y < areaSize.y; y++)
+				{
+					for (int x = 0; x < areaSize.x; x++)
+					{
+						// check for overlaps if required
+						if (overlapMode == OVERLAP_NEVER || (overlapMode == OVERLAP_FREE && (program.input.ctrl_down || gridMode != GRID_MODE_NORMAL)))
+						{
+							// overlapping when not supposed to, don't place a tile
+							if (!checkForOverlaps(Bounding_Box(glm::vec2(1.0f)), startPos + glm::vec4(x, y, 0.0f, 0.0f)))
+							{
+								E_Tile tile = E_Tile(Location(startPos + glm::vec4(x, y, 0.0f, 0.0f), glm::vec3(1.0f)), nextTile.physics, nextTile.visuals);
+								tilesToPlace.push_back(tile);
+							}
+						}
+						else
+						{
+							E_Tile tile = E_Tile(Location(startPos + glm::vec4(x, y, 0.0f, 0.0f), glm::vec3(1.0f)), nextTile.physics, nextTile.visuals);
+							tilesToPlace.push_back(tile);
+						}
+					}
+				}
+
+				tiles.insert(tiles.end(), tilesToPlace.begin(), tilesToPlace.end());
+				add_tile(tilesToPlace);
+			}
+		}
 
 		toolPos = mousePos;
 	}
@@ -243,7 +353,10 @@ void Editor::update_atlas_coords(TextureAtlas* atlas)
 {
 	for (int i = 0; i < tiles.size(); i++)
 	{
+		std::cout << "ac: " << tiles[i].visuals.atlasCoords.x << tiles[i].visuals.atlasCoords.y << std::endl;
 		glm::vec2 atCoords = program.textureLoader.getAtlasTextureCoords(atlas, tiles[i].visuals.textureName);
+		std::cout << "acafter: " << atCoords.x << atCoords.y << std::endl;
+		std::cout << tiles[i].visuals.textureName << std::endl;
 		// i really dont know how to handle it being -1 but this will do for now...
 		if (atCoords != glm::vec2(-1.0f))
 		{
@@ -261,7 +374,7 @@ void Editor::update_atlas_coords(TextureAtlas* atlas)
 
 	// update nextTile too...
 	glm::vec2 atCoords = program.textureLoader.getAtlasTextureCoords(atlas, nextTile.visuals.textureName);
-	nextTile.visuals.atlasCoords = atCoords == glm::vec2(-1.0f) ? glm::vec2(0.0f, atlas->height / 16 - 1) : atCoords;
+	nextTile.visuals.atlasCoords = atCoords == glm::vec2(-1.0f) ? glm::vec2(0.0f, 0.0f) : atCoords;
 	nextTile.visuals.textureName = program.textureLoader.getAtlasTexturePath(atlas, nextTile.visuals.atlasCoords);
 	nextTile.visuals.atlasCoords = program.textureLoader.getAtlasTextureCoords(atlas, nextTile.visuals.textureName);
 
@@ -273,7 +386,7 @@ void Editor::moveTile(int index, glm::vec2 newPos)
 	// snap position to the grid if needed
 	if (gridMode != GRID_MODE_NORMAL)
 	{
-		newPos = mymath::round_to_grid(newPos);
+		newPos = mymath::floor_to_grid(newPos);
 	}
 
 	tiles[index].location.Position.x = newPos.x;
@@ -294,7 +407,7 @@ void Editor::moveTile(unsigned int ID, glm::vec2 newPos)
 	// snap position to the grid if needed
 	if (gridMode != GRID_MODE_NORMAL)
 	{
-		newPos = mymath::round_to_grid(newPos);
+		newPos = mymath::floor_to_grid(newPos);
 	}
 
 	tile->location.Position.x = newPos.x;
@@ -312,7 +425,7 @@ void Editor::resizeTile(int index, glm::vec2 newSize)
 	// snap even the size to the grid if needed
 	if (gridMode != GRID_MODE_NORMAL)
 	{
-		newSize = mymath::round_to_grid(newSize);
+		newSize = mymath::floor_to_grid(newSize);
 	}
 
 	tiles[index].location.Size.x = newSize.x;
@@ -334,7 +447,7 @@ void Editor::resizeTile(unsigned int ID, glm::vec2 newSize)
 	// snap even the size to the grid if needed
 	if (gridMode != GRID_MODE_NORMAL)
 	{
-		newSize = mymath::round_to_grid(newSize);
+		newSize = mymath::floor_to_grid(newSize);
 	}
 
 	tile->location.Size.x = newSize.x;
@@ -412,9 +525,10 @@ void Editor::tool_use()
 		}
 		case PLACE:
 		{
+			if (nextTile.visuals.textureName == "") return;
 			// get target position
 			glm::vec4 pos = program.camera.screen_to_world(toolPos);
-			pos = program.input.ctrl_down || gridMode != GRID_MODE_NORMAL ? mymath::round_to_grid(pos) : pos;
+			pos = program.input.ctrl_down || gridMode != GRID_MODE_NORMAL ? mymath::floor_to_grid(pos) : pos;
 			// check for overlaps if required
 			if (overlapMode == OVERLAP_NEVER || (overlapMode == OVERLAP_FREE && (program.input.ctrl_down || gridMode != GRID_MODE_NORMAL)))
 			{
@@ -425,11 +539,18 @@ void Editor::tool_use()
 			add_tile(tiles.emplace_back(Location(pos, nextTile.location.Size), nextTile.physics, nextTile.visuals));
 			break;
 		}
+		case BOX:
+		{
+			cachedToolPos = toolPos;
+			break;
+		}
 	};
 }
 
 void Editor::tool_use_secondary()
 {
+	if (program.gui.guiHovered || program.file_system.contextOpen) { return; }
+
 	switch(selectedTool)
 	{
 		case SELECT:
@@ -462,6 +583,11 @@ void Editor::tool_use_secondary()
 			E_Tile* tile = positionToTile(program.camera.screen_to_world(toolPos), index);
 			if (tile != nullptr)
 			remove_tile(index);
+			break;
+		}
+		case BOX:
+		{
+			cachedToolPos = toolPos;
 			break;
 		}
 	};

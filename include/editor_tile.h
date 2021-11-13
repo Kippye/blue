@@ -29,7 +29,7 @@ class Physics
 {
 	public:
 		bool CollisionsEnabled = true;
-		bool Static = false;
+		bool Static = true;
 		Physics();
 		Physics(bool _CollisionsEnabled, bool _Static = false);
 };
@@ -39,7 +39,7 @@ class Visuals
 	public:
 		glm::vec2 atlasCoords = glm::vec2(0.0f);
 		std::string textureName = "";
-		TEXTUREMODE TextureMode = TEXTUREMODE_STRETCH;
+		TEXTUREMODE TextureMode = TEXTUREMODE_TILE;
 
 		Visuals();
 		Visuals(glm::vec2 _atlasCoords);

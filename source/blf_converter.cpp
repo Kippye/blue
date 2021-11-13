@@ -2,6 +2,7 @@
 #include <main.h>
 #include <iostream>
 #include <chrono>
+#include <filesystem>
 
 class Program;
 extern Program program;
@@ -40,6 +41,10 @@ void BLF_Converter::load_file(const char* path)
 		// TODO: load more tile options
 		program.editor.add_tile(program.editor.tiles.emplace_back(Location(glm::vec4(tile->x, tile->y, tile->z, 0.0), glm::vec3(tile->sizeX, tile->sizeY, 1.0f)), Physics(tile->collisionsEnabled, tile->_static), Visuals(program.textureLoader.getAtlasTextureCoords(program.render.textureAtlas, texturePath), texturePath, (TEXTUREMODE)tile->textureMode)));
 	}
+
+	// update title
+	std::filesystem::path blfPath = std::filesystem::path(path);
+	program.windowManager.setTitle(blfPath.filename().string().c_str());
 
 	auto end_time = std::chrono::high_resolution_clock::now();
 	auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
