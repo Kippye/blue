@@ -9,7 +9,6 @@ flat in vec2 tileSize;
 flat in vec2 texAtlasSize;
 flat in int shouldTile;
 flat in int selected;
-flat in vec4 color;
 
 uniform sampler2D texture1;
 
@@ -44,5 +43,5 @@ void main()
 		finalCoords = bottomLeftTexCoord + tiledTexCoord - (atlasTextureSize * vec2(0, 1));
 	}
 
-	FragColor = texture(texture1, finalCoords) * color + selectionColor;
+	FragColor = texture(texture1, finalCoords) + selectionColor;
 };

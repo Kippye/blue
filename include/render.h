@@ -10,6 +10,7 @@ enum INSTANCE_ARRAY_UPDATE
 	INSTANCE_ARRAY_UPDATE_ALL = 0,
 	INSTANCE_ARRAY_UPDATE_1 = 1 << 1,
 	INSTANCE_ARRAY_UPDATE_2 = 1 << 2,
+	INSTANCE_ARRAY_UPDATE_3 = 1 << 3,
 };
 
 class Render
@@ -33,11 +34,12 @@ class Render
 
 		glm::mat4 projection = glm::mat4(1.0f);
 
-		unsigned int VBO, VAO, EBO, instanceVBO, instanceAdditionalVBO;
+		unsigned int VBO, VAO, EBO, instanceVBO, instanceAdditionalVBO, instanceColorVBO;
 		TextureAtlas* textureAtlas;
 
 		std::vector<glm::vec4> instanceTransformData = {};
 		std::vector<glm::vec4> instanceAdditionalData = {};
+		std::vector<glm::vec4> instanceColorData = {};
 
 	public:
 		void setup();

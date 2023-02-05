@@ -39,6 +39,7 @@
  * [X] in-editor modifiable ignore list for filenames and / or directories
  * [X] selection tools like area [X], by type [X], etc
  * [1] support for storing tags in tiles (could be one string which is limiting or somehow a map of tags and their names)
+ * [2] variable grid size
  * [C] resize tool ‍GRRRRR
  * [C] undo, redo, if at all doable
  * [C] move tool (with arrow keys & move camera with it)

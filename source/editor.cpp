@@ -10,7 +10,7 @@
 class Program;
 extern Program program;
 
-Editor::Editor() {}
+Editor::Editor() { }
 
 Tool Editor::getTool()
 {
@@ -467,7 +467,13 @@ void Editor::changeTileVisuals(int index, Visuals visuals)
 	program.render.instanceAdditionalData[index].x = visuals.atlasCoords.x;
 	program.render.instanceAdditionalData[index].y = visuals.atlasCoords.y;
 	program.render.instanceAdditionalData[index].z = visuals.TextureMode == TEXTUREMODE_TILE;
+	program.render.instanceColorData[index].x = visuals.Color.x;
+	program.render.instanceColorData[index].y = visuals.Color.y;
+	program.render.instanceColorData[index].z = visuals.Color.z;
+	program.render.instanceColorData[index].w = visuals.Opacity;
+	// TODO: make it just update both at once
 	program.render.updateInstanceArray(INSTANCE_ARRAY_UPDATE_2);
+	program.render.updateInstanceArray(INSTANCE_ARRAY_UPDATE_3);
 
 	setDirtiness(true);
 }
@@ -481,7 +487,13 @@ void Editor::changeTileVisuals(unsigned int ID, Visuals visuals)
 	program.render.instanceAdditionalData[index].x = visuals.atlasCoords.x;
 	program.render.instanceAdditionalData[index].y = visuals.atlasCoords.y;
 	program.render.instanceAdditionalData[index].z = visuals.TextureMode == TEXTUREMODE_TILE;
+	program.render.instanceColorData[index].x = visuals.Color.x;
+	program.render.instanceColorData[index].y = visuals.Color.y;
+	program.render.instanceColorData[index].z = visuals.Color.z;
+	program.render.instanceColorData[index].w = visuals.Opacity;
+	// TODO: make it just update both at once
 	program.render.updateInstanceArray(INSTANCE_ARRAY_UPDATE_2);
+	program.render.updateInstanceArray(INSTANCE_ARRAY_UPDATE_3);
 
 	setDirtiness(true);
 }

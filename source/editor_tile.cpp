@@ -37,6 +37,19 @@ E_Tile::E_Tile(Location _location, Physics _physics, Visuals _visuals)
 	lastID++;
 }
 
+E_Tile::E_Tile(Location _location, Physics _physics, Visuals _visuals, bool* _tags)
+{
+	location = _location;
+	physics = _physics;
+	visuals = _visuals;
+	for (int i = 0; i < sizeof(tags) / sizeof(bool); i++)
+	{
+		tags[i] = _tags[i];
+  	}
+	ID = lastID;
+	lastID++;
+}
+
 Location::Location(){}
 // initialize with position
 Location::Location(glm::vec4 _Position, glm::vec3 _Size)
@@ -58,11 +71,13 @@ Physics::Physics(bool _CollisionsEnabled, bool _Static)
 Visuals::Visuals() {}
 // initialize with visibility setting and atlas coordinates
 Visuals::Visuals(glm::vec2 _atlasCoords) { atlasCoords = _atlasCoords; } // only texture set by default
-Visuals::Visuals(glm::vec2 _atlasCoords, std::string _textureName, TEXTUREMODE _TextureMode) // every setting cus too lazy to make 1 by 1
+Visuals::Visuals(glm::vec2 _atlasCoords, std::string _textureName, TEXTUREMODE _TextureMode, glm::vec4 _Color, float _Opacity) // every setting cus too lazy to make 1 by 1
 {
 	atlasCoords = _atlasCoords;
 	textureName = _textureName;
 	TextureMode = _TextureMode;
+	Color = _Color;
+	Opacity = _Opacity;
 }
 
 //Physics::Physics(bool _CollisionsEnabled = true, bool _Static) { CollisionsEnabled = _CollisionsEnabled; Static = _Static; }

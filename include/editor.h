@@ -5,6 +5,7 @@
 #include <glm.hpp>
 #include <vector>
 #include <map>
+#include <string.h>
 
 class E_Tile;
 
@@ -45,8 +46,10 @@ class Editor
         GRID_MODE gridMode = GRID_MODE_NORMAL;
 		bool dirty = false; // are there any unsaved changes?
     public:
+		static const int MAX_TAGS = 5;
 		// editor data
         std::vector<E_Tile> tiles = {};
+		std::vector<std::string> tags = std::vector(MAX_TAGS, std::string("NA"));
 		// tool data
         glm::vec2& toolPos = glm::vec2(0.0f);
         glm::vec2 cachedToolPos = glm::vec2(0.0f);

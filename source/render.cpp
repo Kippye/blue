@@ -22,6 +22,7 @@ void Render::setup()
 
 	glGenBuffers(1, &instanceVBO);
 	glGenBuffers(1, &instanceAdditionalVBO);
+	glGenBuffers(1, &instanceColorVBO);
 
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
@@ -67,6 +68,17 @@ void Render::updateInstanceArray(INSTANCE_ARRAY_UPDATE type)
 		glEnableVertexAttribArray(1);
 		glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
 		glVertexAttribDivisor(1, 1); // tell OpenGL this is an instanced vertex attribute.
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+	}
+
+	if (type == INSTANCE_ARRAY_UPDATE_ALL || type & INSTANCE_ARRAY_UPDATE_3)
+	{
+		glBindBuffer(GL_ARRAY_BUFFER, instanceColorVBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4) * instanceColorData.size(), instanceColorData.data(), GL_STATIC_DRAW);
+
+		glEnableVertexAttribArray(2);
+		glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+		glVertexAttribDivisor(2, 1); // tell OpenGL this is an instanced vertex attribute.
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 }
@@ -143,12 +155,14 @@ void Render::add_to_instance_data(E_Tile &tile)
 {
 	instanceTransformData.emplace_back(tile.location.Position.x, tile.location.Position.y, tile.location.Size.x, tile.location.Size.y);
 	instanceAdditionalData.emplace_back(tile.visuals.atlasCoords.x, tile.visuals.atlasCoords.y, tile.visuals.TextureMode == TEXTUREMODE_TILE, tile.selected);
+	instanceColorData.emplace_back(tile.visuals.Color.x, tile.visuals.Color.y, tile.visuals.Color.z, tile.visuals.Opacity);
 }
 
 void Render::erase_from_instance_data(int index)
 {
 	instanceTransformData.erase(instanceTransformData.begin() + index);
 	instanceAdditionalData.erase(instanceAdditionalData.begin() + index);
+	instanceColorData.erase(instanceColorData.begin() + index);
 }
 
 void Render::add_to_render_list(E_Tile &tile)
@@ -193,4 +207,5 @@ void Render::terminate()
     glDeleteBuffers(1, &VBO);
     glDeleteBuffers(1, &instanceVBO);
     glDeleteBuffers(1, &instanceAdditionalVBO);
+    glDeleteBuffers(1, &instanceColorVBO);
 }

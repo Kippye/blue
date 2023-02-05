@@ -5,6 +5,7 @@
 #include <gtc/matrix_transform.hpp>
 #include <gtc/type_ptr.hpp>
 #include <string>
+#include <vector>
 
 enum TEXTUREMODE
 {
@@ -40,10 +41,12 @@ class Visuals
 		glm::vec2 atlasCoords = glm::vec2(0.0f);
 		std::string textureName = "";
 		TEXTUREMODE TextureMode = TEXTUREMODE_TILE;
+		glm::vec4 Color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+		float Opacity = 1.0f;
 
 		Visuals();
 		Visuals(glm::vec2 _atlasCoords);
-		Visuals(glm::vec2 _atlasCoords, std::string _textureName, TEXTUREMODE _TextureMode);
+		Visuals(glm::vec2 _atlasCoords, std::string _textureName, TEXTUREMODE _TextureMode, glm::vec4 _Color, float _Opacity);
 };
 
 
@@ -54,6 +57,9 @@ class E_Tile
 	public:
 		unsigned int ID = 0;
 		bool selected = false;
+		// contains whether or not a specific index tag is applied to this tile
+		// TODO: should use a const
+		bool tags[5] = { false, false, false, false, false };
 		Location location;
 		Physics physics;
 		Visuals visuals;
@@ -62,6 +68,7 @@ class E_Tile
 		E_Tile(Physics _physics);
 		E_Tile(Visuals _visuals);
 		E_Tile(Location _location, Physics _physics, Visuals _visuals);
+		E_Tile(Location _location, Physics _physics, Visuals _visuals, bool* _tags);
 };
 
 // operators

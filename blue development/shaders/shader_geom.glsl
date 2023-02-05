@@ -8,7 +8,6 @@ flat out vec2 tileSize;
 flat out vec2 texAtlasSize;
 flat out int shouldTile;
 flat out int selected;
-flat out vec4 color;
 // from vec shader
 layout (points) in;
 in VS_OUT
@@ -18,7 +17,6 @@ in VS_OUT
 	vec2 atlasCoord;
 	int shouldTile;
 	int selected;
-	vec4 color;
 	mat4 matrix;
 } gs_in[];
 
@@ -27,13 +25,13 @@ uniform vec2 atlasSize;
 vec2 getTexCoord(vec2 atlasPos)
 {
 	return vec2(((atlasPos.x / atlasSize.x) * 16) + (gs_in[0].atlasCoord.x / atlasSize.x) * 16,
-	1 - (((atlasPos.y / atlasSize.y) * 16) + (((atlasSize.y / 16 - 1) - gs_in[0].atlasCoord.y) / atlasSize.y) * 16));
+	1 - (((atlasPos.y / atlasSize.y) * 16) + (gs_in[0].atlasCoord.y / atlasSize.y) * 16));
 }
 
 vec2 getBottomLeftTexCoord()
 {
 	return vec2(((0 / atlasSize.x) * 16) + (gs_in[0].atlasCoord.x / atlasSize.x) * 16,
-	1 - (((0 / atlasSize.y) * 16) + (((atlasSize.y / 16 - 1) - gs_in[0].atlasCoord.y) / atlasSize.y) * 16));
+	1 - (((0 / atlasSize.y) * 16) + (gs_in[0].atlasCoord.y / atlasSize.y) * 16));
 }
 
 void main() {
@@ -43,7 +41,6 @@ void main() {
 		texAtlasSize = atlasSize / 16.0f;
 		shouldTile = gs_in[0].shouldTile;
 		selected = gs_in[0].selected;
-		color = gs_in[0].color;
 		bottomLeftTexCoord = getBottomLeftTexCoord();
     EmitVertex();
 	// BOTTOM RIGHT
@@ -53,7 +50,6 @@ void main() {
 		texAtlasSize = atlasSize / 16.0f;
 		shouldTile = gs_in[0].shouldTile;
 		selected = gs_in[0].selected;
-		color = gs_in[0].color;
 		bottomLeftTexCoord = getBottomLeftTexCoord();
 	EmitVertex();
 	// TOP LEFT
@@ -63,7 +59,6 @@ void main() {
 		texAtlasSize = atlasSize / 16.0f;
 		shouldTile = gs_in[0].shouldTile;
 		selected = gs_in[0].selected;
-		color = gs_in[0].color;
 		bottomLeftTexCoord = getBottomLeftTexCoord();
 	EmitVertex();
 	// TOP RIGHT
@@ -73,7 +68,6 @@ void main() {
 		texAtlasSize = atlasSize / 16.0f;
 		shouldTile = gs_in[0].shouldTile;
 		selected = gs_in[0].selected;
-		color = gs_in[0].color;
 		bottomLeftTexCoord = getBottomLeftTexCoord();
 	EmitVertex();
 

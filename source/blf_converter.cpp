@@ -38,8 +38,21 @@ void BLF_Converter::load_file(const char* path)
 		{
 			// TODO: handle this shit
 		}
-		// TODO: load more tile options
-		program.editor.add_tile(program.editor.tiles.emplace_back(Location(glm::vec4(tile->x, tile->y, tile->z, 0.0), glm::vec3(tile->sizeX, tile->sizeY, 1.0f)), Physics(tile->collisionsEnabled, tile->_static), Visuals(program.textureLoader.getAtlasTextureCoords(program.render.textureAtlas, texturePath), texturePath, (TEXTUREMODE)tile->textureMode)));
+
+		bool tags[Editor::MAX_TAGS] = {
+			load_tag(tile->tag_1, 0),
+			load_tag(tile->tag_2, 1),
+			load_tag(tile->tag_3, 2),
+			load_tag(tile->tag_4, 3),
+			load_tag(tile->tag_5, 4)
+		};
+
+		program.editor.add_tile(program.editor.tiles.emplace_back(
+			Location(glm::vec4(tile->x, tile->y, tile->z, 0.0), glm::vec3(tile->sizeX, tile->sizeY, 1.0f)), 
+			Physics(tile->collisionsEnabled, tile->_static), 
+			Visuals(program.textureLoader.getAtlasTextureCoords(program.render.textureAtlas, texturePath), texturePath, (TEXTUREMODE)tile->textureMode, glm::vec4(tile->r / 255, tile->g / 255, tile->b / 255, tile->opacity), tile->opacity),
+			tags
+		));
 	}
 
 	// update title
@@ -82,7 +95,17 @@ void BLF_Converter::write_file(const char* path)
             editor_tiles[i].physics.CollisionsEnabled,
             editor_tiles[i].physics.Static,
             program.textureLoader.getAtlasTexturePath(program.render.textureAtlas, editor_tiles[i].visuals.atlasCoords),
-            (int)editor_tiles[i].visuals.TextureMode
+            (int)editor_tiles[i].visuals.TextureMode,
+			// round colors because blur expects them to be integers (less work for user)
+			(int)editor_tiles[i].visuals.Color.x * 255,
+			(int)editor_tiles[i].visuals.Color.y * 255,
+			(int)editor_tiles[i].visuals.Color.z * 255,
+			editor_tiles[i].visuals.Opacity,
+			editor_tiles[i].tags[0] == true ? program.editor.tags[0] : "NA",
+			editor_tiles[i].tags[1] == true ? program.editor.tags[1] : "NA",
+			editor_tiles[i].tags[2] == true ? program.editor.tags[2] : "NA",
+			editor_tiles[i].tags[3] == true ? program.editor.tags[3] : "NA",
+			editor_tiles[i].tags[4] == true ? program.editor.tags[4] : "NA"
         );
 
 		data.addObject(&(tiles[i]));
@@ -97,4 +120,15 @@ void BLF_Converter::write_file(const char* path)
 
 	std::cout << "Write completed in: " << duration << " milliseconds." << std::endl;
 	program.editor.setDirtiness(false);
+}
+
+bool BLF_Converter::load_tag(String tag, int index)
+{
+	if (tag.operator std::string().compare("NA") != 0)
+	{
+		program.editor.tags[index] = tag;
+		return true;
+	}
+
+	return false;
 }

@@ -9,6 +9,7 @@
 #include <iterator>
 #include <algorithm>
 #include <filesystem>
+#include <string.h>
 
 class Program;
 extern Program program;
@@ -290,14 +291,14 @@ void Gui::addPropertiesGui()
 			/// location
 			float pos[2] = { selection[0]->location.Position.x, selection[0]->location.Position.y };
 			// position
-			if (ImGui::InputFloat2("Position", pos))
+			if (ImGui::DragFloat2("Position", pos))
 			{
 				program.editor.moveTile(selection[0]->ID, glm::vec2(pos[0], pos[1]));
 			}
 
 			float size[2] = { selection[0]->location.Size.x, selection[0]->location.Size.y };
 			// size
-			if (ImGui::InputFloat2("Size ", size))
+			if (ImGui::DragFloat2("Size ", size))
 			{
 				program.editor.resizeTile(selection[0]->ID, glm::vec2(size[0], size[1]));
 			}
@@ -314,14 +315,50 @@ void Gui::addPropertiesGui()
 			// texture name
 			ImGui::Text(("Texture: " + selection[0]->visuals.textureName).c_str());
 			// texturemode
-			if (ImGui::Combo("TextureMode", &(int)selection[0]->visuals.TextureMode, se.tileTextureModeOptions, 2))
+			if (ImGui::Combo("TextureMode ", &(int)selection[0]->visuals.TextureMode, se.tileTextureModeOptions, 2))
 			{
-				program.editor.changeTileVisuals(selection[0]->ID, Visuals(selection[0]->visuals.atlasCoords, selection[0]->visuals.textureName, selection[0]->visuals.TextureMode));
+				program.editor.changeTileVisuals(selection[0]->ID, Visuals(selection[0]->visuals.atlasCoords, selection[0]->visuals.textureName, selection[0]->visuals.TextureMode, selection[0]->visuals.Color, selection[0]->visuals.Opacity));
+			}
+			float color[3] = { selection[0]->visuals.Color.x, selection[0]->visuals.Color.y, selection[0]->visuals.Color.z };
+			// color
+       		if (ImGui::ColorEdit3("Color ", color, ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_InputRGB))
+			{
+				program.editor.changeTileVisuals(selection[0]->ID, Visuals(selection[0]->visuals.atlasCoords, selection[0]->visuals.textureName, selection[0]->visuals.TextureMode, glm::vec4(color[0], color[1], color[2], selection[0]->visuals.Opacity), selection[0]->visuals.Opacity));
+			}
+			float opacity[1] = { selection[0]->visuals.Opacity };
+			// opacity
+			if (ImGui::DragFloat("Opacity ", opacity, 1.0F, 0.0f, 1.0f))
+			{
+				program.editor.changeTileVisuals(selection[0]->ID, Visuals(selection[0]->visuals.atlasCoords, selection[0]->visuals.textureName, selection[0]->visuals.TextureMode, selection[0]->visuals.Color, opacity[0]));
+			}
+
+			if (ImGui::CollapsingHeader("Tags")) 
+			{//, ImGuiTreeNodeFlags_
+				for (int i = 0; i < Editor::MAX_TAGS; i++)
+				{
+					// declaring character array (+1 for null terminator)
+					char* buf = new char[program.editor.tags[i].length() + 1];
+				
+					// copying the contents of the
+					// string to char array
+					strcpy(buf, program.editor.tags[i].c_str());
+
+					if (ImGui::InputText(std::string("##").append(std::to_string(i)).c_str(), buf, 32))
+					{
+						program.editor.tags[i].assign(buf);
+					}
+
+					ImGui::SameLine();
+
+					if (ImGui::Checkbox(std::string("##c").append(std::to_string(i)).c_str(), &selection[0]->tags[i]))
+					{
+
+					}
+				}
 			}
 		}
 		else if (selection.size() > 0) // multiselect
 		{
-			// TODO: i guess just run the above for every selected tile but with one UI element? i have no idea...
 			/// TEMP
 			ImGui::Text(("selected tile count: " + std::to_string(program.editor.selection.size())).c_str());
 			/// location
@@ -339,7 +376,7 @@ void Gui::addPropertiesGui()
 			}
 			float size[2] = { selection[0]->location.Size.x, selection[0]->location.Size.y };
 			// size
-			if (ImGui::InputFloat2("Size ", size))
+			if (ImGui::DragFloat2("Size ", size))
 			{
 				for (int i = 0; i < selection.size(); i++)
 				{
@@ -371,18 +408,41 @@ void Gui::addPropertiesGui()
 			ImGui::Dummy(ImVec2(0.0f, 20.0f));
 
 			// texturemode
-			if (ImGui::Combo("TextureMode", &(int)selection[0]->visuals.TextureMode, se.tileTextureModeOptions, 2))
+			if (ImGui::Combo("TextureMode ", &(int)selection[0]->visuals.TextureMode, se.tileTextureModeOptions, 2))
 			{
 				for (int i = 0; i < selection.size(); i++)
 				{
-					program.editor.changeTileVisuals(selection[i]->ID, Visuals(selection[i]->visuals.atlasCoords, selection[i]->visuals.textureName, selection[0]->visuals.TextureMode));
+					program.editor.changeTileVisuals(selection[i]->ID, Visuals(selection[i]->visuals.atlasCoords, selection[i]->visuals.textureName, selection[0]->visuals.TextureMode, selection[i]->visuals.Color, selection[i]->visuals.Opacity));
 				}
 			}
+
+			float color[3] = { selection[0]->visuals.Color.x, selection[0]->visuals.Color.y, selection[0]->visuals.Color.z };
+			// color
+       		if (ImGui::ColorEdit3("Color ", color, ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_InputRGB))
+			{
+				for (int i = 0; i < selection.size(); i++)
+				{
+					program.editor.changeTileVisuals(selection[i]->ID, Visuals(selection[i]->visuals.atlasCoords, selection[i]->visuals.textureName, selection[i]->visuals.TextureMode, glm::vec4(color[0], color[1], color[2], selection[i]->visuals.Opacity), selection[i]->visuals.Opacity));
+				}
+			}
+
+			float opacity[1] = { selection[0]->visuals.Opacity };
+			// opacity
+			if (ImGui::DragFloat("Opacity ", opacity, 1.0F, 0.0f, 1.0f))
+			{
+				for (int i = 0; i < selection.size(); i++)
+				{
+					program.editor.changeTileVisuals(selection[i]->ID, Visuals(selection[i]->visuals.atlasCoords, selection[i]->visuals.textureName, selection[i]->visuals.TextureMode, selection[i]->visuals.Color, opacity[0]));
+				}			
+			}
 		}
-		/// SEPARATOR
-		ImGui::Dummy(ImVec2(0.0f, 40.0f));
+		if (selection.size() > 0)
+		{
+			/// SEPARATOR
+			ImGui::Dummy(ImVec2(0.0f, 40.0f));
+		}
 		/// OPTIONS SECTION
-		ImGui::SetNextItemOpen(true);
+		// This was here, but i am not sure why ImGui::SetNextItemOpen(se.newTileOptionsVisible);
 		if (ImGui::CollapsingHeader("New tile options"))//, ImGuiTreeNodeFlags_
 		{
 			/// location
@@ -408,6 +468,21 @@ void Gui::addPropertiesGui()
 			// texturemode
 			ImGui::Combo("TextureMode", &se.currentTextureModeSelection, se.tileTextureModeOptions, 2);
 			program.editor.nextTile.visuals.TextureMode = (TEXTUREMODE)se.currentTextureModeSelection;
+			float color[3] = { program.editor.nextTile.visuals.Color.x, program.editor.nextTile.visuals.Color.y, program.editor.nextTile.visuals.Color.z };
+			// color
+       		if (ImGui::ColorEdit3("Color", color, ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_InputRGB))
+			{
+				program.editor.nextTile.visuals.Color.x = color[0];
+				program.editor.nextTile.visuals.Color.y = color[1];
+				program.editor.nextTile.visuals.Color.z = color[2];
+			}
+			float opacity[1] = { program.editor.nextTile.visuals.Opacity };
+			// opacity
+			if (ImGui::DragFloat("Opacity", opacity, 1.0F, 0.0f, 1.0f))
+			{
+				program.editor.nextTile.visuals.Opacity = opacity[0];
+			}
+			se.newTileOptionsVisible = !se.newTileOptionsVisible;
 		}
 	ImGui::End();
 }
@@ -472,7 +547,7 @@ void Gui::addTextureSelectorGui()
 							// change texture of selection (pretty crappy but works ig)
 							for (int i = 0; i < selection.size(); i++)
 							{
-								program.editor.changeTileVisuals(selection[i]->ID, Visuals(atCoords, textureName, selection[i]->visuals.TextureMode));
+								program.editor.changeTileVisuals(selection[i]->ID, Visuals(atCoords, textureName, selection[i]->visuals.TextureMode, selection[i]->visuals.Color, selection[i]->visuals.Opacity));
 							}
 						}
 						// update nexttile regardless
@@ -909,7 +984,7 @@ void Gui::drawGui()
 	checkFileDialog();
 
 	// TEMP
-	// ImGui::ShowDemoWindow();
+	ImGui::ShowDemoWindow();
 	ImGui::Render();
 	// check for right / middle click defocus
 	if (gui->HoveredWindow == NULL && gui->NavWindow != NULL && (guiIO->MouseClicked[1] || guiIO->MouseClicked[2]) /* could cause issues, who cares? && GetFrontMostPopupModal() == NULL*/)
