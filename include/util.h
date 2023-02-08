@@ -5,6 +5,9 @@
 #include <iostream>
 #include <glm/gtx/string_cast.hpp>
 
+// constants
+const int MAX_TAGS = 5;
+
 class mymath
 {
 	public:
@@ -31,6 +34,20 @@ class mymath
 			pos.x = round(pos.x);
 			pos.y = round(pos.y);
 			return pos;
+		}
+		static double rad(double deg)
+		{
+			if (deg == 0 || deg == 360)
+				return 0;
+			
+			return deg * (glm::pi<double>() / 180);
+		}
+		static double deg(double rad)
+		{
+			if (rad == 0)
+				return 0;
+
+			return rad / glm::pi<double>() * 180;
 		}
 };
 

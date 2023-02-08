@@ -7,9 +7,11 @@ extern "C" {
 #include <filesystem>
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include <stb_image_write.h>
 #include <cmath>
 
-#define DEBUG_TEXTURE_LOADING false
+#define DEBUG_TEXTURE_LOADING true
 
 GLuint TextureLoader::createEmptyTexture(int* width, int* height)
 {
@@ -407,6 +409,8 @@ TextureAtlas* TextureLoader::loadTextureAtlas(std::vector<std::string> fullPaths
 		}
 	}
 
+	stbi_write_png("atlas.png", textureAtlas->width, textureAtlas->height, 4, textureAtlasData, textureAtlas->width * 4);
+
 	if (DEBUG_TEXTURE_LOADING) std::cout << "LOADED TEXTURE ATLAS: " << "width: " << textureAtlas->width << "; height: " << textureAtlas->height << "; ID: " << textureAtlas->ID << std::endl;
 
 	return textureAtlas;
@@ -426,7 +430,7 @@ glm::vec2 TextureLoader::getAtlasCoords(TextureAtlas* atlas, int index)
 	// 10 - (2 * 5) = 10 - 10 = 0
 	coords.x = index - (floor(index / (atlas->width / 16)) * (atlas->width / 16));
 
-	std::cout << coords.x << "; " << coords.y << std::endl;
+	// std::cout << coords.x << "; " << coords.y << std::endl;
 	return coords;
 }
 
@@ -467,7 +471,7 @@ glm::vec2 TextureLoader::getAtlasTextureCoords(TextureAtlas* atlas, std::string 
 {
 	if (atlas == nullptr) { std::cerr << "getAtlasTextureCoords: atlas == nullptr" << std::endl; return glm::vec2(0.0f, 0.0f); }
 	
- //std::cout << "texPath: " << texturePath << std::endl;
+ 	// std::cout << "texPath: " << texturePath << std::endl;
 	for (int i = 0; i < atlas->textureFiles.size(); i++)
 	{
 		glm::vec2 coords = getAtlasCoords(atlas, i);

@@ -18,12 +18,13 @@ class Location
 	public:
 		glm::vec4 Position = glm::vec4(0.0f);
 		glm::vec3 Size = glm::vec3(1.0f);
+		double Angle = 0.0f;
 		Bounding_Box box;
 
 		// not supported by blur yet glm::vec3 rotation;
 
 		Location();
-		Location(glm::vec4 _Position, glm::vec3 _Size = glm::vec3(1.0f));
+		Location(glm::vec4 _Position, glm::vec3 _Size = glm::vec3(1.0f), float _Angle = 0.0f);
 };
 
 class Physics
@@ -31,8 +32,11 @@ class Physics
 	public:
 		bool CollisionsEnabled = true;
 		bool Static = true;
+		float Bounce = 0.0f;
+		float Density = 1.0f; 
+		float Friction = 0.00005f;
 		Physics();
-		Physics(bool _CollisionsEnabled, bool _Static = false);
+		Physics(bool _CollisionsEnabled, bool _Static = false, float _Bounce = 0.0f, float _Density = 1.0f, float Friction = 0.00005f);
 };
 
 class Visuals
@@ -41,12 +45,13 @@ class Visuals
 		glm::vec2 atlasCoords = glm::vec2(0.0f);
 		std::string textureName = "";
 		TEXTUREMODE TextureMode = TEXTUREMODE_TILE;
+		glm::vec2 TextureSize = glm::vec2(1.0f, 1.0f);
 		glm::vec4 Color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
 		float Opacity = 1.0f;
 
 		Visuals();
 		Visuals(glm::vec2 _atlasCoords);
-		Visuals(glm::vec2 _atlasCoords, std::string _textureName, TEXTUREMODE _TextureMode, glm::vec4 _Color, float _Opacity);
+		Visuals(glm::vec2 _atlasCoords, std::string _textureName, TEXTUREMODE _TextureMode, glm::vec2 _TextureSize, glm::vec4 _Color, float _Opacity);
 };
 
 
@@ -59,7 +64,7 @@ class E_Tile
 		bool selected = false;
 		// contains whether or not a specific index tag is applied to this tile
 		// TODO: should use a const
-		bool tags[5] = { false, false, false, false, false };
+		bool tags[MAX_TAGS] = { false, false, false, false, false };
 		Location location;
 		Physics physics;
 		Visuals visuals;

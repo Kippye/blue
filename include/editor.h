@@ -1,5 +1,6 @@
 #pragma once
 
+#include <util.h>
 #include <textures.h>
 #include <editor_tile.h>
 #include <glm.hpp>
@@ -37,7 +38,10 @@ struct TileOptions
 		Location location = Location(glm::vec4(0.0f), glm::vec3(1.0f));
 		Physics physics = Physics();
 		Visuals visuals = Visuals();
+		bool tags[MAX_TAGS] = { false, false, false, false, false };
 };
+
+const TileOptions DEFAULT_TILE = TileOptions();
 
 class Editor
 {
@@ -46,7 +50,6 @@ class Editor
         GRID_MODE gridMode = GRID_MODE_NORMAL;
 		bool dirty = false; // are there any unsaved changes?
     public:
-		static const int MAX_TAGS = 5;
 		// editor data
         std::vector<E_Tile> tiles = {};
 		std::vector<std::string> tags = std::vector(MAX_TAGS, std::string("NA"));
@@ -84,6 +87,10 @@ class Editor
 		void delete_selection();
 		void delete_all();
 
+		void clear_tags();
+
+		void reset_next_tile();
+
 		// tool functions
         void tool_use();
         void tool_use_secondary();
@@ -95,8 +102,16 @@ class Editor
         void moveTile(unsigned int ID, glm::vec2 newPos);
         void resizeTile(int index, glm::vec2 newSize);
 		void resizeTile(unsigned int ID, glm::vec2 newSize);
+		void rotateTile(int index, double newRotation);
+		void rotateTile(unsigned int ID, double newRotation);
+		// set the tile's visuals to the given one and update its visual instance data
 		void changeTileVisuals(int index, Visuals visuals);
+		// update a tile's visual instance data
+		void updateTileVisuals(int index);
+		// set the tile's visuals to the given one and update its visual instance data
 		void changeTileVisuals(unsigned int ID, Visuals visuals);
+		// update a tile's visual instance data
+		void updateTileVisuals(unsigned int ID);
 
         void add_tile(E_Tile &tile);
         void add_tile(std::vector<E_Tile> &tiles);

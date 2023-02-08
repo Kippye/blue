@@ -10,7 +10,7 @@
 class Program;
 extern Program program;
 
-Editor::Editor() { }
+Editor::Editor() { mymath::rad(180); }
 
 Tool Editor::getTool()
 {
@@ -220,6 +220,41 @@ void Editor::delete_selection()
 	setDirtiness(true);
 }
 
+void Editor::clear_tags()
+{
+	for (int i = 0; i < MAX_TAGS; i++)
+	{
+		tags[i].assign("NA");
+	}
+}
+
+void Editor::reset_next_tile()
+{
+	nextTile.location.Size.x = DEFAULT_TILE.location.Size.x;
+	nextTile.location.Size.y = DEFAULT_TILE.location.Size.y;
+	nextTile.location.Angle = DEFAULT_TILE.location.Angle;
+
+	nextTile.physics.CollisionsEnabled = DEFAULT_TILE.physics.CollisionsEnabled;
+	nextTile.physics.Static = DEFAULT_TILE.physics.Static;
+	nextTile.physics.Bounce = DEFAULT_TILE.physics.Bounce;
+	nextTile.physics.Density = DEFAULT_TILE.physics.Density;
+	nextTile.physics.Friction = DEFAULT_TILE.physics.Friction;
+
+	program.gui.se.currentTextureModeSelection = DEFAULT_TILE.visuals.TextureMode;
+	nextTile.visuals.TextureMode = DEFAULT_TILE.visuals.TextureMode;
+	nextTile.visuals.TextureSize.x = DEFAULT_TILE.visuals.TextureSize.x;
+	nextTile.visuals.TextureSize.y = DEFAULT_TILE.visuals.TextureSize.y;
+	nextTile.visuals.Color.x = DEFAULT_TILE.visuals.Color.x;
+	nextTile.visuals.Color.y = DEFAULT_TILE.visuals.Color.y;
+	nextTile.visuals.Color.z = DEFAULT_TILE.visuals.Color.z;
+	nextTile.visuals.Opacity = DEFAULT_TILE.visuals.Opacity;
+
+	for (int i = 0; i < sizeof(nextTile.tags) / sizeof(bool); i++)
+	{
+		nextTile.tags[i] = false;
+	}
+}
+
 void Editor::updateToolPos(glm::vec2 &mousePos)
 {
 	// TODO: do some shit with the mouse pos (move the "drawing cursor")
@@ -294,7 +329,7 @@ void Editor::updateToolPos(glm::vec2 &mousePos)
 				}
 
 				// place the tile
-				add_tile(tiles.emplace_back(Location(startPos, glm::vec3(areaSize, 1.0f)), nextTile.physics, nextTile.visuals));
+				add_tile(tiles.emplace_back(Location(startPos, glm::vec3(areaSize, 1.0f)), nextTile.physics, nextTile.visuals, nextTile.tags));
 			}
 			// just released rmb, draw the tiles
 			else if (program.input.rmb_down == false && program.input.rmb_down_last == true)
@@ -328,13 +363,13 @@ void Editor::updateToolPos(glm::vec2 &mousePos)
 							// overlapping when not supposed to, don't place a tile
 							if (!checkForOverlaps(Bounding_Box(glm::vec2(1.0f)), startPos + glm::vec4(x, y, 0.0f, 0.0f)))
 							{
-								E_Tile tile = E_Tile(Location(startPos + glm::vec4(x, y, 0.0f, 0.0f), glm::vec3(1.0f)), nextTile.physics, nextTile.visuals);
+								E_Tile tile = E_Tile(Location(startPos + glm::vec4(x, y, 0.0f, 0.0f), glm::vec3(1.0f)), nextTile.physics, nextTile.visuals, nextTile.tags);
 								tilesToPlace.push_back(tile);
 							}
 						}
 						else
 						{
-							E_Tile tile = E_Tile(Location(startPos + glm::vec4(x, y, 0.0f, 0.0f), glm::vec3(1.0f)), nextTile.physics, nextTile.visuals);
+							E_Tile tile = E_Tile(Location(startPos + glm::vec4(x, y, 0.0f, 0.0f), glm::vec3(1.0f)), nextTile.physics, nextTile.visuals, nextTile.tags);
 							tilesToPlace.push_back(tile);
 						}
 					}
@@ -353,9 +388,9 @@ void Editor::update_atlas_coords(TextureAtlas* atlas)
 {
 	for (int i = 0; i < tiles.size(); i++)
 	{
-		std::cout << "ac: " << tiles[i].visuals.atlasCoords.x << tiles[i].visuals.atlasCoords.y << std::endl;
+		// std::cout << "ac: " << tiles[i].visuals.atlasCoords.x << tiles[i].visuals.atlasCoords.y << std::endl;
 		glm::vec2 atCoords = program.textureLoader.getAtlasTextureCoords(atlas, tiles[i].visuals.textureName);
-		std::cout << "acafter: " << atCoords.x << atCoords.y << std::endl;
+		// std::cout << "acafter: " << atCoords.x << atCoords.y << std::endl;
 		std::cout << tiles[i].visuals.textureName << std::endl;
 		// i really dont know how to handle it being -1 but this will do for now...
 		if (atCoords != glm::vec2(-1.0f))
@@ -373,6 +408,7 @@ void Editor::update_atlas_coords(TextureAtlas* atlas)
 	}
 
 	// update nextTile too...
+	// std::cout << nextTile.visuals.textureName << std::endl;
 	glm::vec2 atCoords = program.textureLoader.getAtlasTextureCoords(atlas, nextTile.visuals.textureName);
 	nextTile.visuals.atlasCoords = atCoords == glm::vec2(-1.0f) ? glm::vec2(0.0f, 0.0f) : atCoords;
 	nextTile.visuals.textureName = program.textureLoader.getAtlasTexturePath(atlas, nextTile.visuals.atlasCoords);
@@ -461,41 +497,48 @@ void Editor::resizeTile(unsigned int ID, glm::vec2 newSize)
 	setDirtiness(true);
 }
 
-void Editor::changeTileVisuals(int index, Visuals visuals)
+void Editor::rotateTile(int index, double newRotation)
 {
-	tiles[index].visuals = visuals;
-	program.render.instanceAdditionalData[index].x = visuals.atlasCoords.x;
-	program.render.instanceAdditionalData[index].y = visuals.atlasCoords.y;
-	program.render.instanceAdditionalData[index].z = visuals.TextureMode == TEXTUREMODE_TILE;
-	program.render.instanceColorData[index].x = visuals.Color.x;
-	program.render.instanceColorData[index].y = visuals.Color.y;
-	program.render.instanceColorData[index].z = visuals.Color.z;
-	program.render.instanceColorData[index].w = visuals.Opacity;
+	tiles[index].location.Angle = newRotation;
+	// TODO: if i make tiles have visible rotation, i would probably also have to make their bounding boxes have rotation 💀
+	// TODO: update instance data when rotation affects rendering
+	setDirtiness(true);
+}
+
+void Editor::rotateTile(unsigned int ID, double newRotation)
+{
+	int index = 0;
+	E_Tile* tile = ID_to_tile(ID, index);
+
+	rotateTile(index, newRotation);
+}
+
+void Editor::updateTileVisuals(int index)
+{
+	// TODO: update when TextureSize is made to have a visible effect
+	Visuals* visuals = &tiles[index].visuals;
+	program.render.instanceTextureData[index].x = visuals->atlasCoords.x;
+	program.render.instanceTextureData[index].y = visuals->atlasCoords.y;
+	program.render.instanceTextureData[index].z = visuals->TextureSize.x;
+	program.render.instanceTextureData[index].w = visuals->TextureSize.y;
+	program.render.instanceColorData[index].x = visuals->Color.x;
+	program.render.instanceColorData[index].y = visuals->Color.y;
+	program.render.instanceColorData[index].z = visuals->Color.z;
+	program.render.instanceColorData[index].w = visuals->Opacity;
+	program.render.instanceAdditionalData[index].x = visuals->TextureMode == TEXTUREMODE_TILE;
 	// TODO: make it just update both at once
 	program.render.updateInstanceArray(INSTANCE_ARRAY_UPDATE_2);
 	program.render.updateInstanceArray(INSTANCE_ARRAY_UPDATE_3);
+	program.render.updateInstanceArray(INSTANCE_ARRAY_UPDATE_4);
 
 	setDirtiness(true);
 }
 
-void Editor::changeTileVisuals(unsigned int ID, Visuals visuals)
+void Editor::updateTileVisuals(unsigned int ID)
 {
 	int index = 0;
 	E_Tile* tile = ID_to_tile(ID, index);
-	tile->visuals = visuals;
-
-	program.render.instanceAdditionalData[index].x = visuals.atlasCoords.x;
-	program.render.instanceAdditionalData[index].y = visuals.atlasCoords.y;
-	program.render.instanceAdditionalData[index].z = visuals.TextureMode == TEXTUREMODE_TILE;
-	program.render.instanceColorData[index].x = visuals.Color.x;
-	program.render.instanceColorData[index].y = visuals.Color.y;
-	program.render.instanceColorData[index].z = visuals.Color.z;
-	program.render.instanceColorData[index].w = visuals.Opacity;
-	// TODO: make it just update both at once
-	program.render.updateInstanceArray(INSTANCE_ARRAY_UPDATE_2);
-	program.render.updateInstanceArray(INSTANCE_ARRAY_UPDATE_3);
-
-	setDirtiness(true);
+	updateTileVisuals(index);
 }
 
 void Editor::tool_use()
@@ -548,7 +591,7 @@ void Editor::tool_use()
 				if (checkForOverlaps(Bounding_Box(glm::vec2(nextTile.location.Size)), pos)) { return; }
 			}
 			// place the tile
-			add_tile(tiles.emplace_back(Location(pos, nextTile.location.Size), nextTile.physics, nextTile.visuals));
+			add_tile(tiles.emplace_back(Location(pos, nextTile.location.Size), nextTile.physics, nextTile.visuals, nextTile.tags));
 			break;
 		}
 		case BOX:

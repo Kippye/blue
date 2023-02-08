@@ -8,6 +8,7 @@
  * [X] fix weird flipped texture selection
  * [X] fix pointer vector issue when deleting selection
  * [X?] fix eggfault when minimizing using taskbar button
+ * [ ] 2. crash when a tile is selected and textures are reloaded then a tile is placed
  * // UI //
  * [X] add io.WantCaptureMouse and io.WantCaptureKeyboard checks to ignore input when file dialogues are open
  * [X] load content folder textures as imagebuttons on a grid
@@ -38,11 +39,12 @@
  * [X] selecting tiles will show properties for that tile (for multiple selection you can mostly only set them all to the same one)
  * [X] in-editor modifiable ignore list for filenames and / or directories
  * [X] selection tools like area [X], by type [X], etc
- * [1] support for storing tags in tiles (could be one string which is limiting or somehow a map of tags and their names)
+ * [X] support for storing tags in tiles (could be one string which is limiting or somehow a map of tags and their names)
  * [2] variable grid size
- * [C] resize tool ‍GRRRRR
+ * [ ] move tool (with mouse)
+ * [ ] figure out how to draw gizmos (new shaders for them?) ImDrawList* draw_list = ImGui::GetWindowDrawList(); ? How would i make them clickable / draggable???
+ * [ ] resize tool ‍GRRRRR
  * [C] undo, redo, if at all doable
- * [C] move tool (with arrow keys & move camera with it)
  * // OTHER //
  * [X] fix up editor tile class
  * [X] only recreate transforms array when a tile is modified (use some kind of event system)
@@ -53,6 +55,7 @@
  * --- // Gui //
  * --- [X] save file dialog sorting modes, maybe a base directory as well
  * [X] add some way to convert from texture to atlas coordinates and reverse
+ * [ ] properly support textures larger than 16x16 in the texture atlas (i would have to get 2 sets of atlasCoords)
  * [?] more options when loading textures (format or smth)
  * [C] create an event system ✌
  * [C] some kind of timer system in render?

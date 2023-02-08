@@ -1,5 +1,6 @@
 # folders
 .vs/
+.vscode
 blue/
 bin/
 obj/ 

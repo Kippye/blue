@@ -1,4 +1,5 @@
 #include <blf_converter.h>
+#include <util.h>
 #include <main.h>
 #include <iostream>
 #include <chrono>
@@ -28,6 +29,8 @@ void BLF_Converter::load_file(const char* path)
 
 	program.render.instanceTransformData.clear();
 	program.render.instanceAdditionalData.clear();
+	program.render.instanceColorData.clear();
+	program.editor.clear_tags();
 	program.editor.tiles.clear();
 
 	for (BLF_Tile* tile : tiles)
@@ -39,7 +42,9 @@ void BLF_Converter::load_file(const char* path)
 			// TODO: handle this shit
 		}
 
-		bool tags[Editor::MAX_TAGS] = {
+		std::cout << tile->bounce << std::endl;
+
+		bool tags[MAX_TAGS] = {
 			load_tag(tile->tag_1, 0),
 			load_tag(tile->tag_2, 1),
 			load_tag(tile->tag_3, 2),
@@ -48,9 +53,9 @@ void BLF_Converter::load_file(const char* path)
 		};
 
 		program.editor.add_tile(program.editor.tiles.emplace_back(
-			Location(glm::vec4(tile->x, tile->y, tile->z, 0.0), glm::vec3(tile->sizeX, tile->sizeY, 1.0f)), 
-			Physics(tile->collisionsEnabled, tile->_static), 
-			Visuals(program.textureLoader.getAtlasTextureCoords(program.render.textureAtlas, texturePath), texturePath, (TEXTUREMODE)tile->textureMode, glm::vec4(tile->r / 255, tile->g / 255, tile->b / 255, tile->opacity), tile->opacity),
+			Location(glm::vec4(tile->x, tile->y, tile->z, 0.0), glm::vec3(tile->sizeX, tile->sizeY, 1.0f), tile->angle), 
+			Physics(tile->collisionsEnabled, tile->_static, tile->bounce, tile->density, tile->friction), 
+			Visuals(program.textureLoader.getAtlasTextureCoords(program.render.textureAtlas, texturePath), texturePath, (TEXTUREMODE)tile->textureMode, glm::vec2(tile->textureSizeX, tile->textureSizeY), glm::vec4(tile->r / 255, tile->g / 255, tile->b / 255, tile->opacity), tile->opacity),
 			tags
 		));
 	}
@@ -92,10 +97,16 @@ void BLF_Converter::write_file(const char* path)
             editor_tiles[i].location.Position.z,
 			editor_tiles[i].location.Size.x,
             editor_tiles[i].location.Size.y,
+			editor_tiles[i].location.Angle,
             editor_tiles[i].physics.CollisionsEnabled,
             editor_tiles[i].physics.Static,
+            editor_tiles[i].physics.Bounce,
+            editor_tiles[i].physics.Density,
+            editor_tiles[i].physics.Friction,
             program.textureLoader.getAtlasTexturePath(program.render.textureAtlas, editor_tiles[i].visuals.atlasCoords),
             (int)editor_tiles[i].visuals.TextureMode,
+			editor_tiles[i].visuals.TextureSize.x,
+			editor_tiles[i].visuals.TextureSize.y,
 			// round colors because blur expects them to be integers (less work for user)
 			(int)editor_tiles[i].visuals.Color.x * 255,
 			(int)editor_tiles[i].visuals.Color.y * 255,
@@ -124,6 +135,12 @@ void BLF_Converter::write_file(const char* path)
 
 bool BLF_Converter::load_tag(String tag, int index)
 {
+	// the loaded tile is probably from a BLF file created prior to tags being added
+	if (tag == String(""))
+	{
+		return false;
+	}
+
 	if (tag.operator std::string().compare("NA") != 0)
 	{
 		program.editor.tags[index] = tag;

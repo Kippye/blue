@@ -49,8 +49,10 @@ struct GuiSizes
 		editorPaneHeight = 64.0f,
 		editorButtonDistance = 66.0f,
 		editorButtonOffset = 33.0f,
-		editorComboWidth = 128.0f;
+		editorComboWidth = 128.0f,
+		propertySectionSeparator = 0.0f; //20.0f;
 		ImVec2 editorButtonSize = ImVec2(58, 58);
+		ImVec2 propertiesButtonSize = ImVec2(128, 32);
 		// style stuff
 		ImVec2 genericPadding = ImVec2(8.0f, 8.0f);
 };

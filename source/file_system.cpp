@@ -239,10 +239,10 @@ void FileSystem::updateTextures()
 		program.gui.tileTextures = program.textureLoader.loadTextures(filesInContent, false);
 		program.render.textureAtlas = loadContentAsAtlas();
 		// only waste time on updating these if they're already something else
-		if (!firstUpdate)
-		{
+		//if (!firstUpdate)
+		//{
 			program.editor.update_atlas_coords(program.render.textureAtlas);
-		}
+		//}
 	}
 
 	std::cout << "Textures updated" << std::endl;
@@ -390,6 +390,7 @@ void FileSystem::trySaveConfigs()
 void FileSystem::startNewFile()
 {
 	program.editor.delete_all();
+	program.editor.clear_tags();
 	blfFile = "";
 	program.windowManager.setTitle("untitled.blf");
 }

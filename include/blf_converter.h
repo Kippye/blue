@@ -1,6 +1,7 @@
 #pragma once
 
 #include <blf.hpp>
+#include <editor.h>
 using namespace blf;
 
 class BLF_Tile : public TemplateObject
@@ -11,19 +12,25 @@ class BLF_Tile : public TemplateObject
 		double z;
 		double sizeX;
 		double sizeY;
+		double angle = DEFAULT_TILE.location.Angle;
 		bool collisionsEnabled;
 		bool _static;
+		double bounce = DEFAULT_TILE.physics.Bounce;
+		double density = DEFAULT_TILE.physics.Density;
+		double friction = DEFAULT_TILE.physics.Friction;
 		String texture;
 		int textureMode;
-		double r;
-		double g;
-		double b;
-		double opacity;
-		String tag_1;
-		String tag_2;
-		String tag_3;
-		String tag_4;
-		String tag_5;
+		double textureSizeX = DEFAULT_TILE.visuals.TextureSize.x;
+		double textureSizeY = DEFAULT_TILE.visuals.TextureSize.y;
+		double r = DEFAULT_TILE.visuals.Color.x * 255;
+		double g = DEFAULT_TILE.visuals.Color.y * 255;
+		double b = DEFAULT_TILE.visuals.Color.z * 255;
+		double opacity = DEFAULT_TILE.visuals.Opacity;
+		String tag_1 = "NA";
+		String tag_2 = "NA";
+		String tag_3 = "NA";
+		String tag_4 = "NA";
+		String tag_5 = "NA";
 		// String tag_6;
 		// String tag_7;
 		// String tag_8;
@@ -32,17 +39,23 @@ class BLF_Tile : public TemplateObject
 
 		BLF_Tile() {}
 
-		BLF_Tile(double x, double y, double z, double sizeX, double sizeY, bool collisionsEnabled, bool _static, String texture, int textureMode, double r, double g, double b, double opacity, String tag_1, String tag_2, String tag_3, String tag_4, String tag_5)
+		BLF_Tile(double x, double y, double z, double sizeX, double sizeY, double angle, bool collisionsEnabled, bool _static, double bounce, double density, double friction, String texture, int textureMode, double textureSizeX, double textureSizeY, double r, double g, double b, double opacity, String tag_1, String tag_2, String tag_3, String tag_4, String tag_5)
 		{
 			this->x = x;
 			this->y = y;
 			this->z = z;
 			this->sizeX = sizeX;
 			this->sizeY = sizeY;
+			this->angle = angle;
 			this->collisionsEnabled = collisionsEnabled;
 			this->_static = _static;
+			this->bounce = bounce;
+			this->density = density;
+			this->friction = friction;
 			this->texture = texture;
 			this->textureMode = textureMode;
+			this->textureSizeX = textureSizeX;
+			this->textureSizeY = textureSizeY;
 			this->r = r;
 			this->g = g;
 			this->b = b;
@@ -73,10 +86,16 @@ class BLF_Tile : public TemplateObject
 				{"Z", &z, TYPE_DOUBLE},
 				{"SizeX", &sizeX, TYPE_DOUBLE},
 				{"SizeY", &sizeY, TYPE_DOUBLE},
+				{"Angle", &angle, TYPE_DOUBLE},
 				{"CollisionsEnabled", &collisionsEnabled, TYPE_BOOL},
 				{"Static", &_static, TYPE_BOOL},
+				{"Bounce", &bounce, TYPE_DOUBLE},
+				{"Density", &density, TYPE_DOUBLE},
+				{"Friction", &friction, TYPE_DOUBLE},
 				{"Texture", &texture, TYPE_STRING},
 				{"TextureMode", &textureMode, TYPE_INT},
+				{"TextureSizeX", &textureSizeX, TYPE_DOUBLE},
+				{"TextureSizeY", &textureSizeY, TYPE_DOUBLE},
 				{"R", &r, TYPE_DOUBLE},
 				{"G", &g, TYPE_DOUBLE},
 				{"B", &b, TYPE_DOUBLE},

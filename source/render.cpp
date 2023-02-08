@@ -21,8 +21,9 @@ void Render::setup()
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	glGenBuffers(1, &instanceVBO);
-	glGenBuffers(1, &instanceAdditionalVBO);
+	glGenBuffers(1, &instanceTextureVBO);
 	glGenBuffers(1, &instanceColorVBO);
+	glGenBuffers(1, &instanceAdditionalVBO);
 
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
@@ -42,6 +43,10 @@ void Render::setup()
 
 	shader.use();
 	shader.setInt("texture1", 0);
+
+	int i = 0;
+	glGetIntegerv(GL_MAX_VARYING_COMPONENTS, &i);
+	std::cout << i << std::endl;
 }
 
 void Render::updateInstanceArray(INSTANCE_ARRAY_UPDATE type)
@@ -62,8 +67,8 @@ void Render::updateInstanceArray(INSTANCE_ARRAY_UPDATE type)
 
 	if (type == INSTANCE_ARRAY_UPDATE_ALL || type & INSTANCE_ARRAY_UPDATE_2)
 	{
-		glBindBuffer(GL_ARRAY_BUFFER, instanceAdditionalVBO);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4) * instanceAdditionalData.size(), instanceAdditionalData.data(), GL_STATIC_DRAW);
+		glBindBuffer(GL_ARRAY_BUFFER, instanceTextureVBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4) * instanceTextureData.size(), instanceTextureData.data(), GL_STATIC_DRAW);
 
 		glEnableVertexAttribArray(1);
 		glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
@@ -79,6 +84,17 @@ void Render::updateInstanceArray(INSTANCE_ARRAY_UPDATE type)
 		glEnableVertexAttribArray(2);
 		glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
 		glVertexAttribDivisor(2, 1); // tell OpenGL this is an instanced vertex attribute.
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+	}
+
+	if (type == INSTANCE_ARRAY_UPDATE_ALL || type & INSTANCE_ARRAY_UPDATE_4)
+	{
+		glBindBuffer(GL_ARRAY_BUFFER, instanceAdditionalVBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4) * instanceAdditionalData.size(), instanceAdditionalData.data(), GL_STATIC_DRAW);
+
+		glEnableVertexAttribArray(3);
+		glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+		glVertexAttribDivisor(3, 1); // tell OpenGL this is an instanced vertex attribute.
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 }
@@ -137,32 +153,34 @@ void Render::render()
 
 void Render::set_tile_selection(int index, bool to)
 {
-	instanceAdditionalData[index].w = float(to);
-	updateInstanceArray(INSTANCE_ARRAY_UPDATE_2);
+	instanceAdditionalData[index].y = float(to);
+	updateInstanceArray(INSTANCE_ARRAY_UPDATE_4);
 }
 
 void Render::set_tile_selection(std::vector<int> &indices, bool to)
 {
 	for (int i = 0; i < indices.size(); i++)
 	{
-		instanceAdditionalData[indices[i]].w = float(to);
+		instanceAdditionalData[indices[i]].y = float(to);
 	}
 
-	updateInstanceArray(INSTANCE_ARRAY_UPDATE_2);
+	updateInstanceArray(INSTANCE_ARRAY_UPDATE_4);
 }
 
 void Render::add_to_instance_data(E_Tile &tile)
 {
 	instanceTransformData.emplace_back(tile.location.Position.x, tile.location.Position.y, tile.location.Size.x, tile.location.Size.y);
-	instanceAdditionalData.emplace_back(tile.visuals.atlasCoords.x, tile.visuals.atlasCoords.y, tile.visuals.TextureMode == TEXTUREMODE_TILE, tile.selected);
+	instanceTextureData.emplace_back(tile.visuals.atlasCoords.x, tile.visuals.atlasCoords.y, tile.visuals.TextureSize.x, tile.visuals.TextureSize.y);
 	instanceColorData.emplace_back(tile.visuals.Color.x, tile.visuals.Color.y, tile.visuals.Color.z, tile.visuals.Opacity);
+	instanceAdditionalData.emplace_back(tile.visuals.TextureMode == TEXTUREMODE_TILE, tile.selected, 0.0f, 0.0f);
 }
 
 void Render::erase_from_instance_data(int index)
 {
 	instanceTransformData.erase(instanceTransformData.begin() + index);
-	instanceAdditionalData.erase(instanceAdditionalData.begin() + index);
+	instanceTextureData.erase(instanceTextureData.begin() + index);
 	instanceColorData.erase(instanceColorData.begin() + index);
+	instanceAdditionalData.erase(instanceAdditionalData.begin() + index);
 }
 
 void Render::add_to_render_list(E_Tile &tile)
@@ -206,6 +224,7 @@ void Render::terminate()
 	glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
     glDeleteBuffers(1, &instanceVBO);
-    glDeleteBuffers(1, &instanceAdditionalVBO);
+    glDeleteBuffers(1, &instanceTextureVBO);
     glDeleteBuffers(1, &instanceColorVBO);
+    glDeleteBuffers(1, &instanceAdditionalVBO);
 }

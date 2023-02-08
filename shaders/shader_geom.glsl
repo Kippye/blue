@@ -16,9 +16,10 @@ in VS_OUT
 	vec2 pos;
 	vec2 size;
 	vec2 atlasCoord;
+	vec2 texSize;
+	vec4 color;
 	int shouldTile;
 	int selected;
-	vec4 color;
 	mat4 matrix;
 } gs_in[];
 
@@ -40,6 +41,7 @@ void main() {
 	// BOTTOM LEFT
 	gl_Position = gs_in[0].matrix * vec4(gs_in[0].pos.x, gs_in[0].pos.y, 0.0f, 1.0f);
 		TexCoord = getTexCoord(vec2(0.0f, 0.0f));
+		tileSize = gs_in[0].size;
 		texAtlasSize = atlasSize / 16.0f;
 		shouldTile = gs_in[0].shouldTile;
 		selected = gs_in[0].selected;
