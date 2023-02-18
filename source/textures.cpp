@@ -11,7 +11,7 @@ extern "C" {
 #include <stb_image_write.h>
 #include <cmath>
 
-#define DEBUG_TEXTURE_LOADING true
+#define DEBUG_TEXTURE_LOADING false
 
 GLuint TextureLoader::createEmptyTexture(int* width, int* height)
 {

@@ -181,6 +181,24 @@ void Input::key_event(GLFWwindow* window, int key, int scancode, int action, int
 				}
 			break;
 			case GLFW_KEY_G:
+				// unnecessary safety check check
+				if (program.editor.gridGizmoID != -1)
+				{
+					int index;
+					Gizmo* gridGizmo = program.editor.ID_to_gizmo(program.editor.gridGizmoID, index);
+					if (gridGizmo->visuals.Opacity > 0)
+					{
+						gridGizmo->visuals.Opacity = 0.0f;
+					}
+					else
+					{
+						// TODO: revert to value set in config instead?
+						gridGizmo->visuals.Opacity = 0.75f;
+					}
+					program.editor.updateGizmoVisuals(index);
+				}
+			break;
+			case GLFW_KEY_K:
 				if (ctrl_down) // switch grid mode
 				{
 					program.gui.se.currentGridModeSelection = program.gui.se.currentGridModeSelection == 2 ? 0 : program.gui.se.currentGridModeSelection + 1;

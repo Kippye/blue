@@ -2,12 +2,12 @@
 layout (location = 0) in vec4 aInstanceTransformData; // xPos / yPos / xSize / ySize
 layout(location = 1) in vec4 aInstanceTextureData; // texX / texY / texSizeX / texSizeY
 layout (location = 2) in vec4 aInstanceColorData; // colorR / colorG / colorB / colorA (opacity * 255)
-layout (location = 3) in vec4 aInstanceAdditionalData; // shouldTile / selected / free / free
+layout (location = 3) in vec4 aInstanceAdditionalData; // shouldTile / selected / free / isGizmo
 
 /*
 desired structure after adding second atlas coords
 layout (location = 0) in vec4 aInstanceTransformData; // xPos / yPos / xSize / ySize
-layout (location = 1) in vec4 aInstanceTextureData; // texSizeX / texSizeY
+layout (location = 1) in vec4 aInstanceTextureData; // texSizeX / texSizeY / free / free
 layout (location = 2) in vec4 aInstanceAtlasData; // texX / texY / texX2 / texY2
 layout (location = 3) in vec4 aInstanceColorData; // colorR / colorG / colorB / colorA (opacity * 255)
 layout (location = 4) in vec4 aInstanceAdditionalData; // shouldTile / selected / free / free

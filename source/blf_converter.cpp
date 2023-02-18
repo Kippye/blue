@@ -42,8 +42,6 @@ void BLF_Converter::load_file(const char* path)
 			// TODO: handle this shit
 		}
 
-		std::cout << tile->bounce << std::endl;
-
 		bool tags[MAX_TAGS] = {
 			load_tag(tile->tag_1, 0),
 			load_tag(tile->tag_2, 1),

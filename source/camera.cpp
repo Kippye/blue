@@ -41,7 +41,7 @@ void Camera::moveCamera(glm::vec3 movement)
 
 	lastMovement = movement;
 	cameraPos += movement * currentCameraSpeed;
-	cameraPos.z = std::clamp(cameraPos.z, 2.0f, 30.0f);
+	cameraPos.z = std::clamp(cameraPos.z, 2.0f, 100.0f);
 }
 
 void Camera::updateView()

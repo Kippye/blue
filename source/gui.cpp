@@ -127,9 +127,9 @@ void Gui::addEditorGui()
 			ImGui::BeginTooltip();
 				ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
 				ImGui::Text("select tool ");
-				ImGui::BulletText("select tiles with LMB ");
-				ImGui::BulletText("multiselect with RMB ");
-				ImGui::BulletText("box select by dragging ");
+				ImGui::BulletText("select tiles with LMB (hold SHIFT to add to selection) ");
+				ImGui::BulletText("add / remove from selection with RMB ");
+				ImGui::BulletText("box select by dragging LMB ");
 				ImGui::BulletText("selected tiles' properties will be shown in the properties tab ");
 				ImGui::PopTextWrapPos();
 			ImGui::EndTooltip();
@@ -245,7 +245,7 @@ void Gui::addEditorGui()
 				ImGui::BulletText("normal: tiles can be placed anywhere and snapped with left CTRL ");
 				ImGui::BulletText("auto: tiles will only be placed on the grid, existing tiles won't be affected ");
 				ImGui::BulletText("full: tiles will only be placed on the grid, existing tiles will be snapped to the grid ");
-				ImGui::BulletText("shortcut: left CTRL + G to switch ");
+				ImGui::BulletText("shortcut: left CTRL + K to switch ");
 				ImGui::PopTextWrapPos();
 			ImGui::EndTooltip();
 		}
@@ -280,344 +280,430 @@ void Gui::addPropertiesGui()
 	ImGui::SetNextWindowSize(ImVec2(s.propertiesPaneWidth, window->SCREEN_HEIGHT - s.bottomBarHeight));
 	ImGui::SetNextWindowPos(ImVec2(window->SCREEN_WIDTH - s.propertiesPaneWidth, 0.0));
 
-	ImGui::Begin("Tile properties", p_close, ImGuiWindowFlags_NoNav);
+	ImGui::Begin("Properties", p_close, ImGuiWindowFlags_NoNav);
 		s.propertiesPaneWidth = ImGui::GetWindowWidth();
 		guiWantKeyboard = guiIO->WantCaptureKeyboard ? true : guiWantKeyboard;
 
-		/// SELECTION SECTION
-		std::vector<E_Tile*>& selection = program.editor.selection;
-		if (selection.size() == 1) // single tile
-		{
-			/// location
-			ImGui::Text("Transform");
-			float pos[2] = { selection[0]->location.Position.x, selection[0]->location.Position.y };
-			// position
-			if (ImGui::DragFloat2("Position", pos))
-			{
-				program.editor.moveTile(selection[0]->ID, glm::vec2(pos[0], pos[1]));
-			}
-			float size[2] = { selection[0]->location.Size.x, selection[0]->location.Size.y };
-			// size
-			if (ImGui::DragFloat2("Size", size))
-			{
-				program.editor.resizeTile(selection[0]->ID, glm::vec2(size[0], size[1]));
-			}
-			float angle[1] = { mymath::deg(selection[0]->location.Angle) };
-			// angle
-			if (ImGui::DragFloat("Angle", angle, 1.0F, 0.0f, 360.0f))
-			{
-				program.editor.rotateTile(selection[0]->ID, mymath::rad((double)*angle));
-			}
-
-			/// physics
-			ImGui::Separator();
-			ImGui::Dummy(ImVec2(0.0f, s.propertySectionSeparator));
-			ImGui::Text("Physics");
-			ImGui::Checkbox("CollisionsEnabled", &selection[0]->physics.CollisionsEnabled);
-			ImGui::Checkbox("Static", &selection[0]->physics.Static);
-			ImGui::DragFloat("Bounce", &selection[0]->physics.Bounce, 0.1F);
-			ImGui::DragFloat("Density", &selection[0]->physics.Density, 0.1F);
-			ImGui::DragFloat("Friction", &selection[0]->physics.Friction, 0.1F);
-
-			/// visual
-			ImGui::Separator();
-			ImGui::Dummy(ImVec2(0.0f, s.propertySectionSeparator));
-			ImGui::Text("Visual");
-			// texture name
-			ImGui::Text(("Texture: " + selection[0]->visuals.textureName).c_str());
-			// texturemode
-			if (ImGui::Combo("TextureMode", &(int)selection[0]->visuals.TextureMode, se.tileTextureModeOptions, 2))
-			{
-				//program.editor.changeTileVisuals(selection[0]->ID, Visuals(selection[0]->visuals.atlasCoords, selection[0]->visuals.textureName, selection[0]->visuals.TextureMode, selection[0]->visuals.TextureSize, selection[0]->visuals.Color, selection[0]->visuals.Opacity));
-				program.editor.updateTileVisuals(selection[0]->ID);
-			}
-			float textureSize[2] = { selection[0]->visuals.TextureSize.x, selection[0]->visuals.TextureSize.y };
-			// TextureSize
-			if (ImGui::DragFloat2("TextureSize", textureSize))
-			{
-				selection[0]->visuals.TextureSize.x = textureSize[0];
-				selection[0]->visuals.TextureSize.y = textureSize[1];
-			}
-			float color[3] = { selection[0]->visuals.Color.x, selection[0]->visuals.Color.y, selection[0]->visuals.Color.z };
-			// color
-       		if (ImGui::ColorEdit3("Color", color, ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_InputRGB))
-			{
-				//program.editor.changeTileVisuals(selection[0]->ID, Visuals(selection[0]->visuals.atlasCoords, selection[0]->visuals.textureName, selection[0]->visuals.TextureMode, selection[0]->visuals.TextureSize, glm::vec4(color[0], color[1], color[2], selection[0]->visuals.Opacity), selection[0]->visuals.Opacity));
-				selection[0]->visuals.Color.x = color[0];
-				selection[0]->visuals.Color.y = color[1];
-				selection[0]->visuals.Color.z = color[2];
-				program.editor.updateTileVisuals(selection[0]->ID);
-			}
-			float opacity[1] = { selection[0]->visuals.Opacity };
-			// opacity
-			if (ImGui::DragFloat("Opacity", opacity, 0.1F, 0.0f, 1.0f))
-			{
-				//program.editor.changeTileVisuals(selection[0]->ID, Visuals(selection[0]->visuals.atlasCoords, selection[0]->visuals.textureName, selection[0]->visuals.TextureMode, selection[0]->visuals.TextureSize, selection[0]->visuals.Color, opacity[0]));
-				selection[0]->visuals.Opacity = *opacity;
-				program.editor.updateTileVisuals(selection[0]->ID);
-			}
-
-			/// tags
-			if (ImGui::CollapsingHeader("Tags")) 
-			{
-				for (int i = 0; i < MAX_TAGS; i++)
-				{
-					// declaring character array (+1 for null terminator)
-					char* buf = new char[program.editor.tags[i].length() + 1];
-				
-					// copying the contents of the
-					// string to char array
-					strcpy(buf, program.editor.tags[i].c_str());
-
-					if (ImGui::InputText(std::string("##").append(std::to_string(i)).c_str(), buf, 32))
+		if (ImGui::BeginTabBar("Tabs"))
+            {
+                if (ImGui::BeginTabItem("Tiles"))
+                {
+					/// SELECTION SECTION
+					std::vector<E_Tile*>& selection = program.editor.selection;
+					if (selection.size() == 1) // single tile
 					{
-						program.editor.tags[i].assign(buf);
+						/// location
+						ImGui::Text("Transform");
+						float pos[2] = { selection[0]->location.Position.x, selection[0]->location.Position.y };
+						// position
+						if (ImGui::DragFloat2("Position", pos))
+						{
+							program.editor.moveTile(selection[0]->ID, glm::vec2(pos[0], pos[1]));
+						}
+						float size[2] = { selection[0]->location.Size.x, selection[0]->location.Size.y };
+						// size
+						if (ImGui::DragFloat2("Size", size))
+						{
+							program.editor.resizeTile(selection[0]->ID, glm::vec2(size[0], size[1]));
+						}
+						float angle[1] = { mymath::deg(selection[0]->location.Angle) };
+						// angle
+						if (ImGui::DragFloat("Angle", angle, 1.0F, 0.0f, 360.0f))
+						{
+							program.editor.rotateTile(selection[0]->ID, mymath::rad((double)*angle));
+						}
+
+						/// physics
+						ImGui::Separator();
+						ImGui::Dummy(ImVec2(0.0f, s.propertySectionSeparator));
+						ImGui::Text("Physics");
+						ImGui::Checkbox("CollisionsEnabled", &selection[0]->physics.CollisionsEnabled);
+						ImGui::Checkbox("Static", &selection[0]->physics.Static);
+						ImGui::DragFloat("Bounce", &selection[0]->physics.Bounce, 0.1F);
+						ImGui::DragFloat("Density", &selection[0]->physics.Density, 0.1F);
+						ImGui::DragFloat("Friction", &selection[0]->physics.Friction, 0.1F);
+
+						/// visual
+						ImGui::Separator();
+						ImGui::Dummy(ImVec2(0.0f, s.propertySectionSeparator));
+						ImGui::Text("Visual");
+						// texture name
+						ImGui::Text(("Texture: " + selection[0]->visuals.textureName).c_str());
+						// texturemode
+						if (ImGui::Combo("TextureMode", &(int)selection[0]->visuals.TextureMode, se.tileTextureModeOptions, 2))
+						{
+							//program.editor.changeTileVisuals(selection[0]->ID, Visuals(selection[0]->visuals.atlasCoords, selection[0]->visuals.textureName, selection[0]->visuals.TextureMode, selection[0]->visuals.TextureSize, selection[0]->visuals.Color, selection[0]->visuals.Opacity));
+							program.editor.updateTileVisuals(selection[0]->ID);
+						}
+						float textureSize[2] = { selection[0]->visuals.TextureSize.x, selection[0]->visuals.TextureSize.y };
+						// TextureSize
+						if (ImGui::DragFloat2("TextureSize", textureSize))
+						{
+							selection[0]->visuals.TextureSize.x = textureSize[0];
+							selection[0]->visuals.TextureSize.y = textureSize[1];
+						}
+						float color[3] = { selection[0]->visuals.Color.x, selection[0]->visuals.Color.y, selection[0]->visuals.Color.z };
+						// color
+						if (ImGui::ColorEdit3("Color", color, ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_InputRGB))
+						{
+							//program.editor.changeTileVisuals(selection[0]->ID, Visuals(selection[0]->visuals.atlasCoords, selection[0]->visuals.textureName, selection[0]->visuals.TextureMode, selection[0]->visuals.TextureSize, glm::vec4(color[0], color[1], color[2], selection[0]->visuals.Opacity), selection[0]->visuals.Opacity));
+							selection[0]->visuals.Color.x = color[0];
+							selection[0]->visuals.Color.y = color[1];
+							selection[0]->visuals.Color.z = color[2];
+							program.editor.updateTileVisuals(selection[0]->ID);
+						}
+						float opacity[1] = { selection[0]->visuals.Opacity };
+						// opacity
+						if (ImGui::DragFloat("Opacity", opacity, 0.1F, 0.0f, 1.0f))
+						{
+							//program.editor.changeTileVisuals(selection[0]->ID, Visuals(selection[0]->visuals.atlasCoords, selection[0]->visuals.textureName, selection[0]->visuals.TextureMode, selection[0]->visuals.TextureSize, selection[0]->visuals.Color, opacity[0]));
+							selection[0]->visuals.Opacity = *opacity;
+							program.editor.updateTileVisuals(selection[0]->ID);
+						}
+
+						/// tags
+						if (ImGui::CollapsingHeader("Tags")) 
+						{
+							for (int i = 0; i < MAX_TAGS; i++)
+							{
+								// declaring character array (+1 for null terminator)
+								char* buf = new char[program.editor.tags[i].length() + 1];
+							
+								// copying the contents of the
+								// string to char array
+								strcpy(buf, program.editor.tags[i].c_str());
+
+								if (ImGui::InputText(std::string("##").append(std::to_string(i)).c_str(), buf, 32))
+								{
+									program.editor.tags[i].assign(buf);
+								}
+
+								ImGui::SameLine();
+
+								if (ImGui::Checkbox(std::string("##c").append(std::to_string(i)).c_str(), &selection[0]->tags[i]))
+								{
+
+								}
+							}
+						}
 					}
-
-					ImGui::SameLine();
-
-					if (ImGui::Checkbox(std::string("##c").append(std::to_string(i)).c_str(), &selection[0]->tags[i]))
+					else if (selection.size() > 0) // multiselect
 					{
+						ImGui::Text(("selected tile count: " + std::to_string(program.editor.selection.size())).c_str());
+						/// location
+						ImGui::Text("Transform");
+						float pos[2] = { 0.0f, 0.0f };
+						// position
+						if (ImGui::InputFloat2("Offset", pos, "", ImGuiInputTextFlags_EnterReturnsTrue))
+						{
+							// add this offset to every selected tile's position
+							for (int i = 0; i < selection.size(); i++)
+							{
+								program.editor.moveTile(selection[i]->ID, selection[i]->location.Position + glm::vec4(pos[0] - lastPos[0], pos[1] - lastPos[1], 0.0f, 0.0f));
+							}
 
+							pos[0] = 0.0f, pos[1] = 0.0f;
+						}
+						float size[2] = { selection[0]->location.Size.x, selection[0]->location.Size.y };
+						// size
+						if (ImGui::DragFloat2("Size", size))
+						{
+							for (int i = 0; i < selection.size(); i++)
+							{
+								program.editor.resizeTile(selection[i]->ID, glm::vec2(size[0], size[1]));
+							}
+						}
+						float angle[1] = { mymath::deg(selection[0]->location.Angle) };
+						// angle
+						if (ImGui::DragFloat("Angle", angle, 1.0F, 0.0f, 360.0f))
+						{
+							for (int i = 0; i < selection.size(); i++)
+							{
+								program.editor.rotateTile(selection[i]->ID, mymath::rad((double)*angle));
+							}
+						}
+
+						/// physics
+						ImGui::Separator();
+						ImGui::Dummy(ImVec2(0.0f, s.propertySectionSeparator));
+						ImGui::Text("Physics");
+						if (ImGui::Checkbox("CollisionsEnabled", &selection[0]->physics.CollisionsEnabled))
+						{
+							for (int i = 0; i < selection.size(); i++)
+							{
+								selection[i]->physics.CollisionsEnabled = selection[0]->physics.CollisionsEnabled;
+							}
+						}			
+						if (ImGui::Checkbox("Static", &selection[0]->physics.Static))
+						{
+							for (int i = 0; i < selection.size(); i++)
+							{
+								selection[i]->physics.Static = selection[0]->physics.Static;
+							}
+						}
+						if (ImGui::DragFloat("Bounce", &selection[0]->physics.Bounce, 0.1F))
+						{
+							for (int i = 0; i < selection.size(); i++)
+							{
+								selection[i]->physics.Bounce = selection[0]->physics.Bounce;
+							}
+						}
+						if (ImGui::DragFloat("Density", &selection[0]->physics.Density, 0.1F))
+						{
+							for (int i = 0; i < selection.size(); i++)
+							{
+								selection[i]->physics.Density = selection[0]->physics.Density;
+							}
+						}
+						if (ImGui::DragFloat("Friction", &selection[0]->physics.Friction, 0.1F))
+						{
+							for (int i = 0; i < selection.size(); i++)
+							{
+								selection[i]->physics.Friction = selection[0]->physics.Friction;
+							}
+						}
+
+						/// visual
+						ImGui::Separator();
+						ImGui::Dummy(ImVec2(0.0f, s.propertySectionSeparator));
+						ImGui::Text("Visual");
+
+						// texturemode
+						if (ImGui::Combo("TextureMode", &(int)selection[0]->visuals.TextureMode, se.tileTextureModeOptions, 2))
+						{
+							for (int i = 0; i < selection.size(); i++)
+							{
+								//program.editor.changeTileVisuals(selection[i]->ID, Visuals(selection[i]->visuals.atlasCoords, selection[i]->visuals.textureName, selection[0]->visuals.TextureMode, selection[i]->visuals.TextureSize, selection[i]->visuals.Color, selection[i]->visuals.Opacity));
+								selection[i]->visuals.TextureMode = selection[0]->visuals.TextureMode;
+								program.editor.updateTileVisuals(selection[i]->ID);
+							}
+						}
+
+						float textureSize[2] = { selection[0]->visuals.TextureSize.x, selection[0]->visuals.TextureSize.y };
+						// TextureSize
+						if (ImGui::DragFloat2("TextureSize", textureSize))
+						{
+							for (int i = 0; i < selection.size(); i++)
+							{
+								selection[i]->visuals.TextureSize.x = textureSize[0];
+								selection[i]->visuals.TextureSize.y = textureSize[1];
+							}
+						}
+
+						float color[3] = { selection[0]->visuals.Color.x, selection[0]->visuals.Color.y, selection[0]->visuals.Color.z };
+						// color
+						if (ImGui::ColorEdit3("Color", color, ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_InputRGB))
+						{
+							for (int i = 0; i < selection.size(); i++)
+							{
+								//program.editor.changeTileVisuals(selection[i]->ID, Visuals(selection[i]->visuals.atlasCoords, selection[i]->visuals.textureName, selection[i]->visuals.TextureMode, selection[i]->visuals.TextureSize, glm::vec4(color[0], color[1], color[2], selection[i]->visuals.Opacity), selection[i]->visuals.Opacity));
+								selection[i]->visuals.Color.x = color[0];
+								selection[i]->visuals.Color.y = color[1];
+								selection[i]->visuals.Color.z = color[2];
+								program.editor.updateTileVisuals(selection[i]->ID);
+							}
+						}
+
+						float opacity[1] = { selection[0]->visuals.Opacity };
+						// opacity
+						if (ImGui::DragFloat("Opacity", opacity, 0.1F, 0.0f, 1.0f))
+						{
+							for (int i = 0; i < selection.size(); i++)
+							{
+								//program.editor.changeTileVisuals(selection[i]->ID, Visuals(selection[i]->visuals.atlasCoords, selection[i]->visuals.textureName, selection[i]->visuals.TextureMode, selection[i]->visuals.TextureSize, selection[i]->visuals.Color, opacity[0]));
+								selection[i]->visuals.Opacity = *opacity;
+								program.editor.updateTileVisuals(selection[i]->ID);
+							}			
+						}
+
+						/// tags
+						if (ImGui::CollapsingHeader("Tags")) 
+						{
+							for (int i = 0; i < MAX_TAGS; i++)
+							{
+								// declaring character array (+1 for null terminator)
+								char* buf = new char[program.editor.tags[i].length() + 1];
+							
+								// copying the contents of the
+								// string to char array
+								strcpy(buf, program.editor.tags[i].c_str());
+
+								if (ImGui::InputText(std::string("##").append(std::to_string(i)).c_str(), buf, 32))
+								{
+									program.editor.tags[i].assign(buf);
+								}
+
+								ImGui::SameLine();
+
+								if (ImGui::Checkbox(std::string("##c").append(std::to_string(i)).c_str(), &selection[0]->tags[i]))
+								{
+									for (int j = 1; j < selection.size(); j++)
+									{
+										selection[j]->tags[i] = selection[0]->tags[i];
+									}
+								}
+							}
+						}
 					}
-				}
-			}
-		}
-		else if (selection.size() > 0) // multiselect
-		{
-			ImGui::Text(("selected tile count: " + std::to_string(program.editor.selection.size())).c_str());
-			/// location
-			ImGui::Text("Transform");
-			float pos[2] = { 0.0f, 0.0f };
-			// position
-			if (ImGui::InputFloat2("Offset", pos, "", ImGuiInputTextFlags_EnterReturnsTrue))
-			{
-				// add this offset to every selected tile's position
-				for (int i = 0; i < selection.size(); i++)
-				{
-					program.editor.moveTile(selection[i]->ID, selection[i]->location.Position + glm::vec4(pos[0] - lastPos[0], pos[1] - lastPos[1], 0.0f, 0.0f));
-				}
-
-				pos[0] = 0.0f, pos[1] = 0.0f;
-			}
-			float size[2] = { selection[0]->location.Size.x, selection[0]->location.Size.y };
-			// size
-			if (ImGui::DragFloat2("Size", size))
-			{
-				for (int i = 0; i < selection.size(); i++)
-				{
-					program.editor.resizeTile(selection[i]->ID, glm::vec2(size[0], size[1]));
-				}
-			}
-			float angle[1] = { mymath::deg(selection[0]->location.Angle) };
-			// angle
-			if (ImGui::DragFloat("Angle", angle, 1.0F, 0.0f, 360.0f))
-			{
-				for (int i = 0; i < selection.size(); i++)
-				{
-					program.editor.rotateTile(selection[i]->ID, mymath::rad((double)*angle));
-				}
-			}
-
-			/// physics
-			ImGui::Separator();
-			ImGui::Dummy(ImVec2(0.0f, s.propertySectionSeparator));
-			ImGui::Text("Physics");
-			if (ImGui::Checkbox("CollisionsEnabled", &selection[0]->physics.CollisionsEnabled))
-			{
-				for (int i = 0; i < selection.size(); i++)
-				{
-					selection[i]->physics.CollisionsEnabled = selection[0]->physics.CollisionsEnabled;
-				}
-			}			
-			if (ImGui::Checkbox("Static", &selection[0]->physics.Static))
-			{
-				for (int i = 0; i < selection.size(); i++)
-				{
-					selection[i]->physics.Static = selection[0]->physics.Static;
-				}
-			}
-			if (ImGui::DragFloat("Bounce", &selection[0]->physics.Bounce, 0.1F))
-			{
-				for (int i = 0; i < selection.size(); i++)
-				{
-					selection[i]->physics.Bounce = selection[0]->physics.Bounce;
-				}
-			}
-			if (ImGui::DragFloat("Density", &selection[0]->physics.Density, 0.1F))
-			{
-				for (int i = 0; i < selection.size(); i++)
-				{
-					selection[i]->physics.Density = selection[0]->physics.Density;
-				}
-			}
-			if (ImGui::DragFloat("Friction", &selection[0]->physics.Friction, 0.1F))
-			{
-				for (int i = 0; i < selection.size(); i++)
-				{
-					selection[i]->physics.Friction = selection[0]->physics.Friction;
-				}
-			}
-
-			/// visual
-			ImGui::Separator();
-			ImGui::Dummy(ImVec2(0.0f, s.propertySectionSeparator));
-			ImGui::Text("Visual");
-
-			// texturemode
-			if (ImGui::Combo("TextureMode", &(int)selection[0]->visuals.TextureMode, se.tileTextureModeOptions, 2))
-			{
-				for (int i = 0; i < selection.size(); i++)
-				{
-					//program.editor.changeTileVisuals(selection[i]->ID, Visuals(selection[i]->visuals.atlasCoords, selection[i]->visuals.textureName, selection[0]->visuals.TextureMode, selection[i]->visuals.TextureSize, selection[i]->visuals.Color, selection[i]->visuals.Opacity));
-					selection[i]->visuals.TextureMode = selection[0]->visuals.TextureMode;
-					program.editor.updateTileVisuals(selection[i]->ID);
-				}
-			}
-
-			float textureSize[2] = { selection[0]->visuals.TextureSize.x, selection[0]->visuals.TextureSize.y };
-			// TextureSize
-			if (ImGui::DragFloat2("TextureSize", textureSize))
-			{
-				for (int i = 0; i < selection.size(); i++)
-				{
-					selection[i]->visuals.TextureSize.x = textureSize[0];
-					selection[i]->visuals.TextureSize.y = textureSize[1];
-				}
-			}
-
-			float color[3] = { selection[0]->visuals.Color.x, selection[0]->visuals.Color.y, selection[0]->visuals.Color.z };
-			// color
-       		if (ImGui::ColorEdit3("Color", color, ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_InputRGB))
-			{
-				for (int i = 0; i < selection.size(); i++)
-				{
-					//program.editor.changeTileVisuals(selection[i]->ID, Visuals(selection[i]->visuals.atlasCoords, selection[i]->visuals.textureName, selection[i]->visuals.TextureMode, selection[i]->visuals.TextureSize, glm::vec4(color[0], color[1], color[2], selection[i]->visuals.Opacity), selection[i]->visuals.Opacity));
-					selection[i]->visuals.Color.x = color[0];
-					selection[i]->visuals.Color.y = color[1];
-					selection[i]->visuals.Color.z = color[2];
-					program.editor.updateTileVisuals(selection[i]->ID);
-				}
-			}
-
-			float opacity[1] = { selection[0]->visuals.Opacity };
-			// opacity
-			if (ImGui::DragFloat("Opacity", opacity, 0.1F, 0.0f, 1.0f))
-			{
-				for (int i = 0; i < selection.size(); i++)
-				{
-					//program.editor.changeTileVisuals(selection[i]->ID, Visuals(selection[i]->visuals.atlasCoords, selection[i]->visuals.textureName, selection[i]->visuals.TextureMode, selection[i]->visuals.TextureSize, selection[i]->visuals.Color, opacity[0]));
-					selection[i]->visuals.Opacity = *opacity;
-					program.editor.updateTileVisuals(selection[i]->ID);
-				}			
-			}
-		}
-		// 0 tiles selected
-		else 
-		{
-			ImGui::Text("no tiles selected");
-		}
-		// if (selection.size() > 0)
-		// {
-		// 	/// SEPARATOR
-		// 	ImGui::Dummy(ImVec2(0.0f, 40.0f));
-		// }
-		ImGui::SetCursorPosY(526.0f);
-		// TODO: Add tags, reset button
-		/// OPTIONS SECTION
-		// This was here, but i am not sure why ImGui::SetNextItemOpen(se.newTileOptionsVisible);
-		if (ImGui::CollapsingHeader("New tile options"))//, ImGuiTreeNodeFlags_
-		{
-			ImGui::Text("Transform");
-			ImGui::SameLine();
-			// reset button
-			if (ImGui::Button("Default settings"))
-			{
-				program.editor.reset_next_tile();
-			}
-
-			/// location
-			float size[2] = { program.editor.nextTile.location.Size.x, program.editor.nextTile.location.Size.y };
-			// size
-			if (ImGui::DragFloat2("Size##m", size))
-			{
-				program.editor.nextTile.location.Size.x = size[0];
-				program.editor.nextTile.location.Size.y = size[1];
-			}
-			float angle[1] = { mymath::deg(program.editor.nextTile.location.Angle) };
-			// angle
-			if (ImGui::DragFloat("Angle##", angle, 1.0F, 0.0f, 360.0f))
-			{
-				program.editor.nextTile.location.Angle = mymath::rad((double)*angle);
-			}
-
-			/// physics
-			ImGui::Separator();
-			ImGui::Dummy(ImVec2(0.0f, s.propertySectionSeparator));
-			ImGui::Text("Physics");
-			ImGui::Checkbox("CollisionsEnabled##m", &program.editor.nextTile.physics.CollisionsEnabled);
-			ImGui::Checkbox("Static##m", &program.editor.nextTile.physics.Static);
-			ImGui::DragFloat("Bounce##m", &program.editor.nextTile.physics.Bounce, 0.1F);
-			ImGui::DragFloat("Density##m", &program.editor.nextTile.physics.Density, 0.1F);
-			ImGui::DragFloat("Friction##m", &program.editor.nextTile.physics.Friction, 0.1F);
-
-			/// visual
-			ImGui::Separator();
-			ImGui::Dummy(ImVec2(0.0f, s.propertySectionSeparator));
-			ImGui::Text("Visual");
-			// texture name
-			ImGui::Text(("Texture: " + program.textureLoader.getAtlasTexturePath(program.render.textureAtlas, program.editor.nextTile.visuals.atlasCoords)).c_str());
-			// texturemode
-			ImGui::Combo("TextureMode##m", &se.currentTextureModeSelection, se.tileTextureModeOptions, 2);
-			program.editor.nextTile.visuals.TextureMode = (TEXTUREMODE)se.currentTextureModeSelection;
-			float textureSize[2] = { program.editor.nextTile.visuals.TextureSize.x, program.editor.nextTile.visuals.TextureSize.y };
-			// TextureSize
-			if (ImGui::DragFloat2("TextureSize##m", textureSize))
-			{
-				program.editor.nextTile.visuals.TextureSize.x = textureSize[0];
-				program.editor.nextTile.visuals.TextureSize.y = textureSize[1];
-			}
-			float color[3] = { program.editor.nextTile.visuals.Color.x, program.editor.nextTile.visuals.Color.y, program.editor.nextTile.visuals.Color.z };
-			// color
-       		if (ImGui::ColorEdit3("Color##m", color, ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_InputRGB))
-			{
-				program.editor.nextTile.visuals.Color.x = color[0];
-				program.editor.nextTile.visuals.Color.y = color[1];
-				program.editor.nextTile.visuals.Color.z = color[2];
-			}
-			float opacity[1] = { program.editor.nextTile.visuals.Opacity };
-			// opacity
-			if (ImGui::DragFloat("Opacity##m", opacity, 0.1F, 0.0f, 1.0f))
-			{
-				program.editor.nextTile.visuals.Opacity = opacity[0];
-			}
-
-			if (ImGui::CollapsingHeader("Tags")) 
-			{
-				for (int i = 0; i < MAX_TAGS; i++)
-				{
-					// declaring character array (+1 for null terminator)
-					char* buf = new char[program.editor.tags[i].length() + 1];
-				
-					// copying the contents of the
-					// string to char array
-					strcpy(buf, program.editor.tags[i].c_str());
-
-					if (ImGui::InputText(std::string("##m").append(std::to_string(i)).c_str(), buf, 32))
+					// 0 tiles selected
+					else 
 					{
-						program.editor.tags[i].assign(buf);
+						ImGui::Text("no tiles selected");
 					}
-
-					ImGui::SameLine();
-
-					if (ImGui::Checkbox(std::string("##cm").append(std::to_string(i)).c_str(), &program.editor.nextTile.tags[i]))
+					// if (selection.size() > 0)
+					// {
+					// 	/// SEPARATOR
+					// 	ImGui::Dummy(ImVec2(0.0f, 40.0f));
+					// }
+					ImGui::SetCursorPosY(556.0f);
+					// TODO: Add tags, reset button
+					/// OPTIONS SECTION
+					// This was here, but i am not sure why ImGui::SetNextItemOpen(se.newTileOptionsVisible);
+					if (ImGui::CollapsingHeader("New tile options"))//, ImGuiTreeNodeFlags_
 					{
+						ImGui::Text("Transform");
+						ImGui::SameLine();
+						// reset button
+						if (ImGui::Button("Default settings"))
+						{
+							program.editor.reset_next_tile();
+						}
 
+						/// location
+						float size[2] = { program.editor.nextTile.location.Size.x, program.editor.nextTile.location.Size.y };
+						// size
+						if (ImGui::DragFloat2("Size##m", size))
+						{
+							program.editor.nextTile.location.Size.x = size[0];
+							program.editor.nextTile.location.Size.y = size[1];
+							if (program.editor.placeCursorID != -1)
+							{
+								int index = program.editor.ID_to_gizmo_index(program.editor.placeCursorID);
+								program.editor.resizeGizmo(index, program.editor.nextTile.location.Size);
+							}
+						}
+						float angle[1] = { mymath::deg(program.editor.nextTile.location.Angle) };
+						// angle
+						if (ImGui::DragFloat("Angle##", angle, 1.0F, 0.0f, 360.0f))
+						{
+							program.editor.nextTile.location.Angle = mymath::rad((double)*angle);
+						}
+
+						/// physics
+						ImGui::Separator();
+						ImGui::Dummy(ImVec2(0.0f, s.propertySectionSeparator));
+						ImGui::Text("Physics");
+						ImGui::Checkbox("CollisionsEnabled##m", &program.editor.nextTile.physics.CollisionsEnabled);
+						ImGui::Checkbox("Static##m", &program.editor.nextTile.physics.Static);
+						ImGui::DragFloat("Bounce##m", &program.editor.nextTile.physics.Bounce, 0.1F);
+						ImGui::DragFloat("Density##m", &program.editor.nextTile.physics.Density, 0.1F);
+						ImGui::DragFloat("Friction##m", &program.editor.nextTile.physics.Friction, 0.1F);
+
+						/// visual
+						ImGui::Separator();
+						ImGui::Dummy(ImVec2(0.0f, s.propertySectionSeparator));
+						ImGui::Text("Visual");
+						// texture name
+						ImGui::Text(("Texture: " + program.textureLoader.getAtlasTexturePath(program.render.textureAtlas, program.editor.nextTile.visuals.atlasCoords)).c_str());
+						// texturemode
+						ImGui::Combo("TextureMode##m", &se.currentTextureModeSelection, se.tileTextureModeOptions, 2);
+						program.editor.nextTile.visuals.TextureMode = (TEXTUREMODE)se.currentTextureModeSelection;
+						if (program.editor.placeCursorID != -1)
+						{
+							int index;
+							Gizmo* placeCursor = program.editor.ID_to_gizmo(program.editor.placeCursorID, index);
+							placeCursor->visuals.TextureMode = program.editor.nextTile.visuals.TextureMode;
+							program.editor.updateGizmoVisuals(index);
+						}
+						float textureSize[2] = { program.editor.nextTile.visuals.TextureSize.x, program.editor.nextTile.visuals.TextureSize.y };
+						// TextureSize
+						if (ImGui::DragFloat2("TextureSize##m", textureSize))
+						{
+							program.editor.nextTile.visuals.TextureSize.x = textureSize[0];
+							program.editor.nextTile.visuals.TextureSize.y = textureSize[1];
+							if (program.editor.placeCursorID != -1)
+							{
+								int index;
+								Gizmo* placeCursor = program.editor.ID_to_gizmo(program.editor.placeCursorID, index);
+								placeCursor->visuals = program.editor.nextTile.visuals;
+								program.editor.updateGizmoVisuals(index);
+							}
+						}
+						float color[3] = { program.editor.nextTile.visuals.Color.x, program.editor.nextTile.visuals.Color.y, program.editor.nextTile.visuals.Color.z };
+						// color
+						if (ImGui::ColorEdit3("Color##m", color, ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_InputRGB))
+						{
+							program.editor.nextTile.visuals.Color.x = color[0];
+							program.editor.nextTile.visuals.Color.y = color[1];
+							program.editor.nextTile.visuals.Color.z = color[2];
+							if (program.editor.placeCursorID != -1)
+							{
+								int index;
+								Gizmo* placeCursor = program.editor.ID_to_gizmo(program.editor.placeCursorID, index);
+								placeCursor->visuals = program.editor.nextTile.visuals;
+								program.editor.updateGizmoVisuals(index);
+							}
+						}
+						float opacity[1] = { program.editor.nextTile.visuals.Opacity };
+						// opacity
+						if (ImGui::DragFloat("Opacity##m", opacity, 0.1F, 0.0f, 1.0f))
+						{
+							program.editor.nextTile.visuals.Opacity = opacity[0];
+							if (program.editor.placeCursorID != -1)
+							{
+								int index;
+								Gizmo* placeCursor = program.editor.ID_to_gizmo(program.editor.placeCursorID, index);
+								placeCursor->visuals.Opacity = program.editor.nextTile.visuals.Opacity;
+								program.editor.updateGizmoVisuals(index);
+							}
+						}
+
+						if (ImGui::CollapsingHeader("Tags")) 
+						{
+							for (int i = 0; i < MAX_TAGS; i++)
+							{
+								// declaring character array (+1 for null terminator)
+								char* buf = new char[program.editor.tags[i].length() + 1];
+							
+								// copying the contents of the
+								// string to char array
+								strcpy(buf, program.editor.tags[i].c_str());
+
+								if (ImGui::InputText(std::string("##m").append(std::to_string(i)).c_str(), buf, 32))
+								{
+									program.editor.tags[i].assign(buf);
+								}
+
+								ImGui::SameLine();
+
+								if (ImGui::Checkbox(std::string("##cm").append(std::to_string(i)).c_str(), &program.editor.nextTile.tags[i]))
+								{
+
+								}
+							}
+						}
+						se.newTileOptionsVisible = !se.newTileOptionsVisible;
 					}
-				}
-			}
-			se.newTileOptionsVisible = !se.newTileOptionsVisible;
-		}
+                    ImGui::EndTabItem();
+                }
+                if (ImGui::BeginTabItem("Editor"))
+				{
+					float color[3] = { program.editor.backgroundColor.x, program.editor.backgroundColor.y, program.editor.backgroundColor.z };
+					// color
+					if (ImGui::ColorEdit3("Background color", color, ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_InputRGB))
+					{
+						program.editor.backgroundColor.x = color[0];
+						program.editor.backgroundColor.y = color[1];
+						program.editor.backgroundColor.z = color[2];
+						
+						program.file_system.update_editor_config();
+					}
+                    ImGui::EndTabItem();
+                }
+                ImGui::EndTabBar();
+            }
+
+		
 	ImGui::End();
 }
 
@@ -665,11 +751,12 @@ void Gui::addTextureSelectorGui()
 						ImGui::PushStyleColor(ImGuiCol_Button, gd.normalButtonColor);
 					}
 
+					// the atlas coords and textureName of this button
+					glm::vec2 atCoords = program.textureLoader.getAtlasCoords(program.render.textureAtlas, total);
+					std::string textureName = program.textureLoader.getAtlasTexturePath(program.render.textureAtlas, atCoords);
 					// check if a tile was selected
 					if (ImGui::ImageButton((void*)(intptr_t)tileTextures[total]->ID, ImVec2(64, 64)))
 					{
-						glm::vec2 atCoords = program.textureLoader.getAtlasCoords(program.render.textureAtlas, total);
-						std::string textureName = program.textureLoader.getAtlasTexturePath(program.render.textureAtlas, atCoords);
 						//std::cout << textureName << std::endl;
 
 						if (program.editor.getTool() == SELECT)
@@ -691,6 +778,22 @@ void Gui::addTextureSelectorGui()
 						// update nexttile regardless
 						program.editor.nextTile.visuals.atlasCoords = atCoords;
 						program.editor.nextTile.visuals.textureName = textureName;
+						if (program.editor.placeCursorID != -1)
+						{
+							int index;
+							Gizmo* placeCursor = program.editor.ID_to_gizmo(program.editor.placeCursorID, index);
+							placeCursor->visuals.atlasCoords = program.editor.nextTile.visuals.atlasCoords;
+							placeCursor->visuals.textureName = program.editor.nextTile.visuals.textureName;
+							program.editor.updateGizmoVisuals(index);
+						}
+					}
+					if (ImGui::IsItemHovered())
+					{
+						ImGui::BeginTooltip();
+							ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+							ImGui::Text(textureName.c_str());
+							ImGui::PopTextWrapPos();
+						ImGui::EndTooltip();
 					}
 
 					ImGui::PopStyleColor();
@@ -780,6 +883,12 @@ void Gui::addBottomBarGui()
 				ImGui::BulletText("shortcut: left CTRL + left SHIFT + O ");
 				ImGui::PopTextWrapPos();
 			ImGui::EndTooltip();
+		}
+
+		ImGui::SetCursorPos(ImVec2(window->SCREEN_WIDTH - ((s.bottomBarButtonWidth * 4) + 60), 0.0f));
+		if (ImGui::Button("Reload textures", ImVec2(s.bottomBarButtonWidth, s.bottomBarHeight)))
+		{
+			program.file_system.updateTextures();
 		}
 
 		ImGui::SetCursorPos(ImVec2(window->SCREEN_WIDTH - ((s.bottomBarButtonWidth * 3) + 40), 0.0f));

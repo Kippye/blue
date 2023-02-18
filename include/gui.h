@@ -44,7 +44,7 @@ struct GuiSizes
 		float
 		propertiesPaneWidth = 64.0f * 4,
 		tileSelectorPaneWidth = 64.0f * 4,
-		bottomBarButtonWidth = 100.0f,
+		bottomBarButtonWidth = 112.0f,
 		bottomBarHeight = 32.0f,
 		editorPaneHeight = 64.0f,
 		editorButtonDistance = 66.0f,

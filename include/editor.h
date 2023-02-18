@@ -3,12 +3,14 @@
 #include <util.h>
 #include <textures.h>
 #include <editor_tile.h>
+#include <gizmo.h>
 #include <glm.hpp>
 #include <vector>
 #include <map>
 #include <string.h>
 
 class E_Tile;
+class Gizmo;
 
 enum GRID_MODE
 {
@@ -52,11 +54,16 @@ class Editor
     public:
 		// editor data
         std::vector<E_Tile> tiles = {};
+		std::vector<Gizmo> gizmos = {};
+		int placeCursorID = -1;
+		int gridGizmoID = -1;
 		std::vector<std::string> tags = std::vector(MAX_TAGS, std::string("NA"));
 		// tool data
         glm::vec2& toolPos = glm::vec2(0.0f);
         glm::vec2 cachedToolPos = glm::vec2(0.0f);
 		OVERLAP_MODE overlapMode = OVERLAP_FREE;
+		// editor settings
+		glm::vec3 backgroundColor = glm::vec3(0.2f, 0.2f, 0.8f);
 
 		std::vector<E_Tile*> selection = {};
 		TileOptions nextTile;
@@ -75,6 +82,8 @@ class Editor
 		bool checkForOverlaps(Bounding_Box &box, glm::vec4 &pos);
 		E_Tile* positionToTile(glm::vec4 &pos, int &index, bool grid = false);
 		E_Tile* ID_to_tile(int ID, int &index);
+		Gizmo* ID_to_gizmo(int ID, int &index);
+		int ID_to_gizmo_index(int ID);
 		std::vector<E_Tile*>* getTilesInArea(Bounding_Box area, glm::vec4 &pos, std::vector<int> &indices);
 
 	private:
@@ -104,17 +113,27 @@ class Editor
 		void resizeTile(unsigned int ID, glm::vec2 newSize);
 		void rotateTile(int index, double newRotation);
 		void rotateTile(unsigned int ID, double newRotation);
-		// set the tile's visuals to the given one and update its visual instance data
-		void changeTileVisuals(int index, Visuals visuals);
 		// update a tile's visual instance data
 		void updateTileVisuals(int index);
-		// set the tile's visuals to the given one and update its visual instance data
-		void changeTileVisuals(unsigned int ID, Visuals visuals);
 		// update a tile's visual instance data
 		void updateTileVisuals(unsigned int ID);
+		// GIZMOS
+		void moveGizmo(int index, glm::vec2 newPos);
+        void moveGizmo(unsigned int ID, glm::vec2 newPos);
+		void resizeGizmo(int index, glm::vec2 newSize);
+		void resizeGizmo(unsigned int ID, glm::vec2 newSize);
+		// update a gizmo's visual instance data
+		void updateGizmoVisuals(int index);
+		// update a gizmo's visual instance data
+		void updateGizmoVisuals(unsigned int ID);
+
+		void update_gizmos();
 
         void add_tile(E_Tile &tile);
         void add_tile(std::vector<E_Tile> &tiles);
         void remove_tile(int index = -1);
         void remove_tile(std::vector<int> &indices);
+
+		void add_gizmo(Gizmo &gizmo);
+        void remove_gizmo(int index = -1);
 };

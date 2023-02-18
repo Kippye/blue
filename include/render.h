@@ -36,6 +36,7 @@ class Render
 		glm::mat4 projection = glm::mat4(1.0f);
 
 		unsigned int VBO, VAO, EBO, instanceVBO, instanceTextureVBO, instanceColorVBO, instanceAdditionalVBO;
+		unsigned int VBO_G, VAO_G, EBO_G, instanceVBO_G, instanceTextureVBO_G, instanceColorVBO_G, instanceAdditionalVBO_G;
 		TextureAtlas* textureAtlas;
 
 		std::vector<glm::vec4> instanceTransformData = {};
@@ -43,21 +44,31 @@ class Render
 		std::vector<glm::vec4> instanceColorData = {};
 		std::vector<glm::vec4> instanceAdditionalData = {};
 
+		std::vector<glm::vec4> GinstanceTransformData = {};
+		std::vector<glm::vec4> GinstanceTextureData = {};
+		std::vector<glm::vec4> GinstanceColorData = {};
+		std::vector<glm::vec4> GinstanceAdditionalData = {};
+
 	public:
 		void setup();
-		void updateInstanceArray(INSTANCE_ARRAY_UPDATE type = INSTANCE_ARRAY_UPDATE_ALL); // update the instance VBOs of transform and additional data
+		void updateInstanceArray(INSTANCE_ARRAY_UPDATE type = INSTANCE_ARRAY_UPDATE_ALL); // update the instance VBOs of transform and additional data for TILES only
+		void updateGizmoInstanceArray(INSTANCE_ARRAY_UPDATE type = INSTANCE_ARRAY_UPDATE_ALL); // update the instance VBOs of transform and additional data for GIZMOS only
 		void render();
 
 		void set_tile_selection(int index, bool to);
 		void Render::set_tile_selection(std::vector<int> &indices, bool to);
 
 		void add_to_instance_data(E_Tile &tile); // add to instance data
+		void add_gizmo_to_instance_data(Gizmo &gizmo); // add to instance data
 		void erase_from_instance_data(int index); // remove from instance data
+		void erase_gizmo_from_instance_data(int index); // remove from instance data
 
 		void add_to_render_list(E_Tile &tile); // add to the list of tiles to be rendered
 		void add_to_render_list(std::vector<E_Tile> &tiles); // add several tiles to be rendered in one update call
+		void add_gizmo_to_render_list(Gizmo &gizmo);
 		void remove_from_render_list(int index); // remove from the list of tiles to be rendered
 		void remove_from_render_list(std::vector<int> &indices); // remove several tiles from being rendered in one update call
+		void remove_gizmo_from_render_list(int index);
 
 		void terminate();
 };

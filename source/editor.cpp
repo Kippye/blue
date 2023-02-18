@@ -10,7 +10,7 @@
 class Program;
 extern Program program;
 
-Editor::Editor() { mymath::rad(180); }
+Editor::Editor() {}
 
 Tool Editor::getTool()
 {
@@ -23,6 +23,23 @@ void Editor::setTool(Tool tool)
 	if (selection.size() > 0 && (tool == SELECT ^ tool == MOVE))
 	{
 		deselect_all();
+	}
+
+	if (tool == PLACE)
+	{
+		Gizmo& placeCursor = gizmos.emplace_back(Location(program.camera.screen_to_world(toolPos), nextTile.location.Size), nextTile.visuals);
+		placeCursorID = placeCursor.ID;
+		add_gizmo(placeCursor);
+	}
+	else
+	{
+		if (placeCursorID != -1)
+		{
+			int index;
+			ID_to_gizmo(placeCursorID, index);
+			remove_gizmo(index);
+			placeCursorID = -1;
+		}
 	}
 
 	selectedTool = tool;
@@ -118,6 +135,32 @@ E_Tile* Editor::ID_to_tile(int ID, int &index)
 		if (tiles[index].ID == ID)
 		{
 			return &tiles[index]; // return so we only get 1 tile each click, otherwise shit would be pretty weird, innit?
+		}
+	}
+	return nullptr;
+}
+
+int Editor::ID_to_gizmo_index(int ID)
+{
+	// reverse loop so we get the top-most tile and also speed up removing recently placed tiles
+	for (int i = gizmos.size() - 1; i >= 0; i--)
+	{
+		if (gizmos[i].ID == ID)
+		{
+			return i;
+		}
+	}
+	return -1;
+}
+
+Gizmo* Editor::ID_to_gizmo(int ID, int &index)
+{
+	// reverse loop so we get the top-most tile and also speed up removing recently placed tiles
+	for (index = gizmos.size() - 1; index >= 0; index--)
+	{
+		if (gizmos[index].ID == ID)
+		{
+			return &gizmos[index]; // return so we only get 1 tile each click, otherwise shit would be pretty weird, innit?
 		}
 	}
 	return nullptr;
@@ -253,12 +296,25 @@ void Editor::reset_next_tile()
 	{
 		nextTile.tags[i] = false;
 	}
+
+	if (placeCursorID != -1)
+	{
+		int index;
+		Gizmo* placeCursor = ID_to_gizmo(placeCursorID, index);
+		resizeGizmo(index, nextTile.location.Size);
+		placeCursor->visuals.TextureMode = nextTile.visuals.TextureMode;
+		placeCursor->visuals.TextureSize.x = nextTile.visuals.TextureSize.x;
+		placeCursor->visuals.TextureSize.y = nextTile.visuals.TextureSize.y;
+		placeCursor->visuals.Color.x = nextTile.visuals.Color.x;
+		placeCursor->visuals.Color.y = nextTile.visuals.Color.y;
+		placeCursor->visuals.Color.z = nextTile.visuals.Color.z;
+		placeCursor->visuals.Opacity = nextTile.visuals.Opacity;
+		updateGizmoVisuals(index);
+	}
 }
 
 void Editor::updateToolPos(glm::vec2 &mousePos)
 {
-	// TODO: do some shit with the mouse pos (move the "drawing cursor")
-
 	if (!program.gui.guiHovered && !program.file_system.contextOpen)
 	{
 		if (selectedTool == SELECT && program.input.lmb_down && program.input.lmb_down_last)
@@ -288,15 +344,31 @@ void Editor::updateToolPos(glm::vec2 &mousePos)
 
 			if (tilesInArea.size() > 0)
 			{
-				selection.assign(tilesInArea.begin(), tilesInArea.end());
-
-				for (E_Tile* tile : selection)
+				for (E_Tile* tile : tilesInArea)
 				{
-					tile->selected = true;
+					if (tile->selected == false)
+					{
+						selection.push_back(tile);
+						tile->selected = true;
+						int index;
+						ID_to_tile(tile->ID, index);
+						program.render.set_tile_selection(index, true);
+					}
 				}
+				// selection.assign(tilesInArea.begin(), tilesInArea.end());
 
-				program.render.set_tile_selection(indices, true);
+				// for (E_Tile* tile : selection)
+				// {
+				// 	tile->selected = true;
+				// }
+
+				// program.render.set_tile_selection(indices, true);
 			}
+		}
+		else if (selectedTool == PLACE)
+		{
+			if (placeCursorID != -1)
+				moveGizmo(program.editor.ID_to_gizmo_index(placeCursorID), program.input.ctrl_down || gridMode != GRID_MODE_NORMAL ? mymath::floor_to_grid(program.camera.screen_to_world(mousePos)) : program.camera.screen_to_world(mousePos));
 		}
 		else if (selectedTool == BOX)
 		{
@@ -384,163 +456,7 @@ void Editor::updateToolPos(glm::vec2 &mousePos)
 	}
 }
 
-void Editor::update_atlas_coords(TextureAtlas* atlas)
-{
-	for (int i = 0; i < tiles.size(); i++)
-	{
-		// std::cout << "ac: " << tiles[i].visuals.atlasCoords.x << tiles[i].visuals.atlasCoords.y << std::endl;
-		glm::vec2 atCoords = program.textureLoader.getAtlasTextureCoords(atlas, tiles[i].visuals.textureName);
-		// std::cout << "acafter: " << atCoords.x << atCoords.y << std::endl;
-		std::cout << tiles[i].visuals.textureName << std::endl;
-		// i really dont know how to handle it being -1 but this will do for now...
-		if (atCoords != glm::vec2(-1.0f))
-		{
-			tiles[i].visuals.atlasCoords = atCoords;
-			program.render.instanceAdditionalData[i].x = atCoords.x;
-			program.render.instanceAdditionalData[i].y = atCoords.y;
-		}
-		else
-		{
-			tiles[i].visuals.atlasCoords = glm::vec2(0.0f, 0.0f);
-			program.render.instanceAdditionalData[i].x = 0.0f;
-			program.render.instanceAdditionalData[i].y = 0.0f;
-		}
-	}
-
-	// update nextTile too...
-	// std::cout << nextTile.visuals.textureName << std::endl;
-	glm::vec2 atCoords = program.textureLoader.getAtlasTextureCoords(atlas, nextTile.visuals.textureName);
-	nextTile.visuals.atlasCoords = atCoords == glm::vec2(-1.0f) ? glm::vec2(0.0f, 0.0f) : atCoords;
-	nextTile.visuals.textureName = program.textureLoader.getAtlasTexturePath(atlas, nextTile.visuals.atlasCoords);
-	nextTile.visuals.atlasCoords = program.textureLoader.getAtlasTextureCoords(atlas, nextTile.visuals.textureName);
-
-	program.render.updateInstanceArray(INSTANCE_ARRAY_UPDATE_2);
-}
-
-void Editor::moveTile(int index, glm::vec2 newPos)
-{
-	// snap position to the grid if needed
-	if (gridMode != GRID_MODE_NORMAL)
-	{
-		newPos = mymath::floor_to_grid(newPos);
-	}
-
-	tiles[index].location.Position.x = newPos.x;
-	tiles[index].location.Position.y = newPos.y;
-	// update visuals
-	program.render.instanceTransformData[index].x = newPos.x;
-	program.render.instanceTransformData[index].y = newPos.y;
-	program.render.updateInstanceArray(INSTANCE_ARRAY_UPDATE_1);
-
-	setDirtiness(true);
-}
-
-void Editor::moveTile(unsigned int ID, glm::vec2 newPos)
-{
-	int index = 0;
-	E_Tile* tile = ID_to_tile(ID, index);
-
-	// snap position to the grid if needed
-	if (gridMode != GRID_MODE_NORMAL)
-	{
-		newPos = mymath::floor_to_grid(newPos);
-	}
-
-	tile->location.Position.x = newPos.x;
-	tile->location.Position.y = newPos.y;
-	// update visuals
-	program.render.instanceTransformData[index].x = newPos.x;
-	program.render.instanceTransformData[index].y = newPos.y;
-	program.render.updateInstanceArray(INSTANCE_ARRAY_UPDATE_1);
-
-	setDirtiness(true);
-}
-
-void Editor::resizeTile(int index, glm::vec2 newSize)
-{
-	// snap even the size to the grid if needed
-	if (gridMode != GRID_MODE_NORMAL)
-	{
-		newSize = mymath::floor_to_grid(newSize);
-	}
-
-	tiles[index].location.Size.x = newSize.x;
-	tiles[index].location.Size.y = newSize.y;
-	tiles[index].location.box.update_size(newSize);
-	// update visuals
-	program.render.instanceTransformData[index].z = newSize.x;
-	program.render.instanceTransformData[index].w = newSize.y;
-	program.render.updateInstanceArray(INSTANCE_ARRAY_UPDATE_1);
-
-	setDirtiness(true);
-}
-
-void Editor::resizeTile(unsigned int ID, glm::vec2 newSize)
-{
-	int index = 0;
-	E_Tile* tile = ID_to_tile(ID, index);
-
-	// snap even the size to the grid if needed
-	if (gridMode != GRID_MODE_NORMAL)
-	{
-		newSize = mymath::floor_to_grid(newSize);
-	}
-
-	tile->location.Size.x = newSize.x;
-	tile->location.Size.y = newSize.y;
-	tiles[index].location.box.update_size(newSize);
-	// update visuals
-	program.render.instanceTransformData[index].z = newSize.x;
-	program.render.instanceTransformData[index].w = newSize.y;
-	program.render.updateInstanceArray(INSTANCE_ARRAY_UPDATE_1);
-
-	setDirtiness(true);
-}
-
-void Editor::rotateTile(int index, double newRotation)
-{
-	tiles[index].location.Angle = newRotation;
-	// TODO: if i make tiles have visible rotation, i would probably also have to make their bounding boxes have rotation 💀
-	// TODO: update instance data when rotation affects rendering
-	setDirtiness(true);
-}
-
-void Editor::rotateTile(unsigned int ID, double newRotation)
-{
-	int index = 0;
-	E_Tile* tile = ID_to_tile(ID, index);
-
-	rotateTile(index, newRotation);
-}
-
-void Editor::updateTileVisuals(int index)
-{
-	// TODO: update when TextureSize is made to have a visible effect
-	Visuals* visuals = &tiles[index].visuals;
-	program.render.instanceTextureData[index].x = visuals->atlasCoords.x;
-	program.render.instanceTextureData[index].y = visuals->atlasCoords.y;
-	program.render.instanceTextureData[index].z = visuals->TextureSize.x;
-	program.render.instanceTextureData[index].w = visuals->TextureSize.y;
-	program.render.instanceColorData[index].x = visuals->Color.x;
-	program.render.instanceColorData[index].y = visuals->Color.y;
-	program.render.instanceColorData[index].z = visuals->Color.z;
-	program.render.instanceColorData[index].w = visuals->Opacity;
-	program.render.instanceAdditionalData[index].x = visuals->TextureMode == TEXTUREMODE_TILE;
-	// TODO: make it just update both at once
-	program.render.updateInstanceArray(INSTANCE_ARRAY_UPDATE_2);
-	program.render.updateInstanceArray(INSTANCE_ARRAY_UPDATE_3);
-	program.render.updateInstanceArray(INSTANCE_ARRAY_UPDATE_4);
-
-	setDirtiness(true);
-}
-
-void Editor::updateTileVisuals(unsigned int ID)
-{
-	int index = 0;
-	E_Tile* tile = ID_to_tile(ID, index);
-	updateTileVisuals(index);
-}
-
+// executed when a tool is used by pressing GLFW_MOUSE_BUTTON_LEFT or for some tools by holding down LMB (drawing with PLACE for example)
 void Editor::tool_use()
 {
 	if (program.gui.guiHovered || program.file_system.contextOpen) { return; }
@@ -555,27 +471,41 @@ void Editor::tool_use()
 
 			E_Tile* tile = positionToTile(program.camera.screen_to_world(toolPos), index);
 
-			if (tile == nullptr || selection.size() > 1) // selected empty space, deselect all tiles (select tile if not null)
+			// clicked on empty space
+			if (tile == nullptr)
 			{
-				deselect_all();
-				if (tile != nullptr) // select the tile instead
+				// not holding shift - deselect all tiles
+				if (program.input.shift_down == false)
 				{
-					selection.push_back(tile);
+					deselect_all();
 				}
 				return;
 			}
-			if (selection.size() == 1) // replace selection
+			// clicked on a tile
+			else
 			{
-				// deselect last tile
-				update_tile_selection(selection[0]->ID, false);
-				// select new tile
-				selection[0] = tile;
+				// not holding shift, replace entire selection with tile
+				if (program.input.shift_down == false)
+				{
+					if (selection.size() == 1)
+					{
+						selection[0]->selected = false;
+						update_tile_selection(selection[0]->ID, false);
+						selection.pop_back();
+					}
+					else
+					{
+						deselect_all();
+					}
+				}
+				
+				// only add unselected tile to selection
+				if (tile->selected == false)
+				{
+					selection.push_back(tile);
+					update_tile_selection(tile, index, true);
+				}
 			}
-			else if (selection.size() == 0) // create selection
-			{
-				selection.push_back(tile);
-			}
-			update_tile_selection(tile, index, true);
 			break;
 		}
 		case PLACE:
@@ -602,6 +532,7 @@ void Editor::tool_use()
 	};
 }
 
+// executed when a tool's secondary function is used by pressing GLFW_MOUSE_BUTTON_RIGHT or for some tools by holding down RMB (erasing with PLACE for example)
 void Editor::tool_use_secondary()
 {
 	if (program.gui.guiHovered || program.file_system.contextOpen) { return; }
@@ -648,6 +579,251 @@ void Editor::tool_use_secondary()
 	};
 }
 
+void Editor::update_atlas_coords(TextureAtlas* atlas)
+{
+	for (int i = 0; i < tiles.size(); i++)
+	{
+		// std::cout << "ac: " << tiles[i].visuals.atlasCoords.x << tiles[i].visuals.atlasCoords.y << std::endl;
+		glm::vec2 atCoords = program.textureLoader.getAtlasTextureCoords(atlas, tiles[i].visuals.textureName);
+		// std::cout << "acafter: " << atCoords.x << atCoords.y << std::endl;
+		std::cout << tiles[i].visuals.textureName << std::endl;
+		// i really dont know how to handle it being -1 but this will do for now...
+		if (atCoords != glm::vec2(-1.0f))
+		{
+			tiles[i].visuals.atlasCoords = atCoords;
+			program.render.instanceTextureData[i].x = atCoords.x;
+			program.render.instanceTextureData[i].y = atCoords.y;
+		}
+		else
+		{
+			tiles[i].visuals.atlasCoords = glm::vec2(0.0f, 0.0f);
+			program.render.instanceTextureData[i].x = 0.0f;
+			program.render.instanceTextureData[i].y = 0.0f;
+		}
+	}
+
+	for (int i = 0; i < gizmos.size(); i++)
+	{
+		// std::cout << "ac: " << tiles[i].visuals.atlasCoords.x << tiles[i].visuals.atlasCoords.y << std::endl;
+		glm::vec2 atCoords = program.textureLoader.getAtlasTextureCoords(atlas, gizmos[i].visuals.textureName);
+		// std::cout << "acafter: " << atCoords.x << atCoords.y << std::endl;
+		std::cout << gizmos[i].visuals.textureName << std::endl;
+		// i really dont know how to handle it being -1 but this will do for now...
+		if (atCoords != glm::vec2(-1.0f))
+		{
+			gizmos[i].visuals.atlasCoords = atCoords;
+			program.render.GinstanceTextureData[i].x = atCoords.x;
+			program.render.GinstanceTextureData[i].y = atCoords.y;
+		}
+		else
+		{
+			gizmos[i].visuals.atlasCoords = glm::vec2(0.0f, 0.0f);
+			program.render.GinstanceTextureData[i].x = 0.0f;
+			program.render.GinstanceTextureData[i].y = 0.0f;
+		}
+	}
+
+	// update nextTile too...
+	// std::cout << nextTile.visuals.textureName << std::endl;
+	glm::vec2 atCoords = program.textureLoader.getAtlasTextureCoords(atlas, nextTile.visuals.textureName);
+	nextTile.visuals.atlasCoords = atCoords == glm::vec2(-1.0f) ? glm::vec2(0.0f, 0.0f) : atCoords;
+	nextTile.visuals.textureName = program.textureLoader.getAtlasTexturePath(atlas, nextTile.visuals.atlasCoords);
+	nextTile.visuals.atlasCoords = program.textureLoader.getAtlasTextureCoords(atlas, nextTile.visuals.textureName);
+
+	program.render.updateInstanceArray(INSTANCE_ARRAY_UPDATE_2);
+	program.render.updateGizmoInstanceArray(INSTANCE_ARRAY_UPDATE_2);
+
+	if (gridGizmoID == -1)
+	{
+		// only show grid if a grid texture was provided
+		if (std::find(program.render.textureAtlas->textureFiles.begin(), program.render.textureAtlas->textureFiles.end(), "grid.png") != program.render.textureAtlas->textureFiles.end())
+		{
+			Gizmo &gridGizmo = gizmos.emplace_back(
+				Location(glm::vec4(-1000.0f, -1000.0f, 0.0f, 0.0f), glm::vec3(2000.0f, 2000.0f, 0.0f)),
+				Visuals(program.textureLoader.getAtlasTextureCoords(program.render.textureAtlas, "grid.png"), "grid.png", TEXTUREMODE_TILE, glm::vec2(1.0f, 1.0f), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f), 0.75f)
+			);
+
+			add_gizmo(gridGizmo); 
+			gridGizmoID = gridGizmo.ID;
+		}
+	}
+}
+
+void Editor::moveTile(int index, glm::vec2 newPos)
+{
+	// snap position to the grid if needed
+	if (gridMode != GRID_MODE_NORMAL)
+	{
+		newPos = mymath::floor_to_grid(newPos);
+	}
+
+	tiles[index].location.Position.x = newPos.x;
+	tiles[index].location.Position.y = newPos.y;
+	// update visuals
+	program.render.instanceTransformData[index].x = newPos.x;
+	program.render.instanceTransformData[index].y = newPos.y;
+	program.render.updateInstanceArray(INSTANCE_ARRAY_UPDATE_1);
+
+	setDirtiness(true);
+}
+
+void Editor::moveTile(unsigned int ID, glm::vec2 newPos)
+{
+	int index = 0;
+	ID_to_tile(ID, index);
+	moveTile(index, newPos);
+}
+
+void Editor::resizeTile(int index, glm::vec2 newSize)
+{
+	// snap even the size to the grid if needed
+	if (gridMode != GRID_MODE_NORMAL)
+	{
+		newSize = mymath::floor_to_grid(newSize);
+	}
+
+	tiles[index].location.Size.x = newSize.x;
+	tiles[index].location.Size.y = newSize.y;
+	tiles[index].location.box.update_size(newSize);
+	// update visuals
+	program.render.instanceTransformData[index].z = newSize.x;
+	program.render.instanceTransformData[index].w = newSize.y;
+	program.render.updateInstanceArray(INSTANCE_ARRAY_UPDATE_1);
+
+	setDirtiness(true);
+}
+
+void Editor::resizeTile(unsigned int ID, glm::vec2 newSize)
+{
+	int index = 0;
+	ID_to_tile(ID, index);
+	resizeTile(index, newSize);
+}
+
+void Editor::rotateTile(int index, double newRotation)
+{
+	tiles[index].location.Angle = newRotation;
+	// TODO: if i make tiles have visible rotation, i would probably also have to make their bounding boxes have rotation 💀
+	// TODO: update instance data when rotation affects rendering
+	setDirtiness(true);
+}
+
+void Editor::rotateTile(unsigned int ID, double newRotation)
+{
+	int index = 0;
+	E_Tile* tile = ID_to_tile(ID, index);
+
+	rotateTile(index, newRotation);
+}
+
+void Editor::updateTileVisuals(int index)
+{
+	// TODO: update when TextureSize is made to have a visible effect
+	Visuals* visuals = &tiles[index].visuals;
+	program.render.instanceTextureData[index].x = visuals->atlasCoords.x;
+	program.render.instanceTextureData[index].y = visuals->atlasCoords.y;
+	program.render.instanceTextureData[index].z = visuals->TextureSize.x;
+	program.render.instanceTextureData[index].w = visuals->TextureSize.y;
+	program.render.instanceColorData[index].x = visuals->Color.x;
+	program.render.instanceColorData[index].y = visuals->Color.y;
+	program.render.instanceColorData[index].z = visuals->Color.z;
+	program.render.instanceColorData[index].w = visuals->Opacity;
+	program.render.instanceAdditionalData[index].x = visuals->TextureMode == TEXTUREMODE_TILE;
+	// TODO: make it just update both at once
+	program.render.updateInstanceArray(INSTANCE_ARRAY_UPDATE_2);
+	program.render.updateInstanceArray(INSTANCE_ARRAY_UPDATE_3);
+	program.render.updateInstanceArray(INSTANCE_ARRAY_UPDATE_4);
+
+	setDirtiness(true);
+}
+
+void Editor::updateTileVisuals(unsigned int ID)
+{
+	int index = 0;
+	E_Tile* tile = ID_to_tile(ID, index);
+	updateTileVisuals(index);
+}
+
+/// GIZMOS
+void Editor::moveGizmo(int index, glm::vec2 newPos)
+{
+	// snap position to the grid if needed
+	if (gridMode != GRID_MODE_NORMAL)
+	{
+		newPos = mymath::floor_to_grid(newPos);
+	}
+
+	gizmos[index].location.Position.x = newPos.x;
+	gizmos[index].location.Position.y = newPos.y;
+	// update visuals
+	program.render.GinstanceTransformData[index].x = newPos.x;
+	program.render.GinstanceTransformData[index].y = newPos.y;
+	program.render.updateGizmoInstanceArray(INSTANCE_ARRAY_UPDATE_1);
+}
+
+void Editor::moveGizmo(unsigned int ID, glm::vec2 newPos)
+{
+	int index = 0;
+	ID_to_gizmo(ID, index);
+	moveGizmo(index, newPos);
+}
+
+void Editor::resizeGizmo(int index, glm::vec2 newSize)
+{
+	// snap even the size to the grid if needed
+	if (gridMode != GRID_MODE_NORMAL)
+	{
+		newSize = mymath::floor_to_grid(newSize);
+	}
+
+	gizmos[index].location.Size.x = newSize.x;
+	gizmos[index].location.Size.y = newSize.y;
+	gizmos[index].location.box.update_size(newSize);
+	// update visuals
+	program.render.GinstanceTransformData[index].z = newSize.x;
+	program.render.GinstanceTransformData[index].w = newSize.y;
+	program.render.updateGizmoInstanceArray(INSTANCE_ARRAY_UPDATE_1);
+}
+
+void Editor::resizeGizmo(unsigned int ID, glm::vec2 newSize)
+{
+	int index = 0;
+	ID_to_gizmo(ID, index);
+	resizeGizmo(index, newSize);
+}
+
+void Editor::updateGizmoVisuals(int index)
+{
+	// TODO: update when TextureSize is made to have a visible effect
+	Visuals* visuals = &gizmos[index].visuals;
+	program.render.GinstanceTextureData[index].x = visuals->atlasCoords.x;
+	program.render.GinstanceTextureData[index].y = visuals->atlasCoords.y;
+	program.render.GinstanceTextureData[index].z = visuals->TextureSize.x;
+	program.render.GinstanceTextureData[index].w = visuals->TextureSize.y;
+	program.render.GinstanceColorData[index].x = visuals->Color.x;
+	program.render.GinstanceColorData[index].y = visuals->Color.y;
+	program.render.GinstanceColorData[index].z = visuals->Color.z;
+	program.render.GinstanceColorData[index].w = visuals->Opacity;
+	program.render.GinstanceAdditionalData[index].x = visuals->TextureMode == TEXTUREMODE_TILE;
+	// TODO: make it just update both at once
+	program.render.updateGizmoInstanceArray(INSTANCE_ARRAY_UPDATE_2);
+	program.render.updateGizmoInstanceArray(INSTANCE_ARRAY_UPDATE_3);
+	program.render.updateGizmoInstanceArray(INSTANCE_ARRAY_UPDATE_4);
+
+	setDirtiness(true);
+}
+
+void Editor::updateGizmoVisuals(unsigned int ID)
+{
+	int index = 0;
+	ID_to_gizmo(ID, index);
+	updateGizmoVisuals(index);
+}
+
+void Editor::update_gizmos()
+{
+}
+
 void Editor::add_tile(E_Tile &tile)
 {
 	program.render.add_to_render_list(tile);
@@ -664,9 +840,11 @@ void Editor::remove_tile(int index)
 {
 	// remove from the tiles vector as well
 	if (index != -1)
-	program.render.remove_from_render_list(index);
-	tiles.erase(std::begin(tiles) + index);
-	setDirtiness(true);
+	{
+		program.render.remove_from_render_list(index);
+		tiles.erase(std::begin(tiles) + index);
+		setDirtiness(true);
+	}
 }
 
 void Editor::remove_tile(std::vector<int> &indices)
@@ -679,8 +857,23 @@ void Editor::remove_tile(std::vector<int> &indices)
 	{
 		// remove from the tiles vector as well
 		if (index != -1)
-		tiles.erase(std::begin(tiles) + index);
+			tiles.erase(std::begin(tiles) + index);
 	}
 
 	setDirtiness(true);
+}
+
+void Editor::add_gizmo(Gizmo &gizmo)
+{
+	program.render.add_gizmo_to_render_list(gizmo);
+}
+
+void Editor::remove_gizmo(int index)
+{
+	// remove from the gizmos vector as well
+	if (index != -1)
+	{
+		program.render.remove_gizmo_from_render_list(index);
+		gizmos.erase(std::begin(gizmos) + index);
+	}
 }

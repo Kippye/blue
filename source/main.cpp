@@ -8,8 +8,15 @@
  * [X] fix weird flipped texture selection
  * [X] fix pointer vector issue when deleting selection
  * [X?] fix eggfault when minimizing using taskbar button
+ * [X] When a tile is deselected by clicking an empty space, it for some reason makes every other tile visually selected
+ * [X] placement cursor doesn't use TextureMode
+ * [X] switching from placement cursor to select and back to place = crash
  * [ ] 2. crash when a tile is selected and textures are reloaded then a tile is placed
- * // UI //
+ * [ ] can't save directories that contain specific characters to config
+ * [ ] weirdly just moving around placing things caused a crash
+ * [ ] push to back is VERY broken, either add Z position or fix it - it's messing with textures and crap
+ * [ ] place cursor (and probably the actual place position too) is too far behind mouse cursor
+ * // UI // 
  * [X] add io.WantCaptureMouse and io.WantCaptureKeyboard checks to ignore input when file dialogues are open
  * [X] load content folder textures as imagebuttons on a grid
  * [X] style ui
@@ -19,7 +26,7 @@
  * [X] section (or separate window) at the bottom of properties panel that lets you set the settings on newly placed tiles
  * [X] grid mode toggle (if tiles have already been placed, they will be snapped to the grid)
  * [?] make fitting window paddings per window
- * [?] toggle visible grid (UI?) (bottom bar?)
+ * [ ] grid settings under editor tab? - opacity, toggle ALSO make it toggle by pressing G
  * [C] [replaced by tile selector] some kind of dropdown for texture selection in the properties panel
  * [C] status gui that shows what process is currently done (mostly useful for stuff like reloading textures, opening or saving a BLF file, etc)
  * [C] beautify file dialog
@@ -40,9 +47,13 @@
  * [X] in-editor modifiable ignore list for filenames and / or directories
  * [X] selection tools like area [X], by type [X], etc
  * [X] support for storing tags in tiles (could be one string which is limiting or somehow a map of tags and their names)
+ * [X] place cursor should support (and show) grid snap
+ * [X] figure out how to draw gizmos (new shaders for them?)
  * [2] variable grid size
+ * [ ] improve grid mode and overlap mode:
+ * 		- only really 2 of each are required: overlap always or never, grid snap normal or automatic
+ * 		- this means they could just be made toggles instead of enums: Auto-snap, Overlap
  * [ ] move tool (with mouse)
- * [ ] figure out how to draw gizmos (new shaders for them?) ImDrawList* draw_list = ImGui::GetWindowDrawList(); ? How would i make them clickable / draggable???
  * [ ] resize tool ‍GRRRRR
  * [C] undo, redo, if at all doable
  * // OTHER //
@@ -55,7 +66,9 @@
  * --- // Gui //
  * --- [X] save file dialog sorting modes, maybe a base directory as well
  * [X] add some way to convert from texture to atlas coordinates and reverse
- * [ ] properly support textures larger than 16x16 in the texture atlas (i would have to get 2 sets of atlasCoords)
+ * [ ] i realised i could just make the placement gizmo permanent and just change the opacity to 0 to hide it... sure, this would add some constant overhead, but remove unnecessary ifs and memory usage (for creation / destruction)
+ * [ ] properly support textures larger than 16x16 in the texture atlas
+ * [ ] properly support textures larger than 16x16 in rendering (i would have to get 2 sets of atlasCoords)
  * [?] more options when loading textures (format or smth)
  * [C] create an event system ✌
  * [C] some kind of timer system in render?
@@ -110,6 +123,7 @@ void Program::loop()
 				program.gui.popupToggles[SAVE_CONTEXT] = true;
 			}
 		}
+		editor.update_gizmos();
 		render.render();
 		//std::cout << "Rendered" << std::endl;
 		glfwPollEvents();

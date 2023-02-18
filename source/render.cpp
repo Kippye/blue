@@ -37,16 +37,31 @@ void Render::setup()
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
+
+	/// GIZMOS
+	glGenBuffers(1, &instanceVBO_G);
+	glGenBuffers(1, &instanceTextureVBO_G);
+	glGenBuffers(1, &instanceColorVBO_G);
+	glGenBuffers(1, &instanceAdditionalVBO_G);
+
+	glGenVertexArrays(1, &VAO_G);
+	glGenBuffers(1, &VBO_G);
+	glGenBuffers(1, &EBO_G);
+
+	glBindVertexArray(VAO_G);
+	// copy array of vertices to buffer for OpenGL
+	glBindBuffer(GL_ARRAY_BUFFER, VBO_G);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO_G);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	// every shader and render call will now use this shader program
 	shader = Shader("shaders/shader_vert.glsl", "shaders/shader_geom.glsl", "shaders/shader_frag.glsl");
 
 	shader.use();
-	shader.setInt("texture1", 0);
-
-	int i = 0;
-	glGetIntegerv(GL_MAX_VARYING_COMPONENTS, &i);
-	std::cout << i << std::endl;
+	//shader.setInt("texture1", 0);
 }
 
 void Render::updateInstanceArray(INSTANCE_ARRAY_UPDATE type)
@@ -99,6 +114,56 @@ void Render::updateInstanceArray(INSTANCE_ARRAY_UPDATE type)
 	}
 }
 
+void Render::updateGizmoInstanceArray(INSTANCE_ARRAY_UPDATE type)
+{
+	glBindVertexArray(VAO_G);
+
+	if (type == INSTANCE_ARRAY_UPDATE_ALL || type & INSTANCE_ARRAY_UPDATE_1)
+	{
+		glBindBuffer(GL_ARRAY_BUFFER, instanceVBO_G);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4) * GinstanceTransformData.size(), GinstanceTransformData.data(), GL_STATIC_DRAW);
+
+		// also set instance data
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+		glVertexAttribDivisor(0, 1); // tell OpenGL this is an instanced vertex attribute.
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+	}
+
+	if (type == INSTANCE_ARRAY_UPDATE_ALL || type & INSTANCE_ARRAY_UPDATE_2)
+	{
+		glBindBuffer(GL_ARRAY_BUFFER, instanceTextureVBO_G);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4) * GinstanceTextureData.size(), GinstanceTextureData.data(), GL_STATIC_DRAW);
+
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+		glVertexAttribDivisor(1, 1); // tell OpenGL this is an instanced vertex attribute.
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+	}
+
+	if (type == INSTANCE_ARRAY_UPDATE_ALL || type & INSTANCE_ARRAY_UPDATE_3)
+	{
+		glBindBuffer(GL_ARRAY_BUFFER, instanceColorVBO_G);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4) * GinstanceColorData.size(), GinstanceColorData.data(), GL_STATIC_DRAW);
+
+		glEnableVertexAttribArray(2);
+		glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+		glVertexAttribDivisor(2, 1); // tell OpenGL this is an instanced vertex attribute.
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+	}
+
+	if (type == INSTANCE_ARRAY_UPDATE_ALL || type & INSTANCE_ARRAY_UPDATE_4)
+	{
+		glBindBuffer(GL_ARRAY_BUFFER, instanceAdditionalVBO_G);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4) * GinstanceAdditionalData.size(), GinstanceAdditionalData.data(), GL_STATIC_DRAW);
+
+		glEnableVertexAttribArray(3);
+		glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+		glVertexAttribDivisor(3, 1); // tell OpenGL this is an instanced vertex attribute.
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+	}
+}
+
 void Render::render()
 {
 	// render loop
@@ -125,7 +190,7 @@ void Render::render()
 
 	//glClearColor(0.5f, 0.2f, 1.0f, 1.0f); // cartoony sky
 	//glClearColor(0.1f, 0.1f, 0.2f, 1.0f); // dark gray color
-	glClearColor(0.2, 0.2, 0.8, 1.0);
+	glClearColor(program.editor.backgroundColor.r, program.editor.backgroundColor.g, program.editor.backgroundColor.b, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	// use the general purpose shader
@@ -145,6 +210,9 @@ void Render::render()
 		glBindVertexArray(VAO);
 		glDrawElementsInstanced(GL_POINTS, 1, GL_UNSIGNED_INT, 0, program.editor.tiles.size());
 	}
+
+	glBindVertexArray(VAO_G);
+	glDrawElementsInstanced(GL_POINTS, 1, GL_UNSIGNED_INT, 0, program.editor.gizmos.size());
 
 	program.gui.drawGui();
 
@@ -175,12 +243,28 @@ void Render::add_to_instance_data(E_Tile &tile)
 	instanceAdditionalData.emplace_back(tile.visuals.TextureMode == TEXTUREMODE_TILE, tile.selected, 0.0f, 0.0f);
 }
 
+void Render::add_gizmo_to_instance_data(Gizmo &gizmo)
+{
+	GinstanceTransformData.emplace_back(gizmo.location.Position.x, gizmo.location.Position.y, gizmo.location.Size.x, gizmo.location.Size.y);
+	GinstanceTextureData.emplace_back(gizmo.visuals.atlasCoords.x, gizmo.visuals.atlasCoords.y, gizmo.visuals.TextureSize.x, gizmo.visuals.TextureSize.y);
+	GinstanceColorData.emplace_back(gizmo.visuals.Color.x, gizmo.visuals.Color.y, gizmo.visuals.Color.z, gizmo.visuals.Opacity);
+	GinstanceAdditionalData.emplace_back(gizmo.visuals.TextureMode == TEXTUREMODE_TILE, 0.0f, 0.0f, 1.0f);
+}
+
 void Render::erase_from_instance_data(int index)
 {
 	instanceTransformData.erase(instanceTransformData.begin() + index);
 	instanceTextureData.erase(instanceTextureData.begin() + index);
 	instanceColorData.erase(instanceColorData.begin() + index);
 	instanceAdditionalData.erase(instanceAdditionalData.begin() + index);
+}
+
+void Render::erase_gizmo_from_instance_data(int index)
+{
+	GinstanceTransformData.erase(GinstanceTransformData.begin() + index);
+	GinstanceTextureData.erase(GinstanceTextureData.begin() + index);
+	GinstanceColorData.erase(GinstanceColorData.begin() + index);
+	GinstanceAdditionalData.erase(GinstanceAdditionalData.begin() + index);
 }
 
 void Render::add_to_render_list(E_Tile &tile)
@@ -197,6 +281,12 @@ void Render::add_to_render_list(std::vector<E_Tile> &tiles)
 	}
 
 	updateInstanceArray();
+}
+
+void Render::add_gizmo_to_render_list(Gizmo &gizmo)
+{
+	add_gizmo_to_instance_data(gizmo);
+	updateGizmoInstanceArray();
 }
 
 // TODO: more functions with fucking pointer vectors cus this shit sucky af
@@ -217,6 +307,12 @@ void Render::remove_from_render_list(std::vector<int> &indices)
 	updateInstanceArray();
 }
 
+void Render::remove_gizmo_from_render_list(int index)
+{
+	erase_gizmo_from_instance_data(index);
+	updateGizmoInstanceArray();
+}
+
 void Render::terminate()
 {
 	// dead
@@ -227,4 +323,11 @@ void Render::terminate()
     glDeleteBuffers(1, &instanceTextureVBO);
     glDeleteBuffers(1, &instanceColorVBO);
     glDeleteBuffers(1, &instanceAdditionalVBO);
+	glDeleteBuffers(1, &EBO_G);
+	glDeleteVertexArrays(1, &VAO_G);
+    glDeleteBuffers(1, &VBO_G);
+    glDeleteBuffers(1, &instanceVBO_G);
+    glDeleteBuffers(1, &instanceTextureVBO_G);
+    glDeleteBuffers(1, &instanceColorVBO_G);
+    glDeleteBuffers(1, &instanceAdditionalVBO_G);
 }

@@ -18,7 +18,6 @@ class FileSystem
 		std::vector<std::string> imageExtensions = {".png", ".jpg", ".jpeg"};
 
 	public:
-		// TEMP save this in config file instead
 		std::string contentDir = "";
 		std::string blfDir = "";
 		std::string blfFile = "";
@@ -31,6 +30,7 @@ class FileSystem
 		bool check_if_is_ignored(std::string name);
 		void ignore_buffer_to_vector();
 		void vectorToIgnoreBuffer();
+		void update_editor_config();
 
 		std::vector<std::string>& getInDir(const char* directory, bool useIgnoreList = true, bool filesOnly = true, bool fullPath = false, bool extension = true, std::vector<std::string> acceptedExtensions = {});
 		std::vector<std::string>& getInDirRecursive(const char* directory, bool useIgnoreList = true, bool filesOnly = true, bool fullPath = false, bool extension = true, std::vector<std::string> acceptedExtensions = {});
@@ -45,19 +45,19 @@ class FileSystem
 		void startNewFile();
 		void tryOpenLastFile();
 
-		template <typename T> void changeSetting(const char* setting_name, T new_value, Setting::Type type, bool add_if_NA = true)
+		template <typename T> Setting* changeSetting(const char* setting_name, T new_value, Setting::Type type, bool add_if_NA = true)
 		{
 			Setting& root = config.getRoot();
 			if (!root.exists(setting_name))
 			{
 				if (add_if_NA)
 				{
-					root.add(setting_name, type);
+					return &root.add(setting_name, type);
 				}
 				else
 				{
 					std::cerr << "tried to change non-existant setting: " << setting_name << std::endl;
-					return;
+					return nullptr;
 				}
 			}
 

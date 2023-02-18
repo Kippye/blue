@@ -98,6 +98,35 @@ void FileSystem::vectorToIgnoreBuffer()
 	}
 }
 
+void FileSystem::update_editor_config()
+{
+	// initialize configuration
+	Setting& root = config.getRoot();
+
+	if(!root.exists("editor"))
+		root.add("editor", Setting::TypeGroup);
+
+	Setting& editor = root["editor"];
+
+	if (!editor.exists("backgroundColor"))
+	{
+		editor.add("backgroundColor", Setting::TypeArray);
+	}
+
+	// clear saved ignores
+	for (int i = editor["backgroundColor"].getLength() - 1; i >= 0; i--)
+	{
+		editor["backgroundColor"].remove(i);
+	}
+
+	for (int i = 0; i < 3; i++)
+	{
+		editor["backgroundColor"].add(Setting::TypeFloat) = program.editor.backgroundColor[i];
+	}
+
+	std::cout << "Editor configuration updated" << std::endl;
+}
+
 std::vector<std::string>& FileSystem::getInDir(const char* directory, bool useIgnoreList, bool filesOnly, bool fullPath, bool extension, std::vector<std::string> acceptedExtensions)
 {
 	std::vector<std::string>* fileNames = new std::vector<std::string>();
@@ -335,6 +364,16 @@ void FileSystem::tryLoadConfigs()
 		dirs.add("ignores", Setting::TypeArray);
 	}
 
+	if(!root.exists("editor"))
+		root.add("editor", Setting::TypeGroup);
+
+	Setting& editor = root["editor"];
+
+	if (!editor.exists("backgroundColor"))
+	{
+		editor.add("backgroundColor", Setting::TypeArray);
+	}
+
 	std::string stringContent = dirs["content"].c_str();
 	if (!std::filesystem::exists(std::filesystem::path(stringContent)))
 	{
@@ -363,6 +402,12 @@ void FileSystem::tryLoadConfigs()
 	{
 		std::string ignorePathString = dirs["ignores"][i].c_str();
 		ignoreList.push_back(ignorePathString);
+	}
+
+	for (int i = 0; i < std::min(editor["backgroundColor"].getLength(), 3); i++)
+	{
+		program.editor.backgroundColor[i] = editor["backgroundColor"][i];
+		std::cout << program.editor.backgroundColor[i];
 	}
 
 	std::cout << "Configuration files loaded" << std::endl;
