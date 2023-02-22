@@ -11,11 +11,18 @@
  * [X] When a tile is deselected by clicking an empty space, it for some reason makes every other tile visually selected
  * [X] placement cursor doesn't use TextureMode
  * [X] switching from placement cursor to select and back to place = crash
- * [ ] 2. crash when a tile is selected and textures are reloaded then a tile is placed
+ * [X] repeatedly selecting the place tool creates duplicate cursors
+ * [X] overlap avoidance doesn't even work correctly
+ * [X] at first, a pretty random texture is selected, rather than the first one in the texture selector
+ * [X] having a larger amount of textures in content causes FPS to drop drastically
+ * [X] tiling inaccuracies when using larger atlases & textures
+ * [ ] crash when a tile is selected and textures are reloaded then a tile is placed
  * [ ] can't save directories that contain specific characters to config
  * [ ] weirdly just moving around placing things caused a crash
  * [ ] push to back is VERY broken, either add Z position or fix it - it's messing with textures and crap
  * [ ] place cursor (and probably the actual place position too) is too far behind mouse cursor
+ * [ ] reloading textures needs to be made more stable
+ * [ ] cursor glitches weirdly and sometimes just doesn't show
  * // UI // 
  * [X] add io.WantCaptureMouse and io.WantCaptureKeyboard checks to ignore input when file dialogues are open
  * [X] load content folder textures as imagebuttons on a grid
@@ -49,10 +56,12 @@
  * [X] support for storing tags in tiles (could be one string which is limiting or somehow a map of tags and their names)
  * [X] place cursor should support (and show) grid snap
  * [X] figure out how to draw gizmos (new shaders for them?)
- * [2] variable grid size
- * [ ] improve grid mode and overlap mode:
+ * [X] improve grid mode and overlap mode:
  * 		- only really 2 of each are required: overlap always or never, grid snap normal or automatic
  * 		- this means they could just be made toggles instead of enums: Auto-snap, Overlap
+ * [2] variable grid size
+ * [ ] make tiles that have lost their texture use missing.png (either loaded from the content folder or stored in /textures or hardcoded) but maybe keep the textureName
+ * [ ] some way to show / hide place cursor? people might find it annoying when removing tiles
  * [ ] move tool (with mouse)
  * [ ] resize tool ‍GRRRRR
  * [C] undo, redo, if at all doable
@@ -66,9 +75,11 @@
  * --- // Gui //
  * --- [X] save file dialog sorting modes, maybe a base directory as well
  * [X] add some way to convert from texture to atlas coordinates and reverse
- * [ ] i realised i could just make the placement gizmo permanent and just change the opacity to 0 to hide it... sure, this would add some constant overhead, but remove unnecessary ifs and memory usage (for creation / destruction)
- * [ ] properly support textures larger than 16x16 in the texture atlas
- * [ ] properly support textures larger than 16x16 in rendering (i would have to get 2 sets of atlasCoords)
+ * [X] i realised i could just make the placement gizmo permanent and just change the opacity to 0 to hide it... sure, this would add some constant overhead, but remove unnecessary ifs and memory usage (for creation / destruction)
+ * [X] properly support textures larger than 16x16 in the texture atlas
+ * [X] properly support textures larger than 16x16 in rendering (i would have to get 2 sets of atlasCoords)
+ * [X] optimize texture reloading - check what takes the longest and make it take less long (i think it's not the actual loading but rather applying the new textures)
+ * [ ] support duplicate texture names by using paths internally (still, displaying only filenames)
  * [?] more options when loading textures (format or smth)
  * [C] create an event system ✌
  * [C] some kind of timer system in render?
@@ -79,6 +90,13 @@
  *    [X] convert tiles to and from blf files
  *    [X] save / open blf files
  */
+/* [X] RELEASE 1.1:
+ *	  [X] Fix tiling inaccuracy
+ *	  [ ] Add missing.png
+ * 	  [ ] Fix cursor bug?
+ * 	  [ ] Attempt to fix dir save bug
+ * 	  [ ] Built-in grid.png?
+*/
 
 class E_Tile;
 class Location;

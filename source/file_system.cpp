@@ -4,6 +4,9 @@
 #include <filesystem>
 #include <sstream>
 
+// TEMP
+#include <chrono>
+
 #define DEBUG_FILE_LOADING false
 
 class Program;
@@ -258,30 +261,45 @@ std::vector<std::string>& FileSystem::getInDirRecursive(const char* directory, b
 void FileSystem::updateTextures()
 {
 	std::cout << "Updating textures..." << std::endl;
+	auto start_time = std::chrono::high_resolution_clock::now();
 
 	bool firstUpdate = program.render.textureAtlas == nullptr;
 
 	// update the textures from the content folder
 	if (contentDir != "")
 	{
+		std::cout << "Creating texture atlas..." << std::endl;
 		std::vector<std::string>& filesInContent = getInDirRecursive(contentDir.c_str(), true, true, true, true, imageExtensions);
 		program.gui.tileTextures = program.textureLoader.loadTextures(filesInContent, false);
+		// NOTE: sometimes this randomly causes a crash at "Loading textures from content..."
 		program.render.textureAtlas = loadContentAsAtlas();
+		for (E_Texture* tt: program.gui.tileTextures)
+		{
+			tt->atlasLocation = program.textureLoader.getAtlasTextureCoords(program.render.textureAtlas, tt->path);
+		}
+		auto load_as_atlas_time = std::chrono::high_resolution_clock::now();
+		auto duration2 = std::chrono::duration_cast<std::chrono::milliseconds>(load_as_atlas_time - start_time).count();
+		std::cout << "Atlas created in " << duration2 << std::endl;
+		auto coord_update_start_time = std::chrono::high_resolution_clock::now();
+		std::cout << "Updating editor atlas coordinates..." << std::endl;
 		// only waste time on updating these if they're already something else
 		//if (!firstUpdate)
 		//{
 			program.editor.update_atlas_coords(program.render.textureAtlas);
 		//}
+		auto duration3 = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - coord_update_start_time).count();
+		std::cout << "Editor atlas coordinate update completed in " << duration3 << std::endl;
 	}
 
-	std::cout << "Textures updated" << std::endl;
+	auto end_time = std::chrono::high_resolution_clock::now();
+	auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
+	std::cout << "Texture update completed in " << duration << std::endl;
 }
 
 void FileSystem::loadGUITextures()
 {
 	std::cout << "Loading GUI textures..." << std::endl;
 
-	if (DEBUG_FILE_LOADING) std::cout << "loading GUI textures" << std::endl;
 	std::string guiTextureFolder = program.textureLoader.textureFolder + "gui/";
 	std::vector<std::string>& filesInFolder = getInDirRecursive(guiTextureFolder.c_str(), true, true, false, true, imageExtensions);
 	std::vector<std::string>& fileNames = getInDirRecursive(guiTextureFolder.c_str(), false, true, false, false, imageExtensions);
@@ -291,7 +309,6 @@ void FileSystem::loadGUITextures()
 	{
 		program.gui.guiTextures.insert({fileNames[i], textures[i]->ID});
 	}
-	if (DEBUG_FILE_LOADING) std::cout << "GUI textures successfully loaded" << std::endl;
 	std::cout << "GUI textures loaded" << std::endl;
 }
 
@@ -407,7 +424,6 @@ void FileSystem::tryLoadConfigs()
 	for (int i = 0; i < std::min(editor["backgroundColor"].getLength(), 3); i++)
 	{
 		program.editor.backgroundColor[i] = editor["backgroundColor"][i];
-		std::cout << program.editor.backgroundColor[i];
 	}
 
 	std::cout << "Configuration files loaded" << std::endl;

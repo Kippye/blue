@@ -8,10 +8,16 @@
 enum INSTANCE_ARRAY_UPDATE
 {
 	INSTANCE_ARRAY_UPDATE_ALL = 0,
+	// TRANSFORM UPDATE
 	INSTANCE_ARRAY_UPDATE_1 = 1 << 1,
+	// TEXTURE UPDATE
 	INSTANCE_ARRAY_UPDATE_2 = 1 << 2,
+	// ATLAS UPDATE
 	INSTANCE_ARRAY_UPDATE_3 = 1 << 3,
+	// COLOR UPDATE
 	INSTANCE_ARRAY_UPDATE_4 = 1 << 4,
+	// ADDITIONAL DATA UPDATE
+	INSTANCE_ARRAY_UPDATE_5 = 1 << 5
 };
 
 class Render
@@ -35,17 +41,19 @@ class Render
 
 		glm::mat4 projection = glm::mat4(1.0f);
 
-		unsigned int VBO, VAO, EBO, instanceVBO, instanceTextureVBO, instanceColorVBO, instanceAdditionalVBO;
-		unsigned int VBO_G, VAO_G, EBO_G, instanceVBO_G, instanceTextureVBO_G, instanceColorVBO_G, instanceAdditionalVBO_G;
+		unsigned int VBO, VAO, EBO, instanceVBO, instanceTextureVBO, instanceAtlasVBO, instanceColorVBO, instanceAdditionalVBO;
+		unsigned int VBO_G, VAO_G, EBO_G, instanceVBO_G, instanceTextureVBO_G, instanceAtlasVBO_G, instanceColorVBO_G, instanceAdditionalVBO_G;
 		TextureAtlas* textureAtlas;
 
 		std::vector<glm::vec4> instanceTransformData = {};
 		std::vector<glm::vec4> instanceTextureData = {};
+		std::vector<glm::vec4> instanceAtlasData = {};
 		std::vector<glm::vec4> instanceColorData = {};
 		std::vector<glm::vec4> instanceAdditionalData = {};
 
 		std::vector<glm::vec4> GinstanceTransformData = {};
 		std::vector<glm::vec4> GinstanceTextureData = {};
+		std::vector<glm::vec4> GinstanceAtlasData = {};
 		std::vector<glm::vec4> GinstanceColorData = {};
 		std::vector<glm::vec4> GinstanceAdditionalData = {};
 

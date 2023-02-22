@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <iostream>
 #include <glm/gtx/string_cast.hpp>
+#define GLM_ENABLE_EXPERIMENTAL
 
 // constants
 const int MAX_TAGS = 5;
@@ -88,7 +89,7 @@ class Bounding_Box
 		{
 			return
 			(
-				contains_position(boxPos, sourcePos + glm::vec4(sourceBox.minimum + glm::vec2(0.01f), 0.0f, 1.0f)) && // contains BL
+				contains_position(boxPos, sourcePos + glm::vec4(sourceBox.minimum + glm::vec2(0.01f), 0.0f, 1.0f)) || // contains BL
 				contains_position(boxPos, sourcePos + glm::vec4(sourceBox.minimum.x + sourceBox.size.x - 0.01f, sourceBox.minimum.y + 0.01f, 0.0f, 1.0f)) || // BR
 				contains_position(boxPos, sourcePos + glm::vec4(sourceBox.minimum.x + 0.01f, sourceBox.minimum.y + sourceBox.size.y - 0.01f, 0.0f, 1.0f)) || // TL
 				contains_position(boxPos, sourcePos + glm::vec4(sourceBox.maximum - glm::vec2(0.01f), 0.0f, 1.0f)) // TR

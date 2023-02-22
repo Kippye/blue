@@ -22,6 +22,7 @@ void Render::setup()
 
 	glGenBuffers(1, &instanceVBO);
 	glGenBuffers(1, &instanceTextureVBO);
+	glGenBuffers(1, &instanceAtlasVBO);
 	glGenBuffers(1, &instanceColorVBO);
 	glGenBuffers(1, &instanceAdditionalVBO);
 
@@ -41,6 +42,7 @@ void Render::setup()
 	/// GIZMOS
 	glGenBuffers(1, &instanceVBO_G);
 	glGenBuffers(1, &instanceTextureVBO_G);
+	glGenBuffers(1, &instanceAtlasVBO_G);
 	glGenBuffers(1, &instanceColorVBO_G);
 	glGenBuffers(1, &instanceAdditionalVBO_G);
 
@@ -58,10 +60,10 @@ void Render::setup()
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	// every shader and render call will now use this shader program
-	shader = Shader("shaders/shader_vert.glsl", "shaders/shader_geom.glsl", "shaders/shader_frag.glsl");
+	shader = Shader("shaders/tile.vert", "shaders/tile.geom", "shaders/tile.frag");
 
 	shader.use();
-	//shader.setInt("texture1", 0);
+	shader.setInt("texture1", 0);
 }
 
 void Render::updateInstanceArray(INSTANCE_ARRAY_UPDATE type)
@@ -93,8 +95,8 @@ void Render::updateInstanceArray(INSTANCE_ARRAY_UPDATE type)
 
 	if (type == INSTANCE_ARRAY_UPDATE_ALL || type & INSTANCE_ARRAY_UPDATE_3)
 	{
-		glBindBuffer(GL_ARRAY_BUFFER, instanceColorVBO);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4) * instanceColorData.size(), instanceColorData.data(), GL_STATIC_DRAW);
+		glBindBuffer(GL_ARRAY_BUFFER, instanceAtlasVBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4) * instanceAtlasData.size(), instanceAtlasData.data(), GL_STATIC_DRAW);
 
 		glEnableVertexAttribArray(2);
 		glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
@@ -104,12 +106,23 @@ void Render::updateInstanceArray(INSTANCE_ARRAY_UPDATE type)
 
 	if (type == INSTANCE_ARRAY_UPDATE_ALL || type & INSTANCE_ARRAY_UPDATE_4)
 	{
-		glBindBuffer(GL_ARRAY_BUFFER, instanceAdditionalVBO);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4) * instanceAdditionalData.size(), instanceAdditionalData.data(), GL_STATIC_DRAW);
+		glBindBuffer(GL_ARRAY_BUFFER, instanceColorVBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4) * instanceColorData.size(), instanceColorData.data(), GL_STATIC_DRAW);
 
 		glEnableVertexAttribArray(3);
 		glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
 		glVertexAttribDivisor(3, 1); // tell OpenGL this is an instanced vertex attribute.
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+	}
+
+	if (type == INSTANCE_ARRAY_UPDATE_ALL || type & INSTANCE_ARRAY_UPDATE_5)
+	{
+		glBindBuffer(GL_ARRAY_BUFFER, instanceAdditionalVBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4) * instanceAdditionalData.size(), instanceAdditionalData.data(), GL_STATIC_DRAW);
+
+		glEnableVertexAttribArray(4);
+		glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+		glVertexAttribDivisor(4, 1); // tell OpenGL this is an instanced vertex attribute.
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 }
@@ -143,12 +156,23 @@ void Render::updateGizmoInstanceArray(INSTANCE_ARRAY_UPDATE type)
 
 	if (type == INSTANCE_ARRAY_UPDATE_ALL || type & INSTANCE_ARRAY_UPDATE_3)
 	{
-		glBindBuffer(GL_ARRAY_BUFFER, instanceColorVBO_G);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4) * GinstanceColorData.size(), GinstanceColorData.data(), GL_STATIC_DRAW);
+		glBindBuffer(GL_ARRAY_BUFFER, instanceAtlasVBO_G);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4) * GinstanceAtlasData.size(), GinstanceAtlasData.data(), GL_STATIC_DRAW);
 
 		glEnableVertexAttribArray(2);
 		glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
 		glVertexAttribDivisor(2, 1); // tell OpenGL this is an instanced vertex attribute.
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+	}
+
+	if (type == INSTANCE_ARRAY_UPDATE_ALL || type & INSTANCE_ARRAY_UPDATE_3)
+	{
+		glBindBuffer(GL_ARRAY_BUFFER, instanceColorVBO_G);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4) * GinstanceColorData.size(), GinstanceColorData.data(), GL_STATIC_DRAW);
+
+		glEnableVertexAttribArray(3);
+		glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+		glVertexAttribDivisor(3, 1); // tell OpenGL this is an instanced vertex attribute.
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 
@@ -157,9 +181,9 @@ void Render::updateGizmoInstanceArray(INSTANCE_ARRAY_UPDATE type)
 		glBindBuffer(GL_ARRAY_BUFFER, instanceAdditionalVBO_G);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4) * GinstanceAdditionalData.size(), GinstanceAdditionalData.data(), GL_STATIC_DRAW);
 
-		glEnableVertexAttribArray(3);
-		glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
-		glVertexAttribDivisor(3, 1); // tell OpenGL this is an instanced vertex attribute.
+		glEnableVertexAttribArray(4);
+		glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+		glVertexAttribDivisor(4, 1); // tell OpenGL this is an instanced vertex attribute.
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 }
@@ -202,7 +226,7 @@ void Render::render()
 
 	if (textureAtlas != nullptr)
 	{
-		shader.setVec2("atlasSize", glm::vec2(textureAtlas->width, textureAtlas->height));
+		shader.setVec2("inTexAtlasSize", glm::vec2(textureAtlas->width, textureAtlas->height));
 
 		// use the texture atlas
 		glActiveTexture(GL_TEXTURE0);
@@ -222,7 +246,7 @@ void Render::render()
 void Render::set_tile_selection(int index, bool to)
 {
 	instanceAdditionalData[index].y = float(to);
-	updateInstanceArray(INSTANCE_ARRAY_UPDATE_4);
+	updateInstanceArray(INSTANCE_ARRAY_UPDATE_5);
 }
 
 void Render::set_tile_selection(std::vector<int> &indices, bool to)
@@ -232,13 +256,14 @@ void Render::set_tile_selection(std::vector<int> &indices, bool to)
 		instanceAdditionalData[indices[i]].y = float(to);
 	}
 
-	updateInstanceArray(INSTANCE_ARRAY_UPDATE_4);
+	updateInstanceArray(INSTANCE_ARRAY_UPDATE_5);
 }
 
 void Render::add_to_instance_data(E_Tile &tile)
 {
 	instanceTransformData.emplace_back(tile.location.Position.x, tile.location.Position.y, tile.location.Size.x, tile.location.Size.y);
-	instanceTextureData.emplace_back(tile.visuals.atlasCoords.x, tile.visuals.atlasCoords.y, tile.visuals.TextureSize.x, tile.visuals.TextureSize.y);
+	instanceTextureData.emplace_back(tile.visuals.TextureSize.x, tile.visuals.TextureSize.y, 0.0f, 0.0f);
+	instanceAtlasData.emplace_back(tile.visuals.atlasLocation.x, tile.visuals.atlasLocation.y, tile.visuals.atlasLocation.z, tile.visuals.atlasLocation.w);
 	instanceColorData.emplace_back(tile.visuals.Color.x, tile.visuals.Color.y, tile.visuals.Color.z, tile.visuals.Opacity);
 	instanceAdditionalData.emplace_back(tile.visuals.TextureMode == TEXTUREMODE_TILE, tile.selected, 0.0f, 0.0f);
 }
@@ -246,7 +271,8 @@ void Render::add_to_instance_data(E_Tile &tile)
 void Render::add_gizmo_to_instance_data(Gizmo &gizmo)
 {
 	GinstanceTransformData.emplace_back(gizmo.location.Position.x, gizmo.location.Position.y, gizmo.location.Size.x, gizmo.location.Size.y);
-	GinstanceTextureData.emplace_back(gizmo.visuals.atlasCoords.x, gizmo.visuals.atlasCoords.y, gizmo.visuals.TextureSize.x, gizmo.visuals.TextureSize.y);
+	GinstanceTextureData.emplace_back(gizmo.visuals.TextureSize.x, gizmo.visuals.TextureSize.y, 0.0f, 0.0f);
+	GinstanceAtlasData.emplace_back(gizmo.visuals.atlasLocation.x, gizmo.visuals.atlasLocation.y, gizmo.visuals.atlasLocation.z, gizmo.visuals.atlasLocation.w);
 	GinstanceColorData.emplace_back(gizmo.visuals.Color.x, gizmo.visuals.Color.y, gizmo.visuals.Color.z, gizmo.visuals.Opacity);
 	GinstanceAdditionalData.emplace_back(gizmo.visuals.TextureMode == TEXTUREMODE_TILE, 0.0f, 0.0f, 1.0f);
 }
@@ -255,6 +281,7 @@ void Render::erase_from_instance_data(int index)
 {
 	instanceTransformData.erase(instanceTransformData.begin() + index);
 	instanceTextureData.erase(instanceTextureData.begin() + index);
+	instanceAtlasData.erase(instanceAtlasData.begin() + index);
 	instanceColorData.erase(instanceColorData.begin() + index);
 	instanceAdditionalData.erase(instanceAdditionalData.begin() + index);
 }
@@ -263,6 +290,7 @@ void Render::erase_gizmo_from_instance_data(int index)
 {
 	GinstanceTransformData.erase(GinstanceTransformData.begin() + index);
 	GinstanceTextureData.erase(GinstanceTextureData.begin() + index);
+	GinstanceAtlasData.erase(GinstanceAtlasData.begin() + index);
 	GinstanceColorData.erase(GinstanceColorData.begin() + index);
 	GinstanceAdditionalData.erase(GinstanceAdditionalData.begin() + index);
 }
@@ -321,6 +349,7 @@ void Render::terminate()
     glDeleteBuffers(1, &VBO);
     glDeleteBuffers(1, &instanceVBO);
     glDeleteBuffers(1, &instanceTextureVBO);
+    glDeleteBuffers(1, &instanceAtlasVBO);
     glDeleteBuffers(1, &instanceColorVBO);
     glDeleteBuffers(1, &instanceAdditionalVBO);
 	glDeleteBuffers(1, &EBO_G);
@@ -328,6 +357,7 @@ void Render::terminate()
     glDeleteBuffers(1, &VBO_G);
     glDeleteBuffers(1, &instanceVBO_G);
     glDeleteBuffers(1, &instanceTextureVBO_G);
+    glDeleteBuffers(1, &instanceAtlasVBO_G);
     glDeleteBuffers(1, &instanceColorVBO_G);
     glDeleteBuffers(1, &instanceAdditionalVBO_G);
 }

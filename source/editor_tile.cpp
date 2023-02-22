@@ -74,15 +74,16 @@ Physics::Physics(bool _CollisionsEnabled, bool _Static, float _Bounce, float _De
 
 Visuals::Visuals() {}
 // initialize with visibility setting and atlas coordinates
-Visuals::Visuals(glm::vec2 _atlasCoords) { atlasCoords = _atlasCoords; } // only texture set by default
-Visuals::Visuals(glm::vec2 _atlasCoords, std::string _textureName, TEXTUREMODE _TextureMode, glm::vec2 _TextureSize, glm::vec4 _Color, float _Opacity) // every setting cus too lazy to make 1 by 1
+Visuals::Visuals(glm::uvec4 _atlasLocation) 
+{ 
+	atlasLocation = _atlasLocation;
+}
+Visuals::Visuals(glm::uvec4 _atlasLocation, std::string _textureName, TEXTUREMODE _TextureMode, glm::vec2 _TextureSize, glm::vec4 _Color, float _Opacity) // every setting cus too lazy to make 1 by 1
 {
-	atlasCoords = _atlasCoords;
+	atlasLocation = _atlasLocation;
 	textureName = _textureName;
 	TextureMode = _TextureMode;
 	TextureSize = _TextureSize;
 	Color = _Color;
 	Opacity = _Opacity;
 }
-
-//Physics::Physics(bool _CollisionsEnabled = true, bool _Static) { CollisionsEnabled = _CollisionsEnabled; Static = _Static; }

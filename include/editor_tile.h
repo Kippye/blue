@@ -30,7 +30,7 @@ class Location
 class Physics
 {
 	public:
-		bool CollisionsEnabled = true;
+		bool CollisionsEnabled = false;
 		bool Static = true;
 		float Bounce = 0.0f;
 		float Density = 1.0f; 
@@ -42,16 +42,16 @@ class Physics
 class Visuals
 {
 	public:
-		glm::vec2 atlasCoords = glm::vec2(0.0f);
+		glm::uvec4 atlasLocation = glm::uvec4(0, 0, 16, 16);
 		std::string textureName = "";
-		TEXTUREMODE TextureMode = TEXTUREMODE_TILE;
+		TEXTUREMODE TextureMode = TEXTUREMODE_STRETCH;
 		glm::vec2 TextureSize = glm::vec2(1.0f, 1.0f);
 		glm::vec4 Color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
 		float Opacity = 1.0f;
 
 		Visuals();
-		Visuals(glm::vec2 _atlasCoords);
-		Visuals(glm::vec2 _atlasCoords, std::string _textureName, TEXTUREMODE _TextureMode, glm::vec2 _TextureSize, glm::vec4 _Color, float _Opacity);
+		Visuals(glm::uvec4 _atlasLocation);
+		Visuals(glm::uvec4 _atlasLocation, std::string _textureName, TEXTUREMODE _TextureMode, glm::vec2 _TextureSize, glm::vec4 _Color, float _Opacity);
 };
 
 

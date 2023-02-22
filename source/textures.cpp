@@ -2,6 +2,7 @@
 extern "C" {
 #include <glad.h>
 }
+#include <util.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <filesystem>
@@ -10,6 +11,11 @@ extern "C" {
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb_image_write.h>
 #include <cmath>
+#include <rectpack2D/include/finders_interface.h>
+#include <glm/gtx/io.hpp>
+#include <chrono>
+
+using namespace rectpack2D;
 
 #define DEBUG_TEXTURE_LOADING false
 
@@ -202,6 +208,8 @@ E_Texture* TextureLoader::loadTexture(const char* fileName, std::string director
 	std::string fullPath = (directory + filePath);
 	E_Texture* texture = new E_Texture();
 
+	texture->path = fileName;
+
 	stbi_set_flip_vertically_on_load(flip);
 	unsigned char* data = stbi_load(fullPath.c_str(), &texture->width, &texture->height, NULL, 4);
 
@@ -255,6 +263,8 @@ E_Texture* TextureLoader::loadTexture(std::string fullPath, bool flip)
 	E_Texture* texture = new E_Texture();
 
 	std::filesystem::path fileName = std::filesystem::path(fullPath).filename();
+
+	texture->path = fileName.string();
 
 	stbi_set_flip_vertically_on_load(flip);
 	unsigned char* data = stbi_load(fullPath.c_str(), &texture->width, &texture->height, NULL, 4);
@@ -331,6 +341,7 @@ std::vector<E_Texture*>& TextureLoader::loadTextures(std::vector<std::string> fu
 	return *textures;
 }
 
+// DEPRECATED
 TextureAtlas* TextureLoader::loadTextureAtlas(std::vector<std::string> fileNames, std::string directory, bool flip)
 {
 	TextureAtlas* textureAtlas = new TextureAtlas();
@@ -374,116 +385,286 @@ TextureAtlas* TextureLoader::loadTextureAtlas(std::vector<std::string> fileNames
 
 TextureAtlas* TextureLoader::loadTextureAtlas(std::vector<std::string> fullPaths, bool flip)
 {
-	TextureAtlas* textureAtlas = new TextureAtlas();
+	auto start_time = std::chrono::high_resolution_clock::now();
+	constexpr bool allow_flip = false;
+	const auto runtime_flipping_mode = flipping_option::DISABLED;
 
-	int tilesPerRow = ceil(sqrt(fullPaths.size())) + 1;
-	int tilesPerColumn = ceil(sqrt(fullPaths.size() - tilesPerRow)) + 1;
+	/* 
+		Here, we choose the "empty_spaces" class that the algorithm will use from now on. 
+	
+		The first template argument is a bool which determines
+		if the algorithm will try to flip rectangles to better fit them.
 
-	int atlasDataSize = ((16 * 16) * (tilesPerRow * tilesPerColumn));
-	unsigned char* textureAtlasData = new unsigned char[atlasDataSize];
-	// create an empty texture for the atlas
-	textureAtlas->width = tilesPerRow * 16;
-	textureAtlas->height = tilesPerColumn * 16;
-	textureAtlas->ID = createEmptyTexture(&textureAtlas->width, &textureAtlas->height);
+		The second argument is optional and specifies an allocator for the empty spaces.
+		The default one just uses a vector to store the spaces.
+		You can also pass a "static_empty_spaces<10000>" which will allocate 10000 spaces on the stack,
+		possibly improving performance.
+	*/
 
-	int total = 0;
+	using spaces_type = rectpack2D::empty_spaces<allow_flip, default_empty_spaces>;
 
-	for (int y = 0; y < tilesPerColumn; y++)
+	/* 
+		rect_xywh or rect_xywhf (see src/rect_structs.h), 
+		depending on the value of allow_flip.
+	*/
+
+	using rect_type = output_rect_t<spaces_type>;
+
+	/*
+		Note: 
+
+		The multiple-bin functionality was removed. 
+		This means that it is now up to you what is to be done with unsuccessful insertions.
+		You may initialize another search when this happens.
+	*/
+
+	auto report_successful = [](rect_type&) {
+		return callback_result::CONTINUE_PACKING;
+	};
+
+	auto report_unsuccessful = [](rect_type&) {
+		//std::cerr << 
+		return callback_result::ABORT_PACKING;
+	};
+
+	/*
+		Initial size for the bin, from which the search begins.
+		The result can only be smaller - if it cannot, the algorithm will gracefully fail.
+	*/
+
+	const auto max_side = 10000;
+
+	/*
+		The search stops when the bin was successfully inserted into,
+		AND the next candidate bin size differs from the last successful one by *less* then discard_step.
+
+		The best possible granuarity is achieved with discard_step = 1.
+		If you pass a negative discard_step, the algoritm will search with even more granularity -
+		E.g. with discard_step = -4, the algoritm will behave as if you passed discard_step = 1,
+		but it will make as many as 4 attempts to optimize bins down to the single pixel.
+
+		Since discard_step = 0 does not make sense, the algoritm will automatically treat this case 
+		as if it were passed a discard_step = 1.
+
+		For common applications, a discard_step = 1 or even discard_step = 128
+		should yield really good packings while being very performant.
+		If you are dealing with very small rectangles specifically,
+		it might be a good idea to make this value negative.
+
+		See the algorithm section of README for more information.
+	*/
+
+	const auto discard_step = -4;
+
+	std::vector<rect_type> rectangles;
+	rectpack2D::rect_wh packed_size;
+
+	std::vector<unsigned char*> atlasTextures = {};
+
+	auto texture_load_start_time = std::chrono::high_resolution_clock::now();
+	
+	for (int i = 0; i < fullPaths.size(); i++)
 	{
-		for (int x = 0; x < tilesPerRow; x++)
-		{
-			if (total >= fullPaths.size()){ break; }
+		int width, height;
+		unsigned char* texture = loadTextureData(fullPaths[i], &width, &height, false);
+		atlasTextures.push_back(texture);
 
-			int width, height;
-			unsigned int ID;
-			unsigned char* texture = loadTextureData(fullPaths[total], &width, &height, false);
-			std::filesystem::path fileName = std::filesystem::path(fullPaths[total]).filename();
-			textureAtlas->textureFiles.push_back(fileName.string());
-
-			// add subtexture to texture atlas
-			glBindTexture(GL_TEXTURE_2D, textureAtlas->ID);
-			glTexSubImage2D(GL_TEXTURE_2D, 0, 16 * x, 16 * y, 16, 16, GL_RGBA, GL_UNSIGNED_BYTE, texture);
-			glBindTexture(GL_TEXTURE_2D, 0);
-
-			total++;
-		}
+		// add rect to pack
+		rectangles.emplace_back(rect_xywh(0, 0, width, height));
 	}
 
-	stbi_write_png("atlas.png", textureAtlas->width, textureAtlas->height, 4, textureAtlasData, textureAtlas->width * 4);
-
-	if (DEBUG_TEXTURE_LOADING) std::cout << "LOADED TEXTURE ATLAS: " << "width: " << textureAtlas->width << "; height: " << textureAtlas->height << "; ID: " << textureAtlas->ID << std::endl;
-
-	return textureAtlas;
-}
-
-glm::vec2 TextureLoader::getAtlasCoords(TextureAtlas* atlas, int index)
-{
-	if (atlas == nullptr) { std::cerr << "getAtlasCoords: atlas == nullptr" << std::endl; return glm::vec2(0.0f, 0.0f); }
+	auto end_time2 = std::chrono::high_resolution_clock::now();
+	auto duration2 = std::chrono::duration_cast<std::chrono::milliseconds>(end_time2 - texture_load_start_time).count();
+	std::cout << "Texture loaded & rectangles created in " << duration2 << std::endl;
 	
-	// since ive done some weird shit these are actually flipped on the Y axis
-	glm::vec2 coords;
-	// 3 - (floor(10 / 5)) = 1
-	coords.y = floor(index / (atlas->width / 16));
-	//coords.y = (atlas->height / 16 - 1) + floor(i / (atlas->width / 16));
-	// 10 - ((3 - 2) * 4) - (3 - 2) = 4 - 1 = 3
-	//coords.x = i - ((atlas->height / 16 - 1 - coords.y) * (atlas->width / 16 - 1)) - (atlas->height / 16 - 1 - coords.y);
-	// 10 - (2 * 5) = 10 - 10 = 0
-	coords.x = index - (floor(index / (atlas->width / 16)) * (atlas->width / 16));
+	auto report_result = [&rectangles](const rect_wh& result_size) {
+		std::cout << "Packed atlas size: " << result_size.w << "; " << result_size.h << std::endl;
+	};
 
-	// std::cout << coords.x << "; " << coords.y << std::endl;
-	return coords;
+	{
+		/*
+			Example 1: Find best packing with default orders. 
+
+			If you pass no comparators whatsoever, 
+			the standard collection of 6 orders:
+		   	by area, by perimeter, by bigger side, by width, by height and by "pathological multiplier"
+			- will be passed by default.
+		*/
+
+		const auto result_size = find_best_packing<spaces_type>(
+			rectangles,
+			make_finder_input(
+				max_side,
+				discard_step,
+				report_successful,
+				report_unsuccessful,
+				runtime_flipping_mode
+			)
+		);
+
+		packed_size = result_size;
+		report_result(result_size);
+	}
+
+	auto end_time = std::chrono::high_resolution_clock::now();
+	auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
+	std::cout << "Atlas packed in " << duration << std::endl;
+
+	TextureAtlas* textureAtlas = new TextureAtlas();
+
+	int atlasDataSize = (packed_size.area());
+	unsigned char* textureAtlasData = new unsigned char[atlasDataSize * 4];
+	// create an empty texture for the atlas
+	textureAtlas->width = packed_size.w;
+	textureAtlas->height = packed_size.h;
+	textureAtlas->ID = createEmptyTexture(&textureAtlas->width, &textureAtlas->height);
+	textureAtlas->data = textureAtlasData;
+
+	for (int i = 0; i < rectangles.size(); i++)
+	{
+		//int width, height;
+		unsigned char* texture = atlasTextures[i]; //loadTextureData(fullPaths[i], &width, &height, false);
+		std::filesystem::path fileName = std::filesystem::path(fullPaths[i]).filename();
+		textureAtlas->textureFiles.push_back(fileName.string());
+		textureAtlas->textureAtlasCoords[fileName.string()] = glm::uvec4(rectangles[i].x, rectangles[i].y, rectangles[i].w, rectangles[i].h);
+
+		// add subtexture to texture atlas
+		glBindTexture(GL_TEXTURE_2D, textureAtlas->ID);
+		if (DEBUG_TEXTURE_LOADING) { std::cout << "Packed atlas texture: " + fileName.string() << ": " << rectangles[i].x << "; " << rectangles[i].y << "; " << rectangles[i].w << "; " << rectangles[i].h << std::endl; }
+		glTexSubImage2D(GL_TEXTURE_2D, 0, rectangles[i].x, rectangles[i].y, rectangles[i].w, rectangles[i].h, GL_RGBA, GL_UNSIGNED_BYTE, texture);
+		glBindTexture(GL_TEXTURE_2D, 0);
+	}
+
+	glBindTexture(GL_TEXTURE_2D, textureAtlas->ID);
+	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, textureAtlas->data);
+
+	if (DEBUG_TEXTURE_LOADING) { stbi_write_png("packed_atlas.png", textureAtlas->width, textureAtlas->height, 4, textureAtlas->data, textureAtlas->width * 4); }
+	//stbi_write_png("packed_atlas.png", textureAtlas->width, textureAtlas->height, 4, textureAtlas->data, textureAtlas->width * 4);
+	return textureAtlas;
+
+	// {
+	// 	/* Example 2: Find best packing using all provided custom rectangle orders. */
+
+	// 	using rect_ptr = rect_type*;
+
+	// 	auto my_custom_order_1 = [](const rect_ptr a, const rect_ptr b) {
+	// 		return a->get_wh().pathological_mult() > b->get_wh().pathological_mult();
+	// 	};
+
+	// 	auto my_custom_order_2 = [](const rect_ptr a, const rect_ptr b) {
+	// 		return a->get_wh().pathological_mult() < b->get_wh().pathological_mult();
+	// 	};
+
+	// 	const auto result_size = find_best_packing<spaces_type>(
+	// 		rectangles,
+	// 		make_finder_input(
+	// 			max_side,
+	// 			discard_step,
+	// 			report_successful,
+	// 			report_unsuccessful,
+	// 			runtime_flipping_mode
+	// 		),
+
+	// 		my_custom_order_1,
+	// 		my_custom_order_2
+	// 	);
+
+	// 	report_result(result_size);
+	// }
+
+	// {
+	// 	/* Example 3: Find best packing exactly in the order of provided input. */
+
+	// 	const auto result_size = find_best_packing_dont_sort<spaces_type>(
+	// 		rectangles,
+	// 		make_finder_input(
+	// 			max_side,
+	// 			discard_step,
+	// 			report_successful,
+	// 			report_unsuccessful,
+	// 			runtime_flipping_mode
+	// 		)
+	// 	);
+
+	// 	report_result(result_size);
+	// }
+
+	// {
+	// 	/* Example 4: Manually perform insertions. This way you can try your own best-bin finding logic. */
+
+	// 	auto packing_root = spaces_type({ max_side, max_side });
+	// 	packing_root.flipping_mode = runtime_flipping_mode;
+
+	// 	for (auto& r : rectangles) {
+	// 		if (const auto inserted_rectangle = packing_root.insert(std::as_const(r).get_wh())) {
+	// 			r = *inserted_rectangle;
+	// 		}
+	// 		else {
+	// 			std::cout << "Failed to insert a rectangle." << std::endl;
+	// 			break;
+	// 		}
+	// 	}
+
+	// 	const auto result_size = packing_root.get_rects_aabb();
+
+	// 	report_result(result_size);
+	// }
 }
 
-unsigned int TextureLoader::getAtlasTextureIndex(TextureAtlas* atlas, glm::vec2 coords)
+glm::uvec4 TextureLoader::getAtlasCoords(TextureAtlas* atlas, int index)
+{
+	if (atlas == nullptr) { std::cerr << "getAtlasCoords: atlas == nullptr" << std::endl; return glm::uvec4(0); }
+	
+	//std::cout << "I: " << index << " = " << atlas->textureAtlasCoords[atlas->textureFiles[index]].x << "; " << atlas->textureAtlasCoords[atlas->textureFiles[index]].y << "; " << atlas->textureAtlasCoords[atlas->textureFiles[index]].z << "; " << atlas->textureAtlasCoords[atlas->textureFiles[index]].w << std::endl;
+
+	return atlas->textureAtlasCoords[atlas->textureFiles[index]]; 
+}
+
+unsigned int TextureLoader::getAtlasTextureIndex(TextureAtlas* atlas, glm::uvec2 coords)
 {
 	if (atlas == nullptr) { std::cerr << "getAtlasTextureIndex: atlas == nullptr" << std::endl; return 0; }
 	
-	return (coords.y * (atlas->width / 16)) + coords.x;
+	// TODO: this could be improved
+	std::string textureName = getAtlasTexturePath(atlas, coords);
+	return std::find(atlas->textureFiles.begin(), atlas->textureFiles.end(), std::string(textureName)) - atlas->textureFiles.begin();
 }
 
 unsigned int TextureLoader::getAtlasTextureIndex(TextureAtlas* atlas, const char* textureName)
 {
 	if (atlas == nullptr) { std::cerr << "getAtlasTextureIndex: atlas == nullptr" << std::endl; return 0; }
 	
-	glm::vec2 coords = getAtlasTextureCoords(atlas, textureName);
-	return (coords.y * (atlas->width / 16)) + coords.x;
+	// TODO: this could be improved
+	return std::find(atlas->textureFiles.begin(), atlas->textureFiles.end(), std::string(textureName)) - atlas->textureFiles.begin();
 }
 
-std::string TextureLoader::getAtlasTexturePath(TextureAtlas* atlas, glm::vec2 coords)
+std::string TextureLoader::getAtlasTexturePath(TextureAtlas* atlas, glm::uvec2 coords)
 {
 	if (atlas == nullptr) { std::cerr << "getAtlasTexturePath: atlas == nullptr" << std::endl; return std::string("N/A"); }
-	
-	int index = (coords.y * (atlas->width / 16)) + coords.x;
-	int unitWidth = atlas->width / 16;
-	int unitHeight = atlas->height / 16;
 
-	//std::cout << "|| getAtlasTexturePath ||" << std::endl;
-	//std::cout << "Atlas size:" << atlas->width << "; " << atlas->height << std::endl;
-	//std::cout << "In coords: " << coords.x << "; " << coords.y << std::endl;
-	//std::cout << "Texture file count:" << atlas->textureFiles.size() << std::endl;
-	//std::cout << "Calculated index: " << index << std::endl;
-	//std::cout << "Texture at index: " << atlas->textureFiles[index] << std::endl;
-
-	return atlas->textureFiles[index];
-}
-
-glm::vec2 TextureLoader::getAtlasTextureCoords(TextureAtlas* atlas, std::string texturePath)
-{
-	if (atlas == nullptr) { std::cerr << "getAtlasTextureCoords: atlas == nullptr" << std::endl; return glm::vec2(0.0f, 0.0f); }
-	
- 	// std::cout << "texPath: " << texturePath << std::endl;
-	for (int i = 0; i < atlas->textureFiles.size(); i++)
+	for (std::string &texture : atlas->textureFiles)
 	{
-		glm::vec2 coords = getAtlasCoords(atlas, i);
-
-		if (atlas->textureFiles[i] == texturePath)
+		if (atlas->textureAtlasCoords[texture].x == coords.x && atlas->textureAtlasCoords[texture].y == coords.y)
 		{
-
-
-			return coords;
+			return texture;
 		}
 	}
-	if (DEBUG_TEXTURE_LOADING) std::cerr << "Texture path not found in atlas, returning (-1, -1)" << std::endl;
+}
 
-	return glm::vec2(-1, -1);
+glm::uvec4 TextureLoader::getAtlasTextureCoords(TextureAtlas* atlas, std::string texturePath)
+{
+	if (atlas == nullptr) { std::cerr << "getAtlasTextureCoords: atlas == nullptr" << std::endl; return glm::uvec4(0); }
+
+	for (const auto& pair : atlas->textureAtlasCoords) {
+		const std::string &keyPath = pair.first;
+		
+		if (DEBUG_TEXTURE_LOADING) { std::cout << "Present path: " << keyPath << " Given path: " << texturePath << std::endl; }
+
+		if (keyPath == texturePath)
+		{
+			return pair.second;
+		}
+	}
+
+	std::cerr << "getAtlasTextureCoords: Texture path [" + texturePath + "] not found in atlas " << std::endl; 
+	return glm::uvec4(0);
 }

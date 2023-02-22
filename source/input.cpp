@@ -201,14 +201,13 @@ void Input::key_event(GLFWwindow* window, int key, int scancode, int action, int
 			case GLFW_KEY_K:
 				if (ctrl_down) // switch grid mode
 				{
-					program.gui.se.currentGridModeSelection = program.gui.se.currentGridModeSelection == 2 ? 0 : program.gui.se.currentGridModeSelection + 1;
-					program.editor.setGridMode((GRID_MODE)program.gui.se.currentGridModeSelection);
+					program.editor.setAutosnap(!program.editor.getAutosnap());
 				}
 			break;
 			case GLFW_KEY_L:
 				if (ctrl_down) // switch overlap mode
 				{
-					program.editor.overlapMode = (int)program.editor.overlapMode == 2 ? OVERLAP_NEVER : (OVERLAP_MODE)((int)program.editor.overlapMode + 1);
+					program.editor.overlap = !program.editor.overlap;
 				}
 			break;
 		}

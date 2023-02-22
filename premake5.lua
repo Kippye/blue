@@ -31,7 +31,8 @@ project "blue"
 		"include/blf/include",
 		"include/blf/include/blf",
 		"include/ImGuiFileDialog-Lib_Only",
-		"include/libconfig/lib"
+		"include/libconfig/lib",
+		"include/rectpack2D/include",
 	}
 	
 	defines

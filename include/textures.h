@@ -13,6 +13,10 @@ struct E_Texture
 {
 	public:
 	GLuint ID;
+	// NOTE: currently not the actual path, just the name
+	std::string path;
+	// NOTE: might not always be set to a correct value
+	glm::uvec4 atlasLocation = glm::uvec4(0);
 	int width;
 	int height;
 };
@@ -26,6 +30,7 @@ struct TextureAtlas
 	int height;
 
 	std::vector<std::string> textureFiles = {};
+	std::map<std::string, glm::uvec4> textureAtlasCoords;
 
 	~TextureAtlas()
 	{
@@ -53,9 +58,9 @@ class TextureLoader
 		TextureAtlas* loadTextureAtlas(std::vector<std::string> fileNames, std::string directory = textureFolder, bool flip = false);
 		TextureAtlas* loadTextureAtlas(std::vector<std::string> fullPaths, bool flip = false);
 
-		unsigned int getAtlasTextureIndex(TextureAtlas* atlas, glm::vec2 coords);
+		unsigned int getAtlasTextureIndex(TextureAtlas* atlas, glm::uvec2 coords);
 		unsigned int getAtlasTextureIndex(TextureAtlas* atlas, const char* textureName);
-		glm::vec2 getAtlasCoords(TextureAtlas* atlas, int index);
-		std::string getAtlasTexturePath(TextureAtlas* atlas, glm::vec2 coords);
-		glm::vec2 getAtlasTextureCoords(TextureAtlas* atlas, std::string texturePath);
+		glm::uvec4 getAtlasCoords(TextureAtlas* atlas, int index);
+		std::string getAtlasTexturePath(TextureAtlas* atlas, glm::uvec2 coords);
+		glm::uvec4 getAtlasTextureCoords(TextureAtlas* atlas, std::string texturePath);
 };

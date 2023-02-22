@@ -28,16 +28,19 @@ void BLF_Converter::load_file(const char* path)
 	DataGroup<BLF_Tile> tiles = data.get<BLF_Tile>();
 
 	program.render.instanceTransformData.clear();
-	program.render.instanceAdditionalData.clear();
+	program.render.instanceTextureData.clear();
+	program.render.instanceAtlasData.clear();
 	program.render.instanceColorData.clear();
+	program.render.instanceAdditionalData.clear();
 	program.editor.clear_tags();
 	program.editor.tiles.clear();
+	program.editor.selection.clear();
 
 	for (BLF_Tile* tile : tiles)
 	{
 		std::string texturePath = tile->texture;
-		//std::cout << texturePath << std::endl;
-		if (program.textureLoader.getAtlasTextureCoords(program.render.textureAtlas, texturePath) == glm::vec2(-1, -1))
+		std::cout << "load_file: loaded tile's texture: " << texturePath << std::endl;
+		if (program.textureLoader.getAtlasTextureCoords(program.render.textureAtlas, texturePath) == glm::uvec4(0))
 		{
 			// TODO: handle this shit
 		}
@@ -88,7 +91,7 @@ void BLF_Converter::write_file(const char* path)
 
 	for (int i = 0; i < editor_tiles.size(); i++)
 	{
-		std::cout << program.textureLoader.getAtlasTexturePath(program.render.textureAtlas, editor_tiles[i].visuals.atlasCoords) << std::endl;
+		std::cout << program.textureLoader.getAtlasTexturePath(program.render.textureAtlas, editor_tiles[i].visuals.atlasLocation) << std::endl;
 		tiles.emplace_back(
             editor_tiles[i].location.Position.x,
             editor_tiles[i].location.Position.y,
@@ -101,7 +104,7 @@ void BLF_Converter::write_file(const char* path)
             editor_tiles[i].physics.Bounce,
             editor_tiles[i].physics.Density,
             editor_tiles[i].physics.Friction,
-            program.textureLoader.getAtlasTexturePath(program.render.textureAtlas, editor_tiles[i].visuals.atlasCoords),
+            program.textureLoader.getAtlasTexturePath(program.render.textureAtlas, editor_tiles[i].visuals.atlasLocation),
             (int)editor_tiles[i].visuals.TextureMode,
 			editor_tiles[i].visuals.TextureSize.x,
 			editor_tiles[i].visuals.TextureSize.y,

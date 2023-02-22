@@ -187,13 +187,34 @@ void Gui::addEditorGui()
 			ImGui::EndTooltip();
 		}
 
+		currentToolButtonX += s.editorButtonDistance + s.editorButtonOffset;
+
+		ImGui::SetCursorPos(ImVec2(currentToolButtonX, 0.0f));
+
+		ImGui::SetNextItemWidth(s.editorComboWidth);
+		// push to back button
+		if (ImGui::Button("Push to back", ImVec2(s.editorComboWidth, s.editorButtonSize.y / 2)))
+		{
+			program.editor.push_selection_to_back();
+		}
+
+		if (ImGui::IsItemHovered())
+		{
+			ImGui::BeginTooltip();
+			ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+			ImGui::Text("push back ");
+			ImGui::BulletText("pushes every selected tile to the background ");
+			ImGui::PopTextWrapPos();
+			ImGui::EndTooltip();
+		}
+
 		/// editor buttons section
 		if (program.editor.getTool() == SELECT)
 		{
-			ImGui::SetCursorPos(ImVec2(ImGui::GetWindowWidth() - 512 - 32 - 20, 0.0f));
+			ImGui::SetCursorPos(ImVec2(currentToolButtonX, s.editorButtonSize.y / 2 + 3.5f));
 			ImGui::SetNextItemWidth(s.editorComboWidth);
 			// texture select button
-			if (ImGui::Button("Select by texture", ImVec2(s.editorComboWidth, s.bottomBarHeight)))
+			if (ImGui::Button("Select by texture", ImVec2(s.editorComboWidth, s.editorButtonSize.y / 2)))
 			{
 				program.editor.select_by_texture(program.editor.nextTile.visuals.textureName);
 			}
@@ -209,65 +230,23 @@ void Gui::addEditorGui()
 			}
 		}
 
-		ImGui::SetCursorPos(ImVec2(ImGui::GetWindowWidth() - 384 - 32, 0.0f));
-		ImGui::SetNextItemWidth(s.editorComboWidth);
-		// push to back button
-		if (ImGui::Button("Push to back", ImVec2(s.editorComboWidth, s.bottomBarHeight)))
-		{
-			program.editor.push_selection_to_back();
-		}
-
-		if (ImGui::IsItemHovered())
-		{
-			ImGui::BeginTooltip();
-			ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
-			ImGui::Text("push back ");
-			ImGui::BulletText("pushes every selected tile to the background ");
-			ImGui::PopTextWrapPos();
-			ImGui::EndTooltip();
-		}
-
 		/// editor toggles section
-
 		ImGui::SetCursorPos(ImVec2(ImGui::GetWindowWidth() - 256, 0.0f));
 		ImGui::SetNextItemWidth(s.editorComboWidth);
-		// overlap switch dropdown
-		if (ImGui::Combo("", &(int)se.currentGridModeSelection, se.gridModeOptions, 3))
-		{
-			program.editor.setGridMode((GRID_MODE)se.currentGridModeSelection);
-		}
+		ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0.5f, 0.5f));
+		ImGui::Selectable("Overlap", &program.editor.overlap, 0, ImVec2(s.editorComboWidth, s.editorButtonSize.y / 2));
+		ImGui::PopStyleVar();
+		ImGui::SameLine();
+		if (ImGui::Checkbox("##ol", &program.editor.overlap)){}
 
-		if (ImGui::IsItemHovered())
-		{
-			ImGui::BeginTooltip();
-				ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
-				ImGui::Text("grid mode ");
-				ImGui::BulletText("normal: tiles can be placed anywhere and snapped with left CTRL ");
-				ImGui::BulletText("auto: tiles will only be placed on the grid, existing tiles won't be affected ");
-				ImGui::BulletText("full: tiles will only be placed on the grid, existing tiles will be snapped to the grid ");
-				ImGui::BulletText("shortcut: left CTRL + K to switch ");
-				ImGui::PopTextWrapPos();
-			ImGui::EndTooltip();
-		}
-
-		ImGui::SetCursorPos(ImVec2(ImGui::GetWindowWidth() - 128, 0.0f));
+		ImGui::SetCursorPos(ImVec2(ImGui::GetWindowWidth() - 256, s.editorButtonSize.y / 2 + 3.5f));
 		ImGui::SetNextItemWidth(s.editorComboWidth);
-		// overlap switch dropdown
-		ImGui::Combo(" ", &(int)program.editor.overlapMode, se.tileOverlapModeOptions, 3);
-
-		if (ImGui::IsItemHovered())
-		{
-			ImGui::BeginTooltip();
-				ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
-				ImGui::Text("tile overlap mode ");
-				ImGui::BulletText("none: tiles won't be placed if they intersect another ");
-				ImGui::BulletText("free: only tiles placed on the grid can't overlap (recommended) ");
-				ImGui::BulletText("always: no overlap checks will be performed ");
-				ImGui::BulletText("shortcut: left CTRL + L to switch ");
-				ImGui::PopTextWrapPos();
-			ImGui::EndTooltip();
-		}
-
+		ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0.5f, 0.5f));
+		ImGui::Selectable("Auto-snap", &program.editor.autosnap, 0, ImVec2(s.editorComboWidth, s.editorButtonSize.y / 2));
+		ImGui::PopStyleVar();
+		ImGui::SameLine();
+		if (ImGui::Checkbox("##as", &program.editor.autosnap)){}
+		
 		ImGui::PopStyleVar(ImGuiStyleVar_WindowPadding);
 	ImGui::End();
 }
@@ -328,7 +307,7 @@ void Gui::addPropertiesGui()
 						ImGui::Dummy(ImVec2(0.0f, s.propertySectionSeparator));
 						ImGui::Text("Visual");
 						// texture name
-						ImGui::Text(("Texture: " + selection[0]->visuals.textureName).c_str());
+						ImGui::Text(("Texture: " + selection[0]->visuals.textureName + " (" + std::to_string(selection[0]->visuals.atlasLocation.z) + "x" + std::to_string(selection[0]->visuals.atlasLocation.w) + ")").c_str());
 						// texturemode
 						if (ImGui::Combo("TextureMode", &(int)selection[0]->visuals.TextureMode, se.tileTextureModeOptions, 2))
 						{
@@ -341,6 +320,7 @@ void Gui::addPropertiesGui()
 						{
 							selection[0]->visuals.TextureSize.x = textureSize[0];
 							selection[0]->visuals.TextureSize.y = textureSize[1];
+							program.editor.updateTileVisuals(selection[0]->ID);
 						}
 						float color[3] = { selection[0]->visuals.Color.x, selection[0]->visuals.Color.y, selection[0]->visuals.Color.z };
 						// color
@@ -473,7 +453,6 @@ void Gui::addPropertiesGui()
 						{
 							for (int i = 0; i < selection.size(); i++)
 							{
-								//program.editor.changeTileVisuals(selection[i]->ID, Visuals(selection[i]->visuals.atlasCoords, selection[i]->visuals.textureName, selection[0]->visuals.TextureMode, selection[i]->visuals.TextureSize, selection[i]->visuals.Color, selection[i]->visuals.Opacity));
 								selection[i]->visuals.TextureMode = selection[0]->visuals.TextureMode;
 								program.editor.updateTileVisuals(selection[i]->ID);
 							}
@@ -487,6 +466,7 @@ void Gui::addPropertiesGui()
 							{
 								selection[i]->visuals.TextureSize.x = textureSize[0];
 								selection[i]->visuals.TextureSize.y = textureSize[1];
+								program.editor.updateTileVisuals(selection[i]->ID);
 							}
 						}
 
@@ -496,7 +476,6 @@ void Gui::addPropertiesGui()
 						{
 							for (int i = 0; i < selection.size(); i++)
 							{
-								//program.editor.changeTileVisuals(selection[i]->ID, Visuals(selection[i]->visuals.atlasCoords, selection[i]->visuals.textureName, selection[i]->visuals.TextureMode, selection[i]->visuals.TextureSize, glm::vec4(color[0], color[1], color[2], selection[i]->visuals.Opacity), selection[i]->visuals.Opacity));
 								selection[i]->visuals.Color.x = color[0];
 								selection[i]->visuals.Color.y = color[1];
 								selection[i]->visuals.Color.z = color[2];
@@ -510,7 +489,6 @@ void Gui::addPropertiesGui()
 						{
 							for (int i = 0; i < selection.size(); i++)
 							{
-								//program.editor.changeTileVisuals(selection[i]->ID, Visuals(selection[i]->visuals.atlasCoords, selection[i]->visuals.textureName, selection[i]->visuals.TextureMode, selection[i]->visuals.TextureSize, selection[i]->visuals.Color, opacity[0]));
 								selection[i]->visuals.Opacity = *opacity;
 								program.editor.updateTileVisuals(selection[i]->ID);
 							}			
@@ -604,7 +582,7 @@ void Gui::addPropertiesGui()
 						ImGui::Dummy(ImVec2(0.0f, s.propertySectionSeparator));
 						ImGui::Text("Visual");
 						// texture name
-						ImGui::Text(("Texture: " + program.textureLoader.getAtlasTexturePath(program.render.textureAtlas, program.editor.nextTile.visuals.atlasCoords)).c_str());
+						ImGui::Text(("Texture: " + program.textureLoader.getAtlasTexturePath(program.render.textureAtlas, program.editor.nextTile.visuals.atlasLocation) + " (" + std::to_string(program.editor.nextTile.visuals.atlasLocation.z) + "x" + std::to_string(program.editor.nextTile.visuals.atlasLocation.w) + ")").c_str());
 						// texturemode
 						ImGui::Combo("TextureMode##m", &se.currentTextureModeSelection, se.tileTextureModeOptions, 2);
 						program.editor.nextTile.visuals.TextureMode = (TEXTUREMODE)se.currentTextureModeSelection;
@@ -724,6 +702,8 @@ void Gui::addTextureSelectorGui()
 			openFileDialog(DIR);
 		}
 
+		ImGui::Text(("textures: " + std::to_string(tileTextures.size())).c_str());
+
 		if (tileTextures.size() > 0)
 		{
 			// tile tiles
@@ -738,8 +718,6 @@ void Gui::addTextureSelectorGui()
 						ImGui::SameLine();
 					ImGui::PushID(y * tilesPerRow + x * tilesPerRow);
 
-					// add highlight to see which is selected
-					se.currentTextureSelection = program.textureLoader.getAtlasTextureIndex(program.render.textureAtlas, program.editor.nextTile.visuals.atlasCoords);
 					//std::cout << "total: " << total << "cts: " << se.currentTextureSelection << std::endl;
 
 					if (se.currentTextureSelection == total)
@@ -752,12 +730,14 @@ void Gui::addTextureSelectorGui()
 					}
 
 					// the atlas coords and textureName of this button
-					glm::vec2 atCoords = program.textureLoader.getAtlasCoords(program.render.textureAtlas, total);
-					std::string textureName = program.textureLoader.getAtlasTexturePath(program.render.textureAtlas, atCoords);
+					// NOTE: this is unnecessary to call EVERY frame for EVERY button, instead call it only when textures are updated!
+					glm::uvec4 atLocation = glm::uvec4(0); // program.textureLoader.getAtlasCoords(program.render.textureAtlas, total);
+					std::string textureName = "brick.png";//program.textureLoader.getAtlasTexturePath(program.render.textureAtlas, atLocation);
 					// check if a tile was selected
 					if (ImGui::ImageButton((void*)(intptr_t)tileTextures[total]->ID, ImVec2(64, 64)))
 					{
-						//std::cout << textureName << std::endl;
+						// std::cout << atLocation.x << "; " << atLocation.y << "; " << atLocation.z << "; " << atLocation.w << std::endl;
+						// std::cout << textureName << std::endl;
 
 						if (program.editor.getTool() == SELECT)
 						{
@@ -768,21 +748,25 @@ void Gui::addTextureSelectorGui()
 							// change texture of selection (pretty crappy but works ig)
 							for (int i = 0; i < selection.size(); i++)
 							{
-								//program.editor.changeTileVisuals(selection[i]->ID, Visuals(atCoords, textureName, selection[i]->visuals.TextureMode, selection[i]->visuals.TextureSize, selection[i]->visuals.Color, selection[i]->visuals.Opacity));
-								selection[i]->visuals.atlasCoords.x = atCoords.x;
-								selection[i]->visuals.atlasCoords.y = atCoords.y;
-								selection[i]->visuals.textureName = textureName;
+								selection[i]->visuals.atlasLocation.x = tileTextures[total]->atlasLocation.x;
+								selection[i]->visuals.atlasLocation.y = tileTextures[total]->atlasLocation.y;
+								selection[i]->visuals.atlasLocation.z = tileTextures[total]->atlasLocation.z;
+								selection[i]->visuals.atlasLocation.w = tileTextures[total]->atlasLocation.w;
+								selection[i]->visuals.textureName = tileTextures[total]->path;
 								program.editor.updateTileVisuals(selection[i]->ID);
 							}
 						}
 						// update nexttile regardless
-						program.editor.nextTile.visuals.atlasCoords = atCoords;
-						program.editor.nextTile.visuals.textureName = textureName;
+						program.editor.nextTile.visuals.atlasLocation = glm::uvec4(tileTextures[total]->atlasLocation);
+						program.editor.nextTile.visuals.textureName = tileTextures[total]->path;
+						// add highlight to see which is selected
+						se.currentTextureSelection = total; //program.textureLoader.getAtlasTextureIndex(program.render.textureAtlas, program.editor.nextTile.visuals.atlasLocation);
+						// update place cursor
 						if (program.editor.placeCursorID != -1)
 						{
 							int index;
 							Gizmo* placeCursor = program.editor.ID_to_gizmo(program.editor.placeCursorID, index);
-							placeCursor->visuals.atlasCoords = program.editor.nextTile.visuals.atlasCoords;
+							placeCursor->visuals.atlasLocation = program.editor.nextTile.visuals.atlasLocation;
 							placeCursor->visuals.textureName = program.editor.nextTile.visuals.textureName;
 							program.editor.updateGizmoVisuals(index);
 						}
@@ -791,7 +775,7 @@ void Gui::addTextureSelectorGui()
 					{
 						ImGui::BeginTooltip();
 							ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
-							ImGui::Text(textureName.c_str());
+							ImGui::Text(tileTextures[total]->path.c_str());
 							ImGui::PopTextWrapPos();
 						ImGui::EndTooltip();
 					}
@@ -890,11 +874,31 @@ void Gui::addBottomBarGui()
 		{
 			program.file_system.updateTextures();
 		}
+		if (ImGui::IsItemHovered())
+		{
+			ImGui::BeginTooltip();
+			ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+			ImGui::Text("reload textures ");
+			ImGui::BulletText("reload textures from the content folder ");
+			ImGui::BulletText("applies any changes made to the content folder ");
+			ImGui::BulletText("tries to give tiles textures with the same name ");
+			ImGui::PopTextWrapPos();
+			ImGui::EndTooltip();
+		}
 
 		ImGui::SetCursorPos(ImVec2(window->SCREEN_WIDTH - ((s.bottomBarButtonWidth * 3) + 40), 0.0f));
 		if (ImGui::Button("Reset camera", ImVec2(s.bottomBarButtonWidth, s.bottomBarHeight)))
 		{
 			program.camera.cameraPos = glm::vec3(0, 0, program.camera.blurZoomLevel);
+		}
+		if (ImGui::IsItemHovered())
+		{
+			ImGui::BeginTooltip();
+			ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+			ImGui::Text("reset camera ");
+			ImGui::BulletText("resets the camera position to what it's like by default in BlurEngine ");
+			ImGui::PopTextWrapPos();
+			ImGui::EndTooltip();
 		}
 
 		ImGui::SetCursorPos(ImVec2(window->SCREEN_WIDTH - ((s.bottomBarButtonWidth * 2) + 20), 0.0f));

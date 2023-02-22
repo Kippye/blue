@@ -12,20 +12,6 @@
 class E_Tile;
 class Gizmo;
 
-enum GRID_MODE
-{
-	GRID_MODE_NORMAL,
-	GRID_MODE_AUTO,
-	GRID_MODE_FULL
-};
-
-enum OVERLAP_MODE
-{
-	OVERLAP_NEVER,
-	OVERLAP_FREE,
-	OVERLAP_ALL
-};
-
 enum Tool
 {
     SELECT, // select placed tiles by clicking, dragging, or ctrl clicking (multiple selection)
@@ -49,7 +35,6 @@ class Editor
 {
 	private:
         Tool selectedTool = SELECT;
-        GRID_MODE gridMode = GRID_MODE_NORMAL;
 		bool dirty = false; // are there any unsaved changes?
     public:
 		// editor data
@@ -61,7 +46,8 @@ class Editor
 		// tool data
         glm::vec2& toolPos = glm::vec2(0.0f);
         glm::vec2 cachedToolPos = glm::vec2(0.0f);
-		OVERLAP_MODE overlapMode = OVERLAP_FREE;
+		bool overlap = true;
+		bool autosnap = false;
 		// editor settings
 		glm::vec3 backgroundColor = glm::vec3(0.2f, 0.2f, 0.8f);
 
@@ -73,8 +59,8 @@ class Editor
 		// properties
 		Tool getTool();
 		void setTool(Tool);
-		GRID_MODE getGridMode();
-		void setGridMode(GRID_MODE);
+		bool getAutosnap();
+		void setAutosnap(bool);
 		bool getDirtiness();
 		void setDirtiness(bool);
 

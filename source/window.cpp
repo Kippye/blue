@@ -97,7 +97,7 @@ void Window::initialize()
 	{
 		if (focused)
 		{
-			program.file_system.updateTextures();
+			//program.file_system.updateTextures();
 			//glfwSetInputMode(self->window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 		}
 		else
