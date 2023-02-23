@@ -850,7 +850,7 @@ namespace IGFD
 		void SetPath(const std::string& vPath);																				// set the path of the dialog, will launch the directory scan for populate the file listview
 		void CompleteFileInfos(FileInfoStruct *vFileInfoStruct);
 	public:														// set time and date infos of a file (detail view mode)
-		void SortFields(SortingFieldEnum vSortingField = SortingFieldEnum::FIELD_NONE, 	bool vCanChangeOrder = true);		// will sort a column
+		void SortFields(SortingFieldEnum vSortingField = SortingFieldEnum::FIELD_NONE, 	bool vCanChangeOrder = true, bool flip = false);		// will sort a column
 	protected:
 		void ScanDir(const std::string& vPath);																				// scan the directory for retrieve the file list
 		void SetCurrentDir(const std::string& vPath);																		// define current directory for scan

@@ -124,15 +124,15 @@ void Input::key_event(GLFWwindow* window, int key, int scancode, int action, int
 		{
 			/// select tools with keys
 			case GLFW_KEY_1:
-				if (program.gui.guiWantKeyboard) { return; }
+				if (program.gui.guiWantKeyboard || program.gui.tileTextures.size() == 0) { return; }
 				program.editor.setTool(SELECT);
 			break;
 			case GLFW_KEY_2:
-				if (program.gui.guiWantKeyboard) { return; }
+				if (program.gui.guiWantKeyboard || program.gui.tileTextures.size() == 0) { return; }
 				program.editor.setTool(PLACE);
 			break;
 			case GLFW_KEY_3:
-				if (program.gui.guiWantKeyboard) { return; }
+				if (program.gui.guiWantKeyboard || program.gui.tileTextures.size() == 0) { return; }
 				program.editor.setTool(BOX);
 				break;
 			// and so on...
@@ -153,31 +153,55 @@ void Input::key_event(GLFWwindow* window, int key, int scancode, int action, int
 			case GLFW_KEY_N: 
 				if (ctrl_down) // create a new empty file
 				{
-					// save changes first?
-					if (program.editor.getDirtiness())
+					if (program.render.textureAtlas == nullptr)
 					{
-						program.gui.popupToggles[SAVE_CONTEXT] = true;
+						program.gui.popupToggles[CONTENT_LACK_WARNING] = true;
 					}
 					else
 					{
-						program.file_system.startNewFile();
+						program.gui.popupToggles[CONTENT_LACK_WARNING] = false;
+						// save changes first?
+						if (program.editor.getDirtiness())
+						{
+							program.gui.popupToggles[SAVE_CONTEXT] = true;
+						}
+						else
+						{
+							program.file_system.startNewFile();
+						}
 					}
 				}
 			break;
 			case GLFW_KEY_I:
 				if (ctrl_down) // pop up open dialog
 				{
-					program.gui.openFileDialog(OPEN);
+					if (program.render.textureAtlas == nullptr)
+					{
+						program.gui.popupToggles[CONTENT_LACK_WARNING] = true;
+					}
+					else
+					{
+						program.gui.popupToggles[CONTENT_LACK_WARNING] = false;
+						program.gui.openFileDialog(OPEN);
+					}
 				}
 			break;
 			case GLFW_KEY_O:
 				if (ctrl_down) // save
 				{
-					if (shift_down) // save as
+					if (program.render.textureAtlas == nullptr)
 					{
-						program.gui.openFileDialog(SAVE_AS);
+						program.gui.popupToggles[CONTENT_LACK_WARNING] = true;
 					}
-					program.gui.openFileDialog(SAVE);
+					else
+					{
+						program.gui.popupToggles[CONTENT_LACK_WARNING] = false;
+						if (shift_down) // save as
+						{
+							program.gui.openFileDialog(SAVE_AS);
+						}
+						program.gui.openFileDialog(SAVE);
+					}
 				}
 			break;
 			case GLFW_KEY_G:

@@ -16,13 +16,15 @@
  * [X] at first, a pretty random texture is selected, rather than the first one in the texture selector
  * [X] having a larger amount of textures in content causes FPS to drop drastically
  * [X] tiling inaccuracies when using larger atlases & textures
- * [ ] crash when a tile is selected and textures are reloaded then a tile is placed
- * [ ] can't save directories that contain specific characters to config
+ * [X] reload textures + select place tool = grid disappears
+ * [X] crash when loading a file but there are no textures - "fixed" by making doing so impossible
+ * [ ] crash when a tile is selected and textures are reloaded then a tile is placed - i gotta somehow create an atlas with just the grid and missing textures before any actual textures exist
  * [ ] weirdly just moving around placing things caused a crash
  * [ ] push to back is VERY broken, either add Z position or fix it - it's messing with textures and crap
  * [ ] place cursor (and probably the actual place position too) is too far behind mouse cursor
  * [ ] reloading textures needs to be made more stable
  * [ ] cursor glitches weirdly and sometimes just doesn't show
+ * [C] can't save directories that contain specific characters to config - it doesn't seem to be caused by characters
  * // UI // 
  * [X] add io.WantCaptureMouse and io.WantCaptureKeyboard checks to ignore input when file dialogues are open
  * [X] load content folder textures as imagebuttons on a grid
@@ -32,12 +34,14 @@
  * [X] editor (tool selector, etc) panel
  * [X] section (or separate window) at the bottom of properties panel that lets you set the settings on newly placed tiles
  * [X] grid mode toggle (if tiles have already been placed, they will be snapped to the grid)
- * [?] make fitting window paddings per window
+ * [X] set default file dialog sort mode to name ascending
  * [ ] grid settings under editor tab? - opacity, toggle ALSO make it toggle by pressing G
+ * [ ] beautify file dialog
+ * [ ] make a new gui style
+ * [ ] look for a font to use?
+ * [?] make fitting window paddings per window
  * [C] [replaced by tile selector] some kind of dropdown for texture selection in the properties panel
  * [C] status gui that shows what process is currently done (mostly useful for stuff like reloading textures, opening or saving a BLF file, etc)
- * [C] beautify file dialog
- * [C] set default file dialog sort mode to name ascending
  * // EDITOR //
  * [X] box draw tool: shortcut 3, click to select start and end point, will use the texturemode of the next tile, right click to fill the area with 1x1 tiles
  * [X] only listen to editor movement commands when no imgui window is focused
@@ -59,12 +63,19 @@
  * [X] improve grid mode and overlap mode:
  * 		- only really 2 of each are required: overlap always or never, grid snap normal or automatic
  * 		- this means they could just be made toggles instead of enums: Auto-snap, Overlap
+ * [X?] make tiles that have lost their texture use missing.png (either loaded from the content folder or stored in /textures or hardcoded) but maybe keep the textureName
  * [2] variable grid size
- * [ ] make tiles that have lost their texture use missing.png (either loaded from the content folder or stored in /textures or hardcoded) but maybe keep the textureName
+ * [ ] create gizmos for drag selection boxes
+ * [ ] create gizmos for box place preview
+ * [ ] fix box selection / placement (it weirdly follows the camera rather than staying in the same spot and changing size)
+ * [ ] also make box select work by creating an overlay, not selecting tiles? and then selecting all tiles when the drag is ended?
  * [ ] some way to show / hide place cursor? people might find it annoying when removing tiles
  * [ ] move tool (with mouse)
  * [ ] resize tool ‍GRRRRR
- * [C] undo, redo, if at all doable
+ * [ ] copy selection
+ * [ ] paste
+ * [ ] cut selection
+ * [ ] undo, redo, if at all doable
  * // OTHER //
  * [X] fix up editor tile class
  * [X] only recreate transforms array when a tile is modified (use some kind of event system)
@@ -90,12 +101,18 @@
  *    [X] convert tiles to and from blf files
  *    [X] save / open blf files
  */
-/* [X] RELEASE 1.1:
+/* [ ] RELEASE 1.1 RENDERING UPDATE:
  *	  [X] Fix tiling inaccuracy
- *	  [ ] Add missing.png
- * 	  [ ] Fix cursor bug?
- * 	  [ ] Attempt to fix dir save bug
- * 	  [ ] Built-in grid.png?
+ *	  [X?] Add missing.png
+ * 	  [C] Fix cursor bug?
+ * 	  [X] Built-in grid.png?
+*/
+/* [ ] RELEASE 1.2 TOOLS UPDATE:
+ *	  [ ] Add move tool
+ *    [ ] Add resize / scale tool
+ *    [ ] Add gizmos for all the tools
+ *    [ ] Add copy / cut / paste
+ *    [ ] Fix box selection & placement
 */
 
 class E_Tile;

@@ -17,11 +17,12 @@ class Gizmo
 		static inline unsigned int lastID = 0;
 	public:
 		unsigned int ID = 0;
+		bool permanent = false;
 		Location location;
 		Visuals visuals;
 		Gizmo();
-		Gizmo(Location _location);
-		Gizmo(Location _location, Visuals _visuals);
+		Gizmo(Location _location, bool _permanent = false);
+		Gizmo(Location _location, Visuals _visuals, bool _permanent = false);
 };
 
 // operators

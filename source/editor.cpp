@@ -583,22 +583,12 @@ void Editor::update_atlas_coords(TextureAtlas* atlas)
 		{
 			atLocation = updatedAtlasLocations[tiles[i].visuals.textureName];
 		}
-		//std::cout << tiles[i].visuals.textureName << std::endl;
-		// // i really dont know how to handle it being -1 but this will do for now...
-		// if (atLocation != glm::uvec4(-1.0f))
-		// {
-			tiles[i].visuals.atlasLocation = atLocation;
-			program.render.instanceAtlasData[i].x = atLocation.x;
-			program.render.instanceAtlasData[i].y = atLocation.y;
-			program.render.instanceAtlasData[i].z = atLocation.z;
-			program.render.instanceAtlasData[i].w = atLocation.w;
-		// }
-		// else
-		// {
-			// tiles[i].visuals.atLocation = glm::vec2(0.0f, 0.0f);
-			// program.render.instanceTextureData[i].x = 0.0f;
-			// program.render.instanceTextureData[i].y = 0.0f;
-		//}
+
+		tiles[i].visuals.atlasLocation = atLocation;
+		program.render.instanceAtlasData[i].x = atLocation.x;
+		program.render.instanceAtlasData[i].y = atLocation.y;
+		program.render.instanceAtlasData[i].z = atLocation.z;
+		program.render.instanceAtlasData[i].w = atLocation.w;
 	}
 
 	for (int i = 0; i < gizmos.size(); i++)
@@ -606,7 +596,6 @@ void Editor::update_atlas_coords(TextureAtlas* atlas)
 		glm::uvec4 atLocation;
 		if (updatedAtlasLocations.find(gizmos[i].visuals.textureName) == updatedAtlasLocations.end())
 		{
-			// std::cout << "ac: " << gizmos[i].visuals.atlasCoords.x << gizmos[i].visuals.atlasCoords.y << std::endl;
 			atLocation = program.textureLoader.getAtlasTextureCoords(atlas, gizmos[i].visuals.textureName);
 			updatedAtlasLocations[gizmos[i].visuals.textureName] = atLocation;
 		}
@@ -614,23 +603,13 @@ void Editor::update_atlas_coords(TextureAtlas* atlas)
 		{
 			atLocation = updatedAtlasLocations[tiles[i].visuals.textureName];
 		}
-		// std::cout << "acafter: " << atCoords.x << atCoords.y << std::endl;
 		std::cout << "Gizmo textureName: " << gizmos[i].visuals.textureName << std::endl;
-		// i really dont know how to handle it being -1 but this will do for now...
-		// if (atLocation != glm::vec2(-1.0f))
-		// {
-			gizmos[i].visuals.atlasLocation = atLocation;
-			program.render.GinstanceTextureData[i].x = atLocation.x;
-			program.render.GinstanceTextureData[i].y = atLocation.y;
-			program.render.GinstanceTextureData[i].z = atLocation.z;
-			program.render.GinstanceTextureData[i].w = atLocation.w;
-		// }
-		// else
-		// {
-		// 	gizmos[i].visuals.atlasCoords = glm::vec2(0.0f, 0.0f);
-		// 	program.render.GinstanceTextureData[i].x = 0.0f;
-		// 	program.render.GinstanceTextureData[i].y = 0.0f;
-		// }
+
+		gizmos[i].visuals.atlasLocation = atLocation;
+		program.render.GinstanceAtlasData[i].x = atLocation.x;
+		program.render.GinstanceAtlasData[i].y = atLocation.y;
+		program.render.GinstanceAtlasData[i].z = atLocation.z;
+		program.render.GinstanceAtlasData[i].w = atLocation.w;
 	}
 
 	// update nextTile too...
@@ -651,7 +630,8 @@ void Editor::update_atlas_coords(TextureAtlas* atlas)
 		{
 			Gizmo &gridGizmo = gizmos.emplace_back(
 				Location(glm::vec4(-1000.0f, -1000.0f, 0.0f, 0.0f), glm::vec3(2000.0f, 2000.0f, 0.0f)),
-				Visuals(program.textureLoader.getAtlasTextureCoords(program.render.textureAtlas, "grid.png"), "grid.png", TEXTUREMODE_TILE, glm::vec2(1.0f, 1.0f), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f), 0.75f)
+				Visuals(program.textureLoader.getAtlasTextureCoords(program.render.textureAtlas, "grid_blue.png"), "grid_blue.png", TEXTUREMODE_TILE, glm::vec2(1.0f, 1.0f), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f), 0.75f),
+				/*_permanent*/ true
 			);
 
 			add_gizmo(gridGizmo); 
@@ -812,7 +792,6 @@ void Editor::resizeGizmo(unsigned int ID, glm::vec2 newSize)
 
 void Editor::updateGizmoVisuals(int index)
 {
-	// TODO: update when TextureSize is made to have a visible effect
 	Visuals* visuals = &gizmos[index].visuals;
 	program.render.GinstanceTextureData[index].x = visuals->TextureSize.x;
 	program.render.GinstanceTextureData[index].y = visuals->TextureSize.y;
@@ -825,10 +804,8 @@ void Editor::updateGizmoVisuals(int index)
 	program.render.GinstanceColorData[index].z = visuals->Color.z;
 	program.render.GinstanceColorData[index].w = visuals->Opacity;
 	program.render.GinstanceAdditionalData[index].x = visuals->TextureMode == TEXTUREMODE_TILE;
-	// TODO: make it just update both at once
-	program.render.updateGizmoInstanceArray(INSTANCE_ARRAY_UPDATE_ALL);
 
-	setDirtiness(true);
+	program.render.updateGizmoInstanceArray(INSTANCE_ARRAY_UPDATE_ALL);
 }
 
 void Editor::updateGizmoVisuals(unsigned int ID)

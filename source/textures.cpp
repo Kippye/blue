@@ -463,6 +463,18 @@ TextureAtlas* TextureLoader::loadTextureAtlas(std::vector<std::string> fullPaths
 
 	auto texture_load_start_time = std::chrono::high_resolution_clock::now();
 	
+	// missing texture (loaded from the program's textures folder)
+	int missingWidth, missingHeight;
+	unsigned char* missingTexture = loadTextureData(textureFolder + "missing_blue.png", &missingWidth, &missingHeight, false);
+	atlasTextures.push_back(missingTexture);
+	rectangles.emplace_back(rect_xywh(0, 0, missingWidth, missingHeight));
+
+	// grid texture (loaded from the program's textures folder)
+	int gridWidth, gridHeight;
+	unsigned char* gridTexture = loadTextureData(textureFolder + "grid_blue.png", &gridWidth, &gridHeight, false);
+	atlasTextures.push_back(gridTexture);
+	rectangles.emplace_back(rect_xywh(0, 0, gridWidth, gridHeight));
+
 	for (int i = 0; i < fullPaths.size(); i++)
 	{
 		int width, height;
@@ -520,10 +532,12 @@ TextureAtlas* TextureLoader::loadTextureAtlas(std::vector<std::string> fullPaths
 	textureAtlas->ID = createEmptyTexture(&textureAtlas->width, &textureAtlas->height);
 	textureAtlas->data = textureAtlasData;
 
+	fullPaths.insert(fullPaths.begin(), std::string("textures\\missing_blue.png"));
+	fullPaths.insert(fullPaths.begin() + 1, std::string("textures\\grid_blue.png"));
+
 	for (int i = 0; i < rectangles.size(); i++)
 	{
-		//int width, height;
-		unsigned char* texture = atlasTextures[i]; //loadTextureData(fullPaths[i], &width, &height, false);
+		unsigned char* texture = atlasTextures[i];
 		std::filesystem::path fileName = std::filesystem::path(fullPaths[i]).filename();
 		textureAtlas->textureFiles.push_back(fileName.string());
 		textureAtlas->textureAtlasCoords[fileName.string()] = glm::uvec4(rectangles[i].x, rectangles[i].y, rectangles[i].w, rectangles[i].h);
@@ -613,7 +627,7 @@ TextureAtlas* TextureLoader::loadTextureAtlas(std::vector<std::string> fullPaths
 
 glm::uvec4 TextureLoader::getAtlasCoords(TextureAtlas* atlas, int index)
 {
-	if (atlas == nullptr) { std::cerr << "getAtlasCoords: atlas == nullptr" << std::endl; return glm::uvec4(0); }
+	if (atlas == nullptr) { std::cerr << "getAtlasCoords: atlas == nullptr" << std::endl; return getAtlasTextureCoords(atlas, std::string("missing_blue.png")); }
 	
 	//std::cout << "I: " << index << " = " << atlas->textureAtlasCoords[atlas->textureFiles[index]].x << "; " << atlas->textureAtlasCoords[atlas->textureFiles[index]].y << "; " << atlas->textureAtlasCoords[atlas->textureFiles[index]].z << "; " << atlas->textureAtlasCoords[atlas->textureFiles[index]].w << std::endl;
 
@@ -639,7 +653,7 @@ unsigned int TextureLoader::getAtlasTextureIndex(TextureAtlas* atlas, const char
 
 std::string TextureLoader::getAtlasTexturePath(TextureAtlas* atlas, glm::uvec2 coords)
 {
-	if (atlas == nullptr) { std::cerr << "getAtlasTexturePath: atlas == nullptr" << std::endl; return std::string("N/A"); }
+	if (atlas == nullptr) { std::cerr << "getAtlasTexturePath: atlas == nullptr" << std::endl; return std::string("missing_blue.png"); }
 
 	for (std::string &texture : atlas->textureFiles)
 	{
@@ -652,7 +666,7 @@ std::string TextureLoader::getAtlasTexturePath(TextureAtlas* atlas, glm::uvec2 c
 
 glm::uvec4 TextureLoader::getAtlasTextureCoords(TextureAtlas* atlas, std::string texturePath)
 {
-	if (atlas == nullptr) { std::cerr << "getAtlasTextureCoords: atlas == nullptr" << std::endl; return glm::uvec4(0); }
+	if (atlas == nullptr) { std::cerr << "getAtlasTextureCoords: atlas == nullptr" << std::endl; return getAtlasTextureCoords(atlas, std::string("missing_blue.png")); }
 
 	for (const auto& pair : atlas->textureAtlasCoords) {
 		const std::string &keyPath = pair.first;
@@ -666,5 +680,5 @@ glm::uvec4 TextureLoader::getAtlasTextureCoords(TextureAtlas* atlas, std::string
 	}
 
 	std::cerr << "getAtlasTextureCoords: Texture path [" + texturePath + "] not found in atlas " << std::endl; 
-	return glm::uvec4(0);
+	return getAtlasTextureCoords(atlas, std::string("missing_blue.png"));
 }

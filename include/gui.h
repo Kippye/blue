@@ -20,7 +20,8 @@ enum GUI_POPUP
 	STATUS,
 	IGNORE_LIST,
 	SAVE_CONTEXT,
-	REOPEN_CONTEXT
+	REOPEN_CONTEXT,
+	CONTENT_LACK_WARNING
 };
 
 enum GUI_PROMPT
@@ -74,7 +75,12 @@ struct GuiData
 		float f64_free = 0.1f,
 		f64_snap = 1.0f;
 		ImVec4 normalButtonColor;
-		ImVec4 selectedButtonColor = ImVec4(0.00f, 0.51f, 1.00f, 1.00f);
+		ImVec4 selectedButtonColor = ImVec4(0.00f, 0.51f, 1.00f, 1.0f);
+		ImVec4 contentFolderColor = ImVec4(0.25f, 0.68f, 0.01f, 1.0f);
+		ImVec4 blfFileColor = ImVec4(0.68f, 0.45f, 0.01f, 1.0f);
+		ImVec4 buttonDisabled = ImVec4(0.60f, 0.25f, 0.25f, 1.0f);
+		ImVec4 buttonDisabledHovered = ImVec4(0.73f, 0.30f, 0.30f, 1.0f);
+		ImVec4 buttonDisabledActive = ImVec4(0.82f, 0.26f, 0.0f, 1.0f);
 };
 
 class Gui
@@ -96,7 +102,8 @@ class Gui
 		{
 			{ STATUS, false },
 			{ IGNORE_LIST, false },
-			{ SAVE_CONTEXT, false}
+			{ SAVE_CONTEXT, false},
+			{ CONTENT_LACK_WARNING, false }
 		};
 
 		std::vector<E_Texture*>& tileTextures = std::vector<E_Texture*>{};

@@ -106,6 +106,13 @@ void Gui::addEditorGui()
 		float currentToolButtonX = 0.0f;
 		ImGui::SetCursorPos(ImVec2(currentToolButtonX, 0.0f));
 
+		if (tileTextures.size() == 0) 
+		{
+			ImGui::PopStyleVar(ImGuiStyleVar_WindowPadding); 
+			ImGui::End(); 
+			return;
+		}
+
 		// select tool button
 		if (program.editor.getTool() == SELECT)
 		{
@@ -802,16 +809,30 @@ void Gui::addBottomBarGui()
 	ImGui::Begin("Bottom bar", p_close, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
 		ImGui::SetCursorPos(ImVec2(0.0f, 0.0f));
 		
+		if (program.render.textureAtlas == nullptr)
+		{
+			ImGui::PushStyleColor(ImGuiCol_Button, gd.buttonDisabled);
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, gd.buttonDisabledActive);
+			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, gd.buttonDisabledHovered);
+		}
 		if (ImGui::Button("New", ImVec2(s.bottomBarButtonWidth, s.bottomBarHeight)))
 		{
-			// save changes first?
-			if (program.editor.getDirtiness())
+			if (program.render.textureAtlas == nullptr)
 			{
-				program.gui.popupToggles[SAVE_CONTEXT] = true;
+				popupToggles[CONTENT_LACK_WARNING] = true;
 			}
 			else
 			{
-				program.file_system.startNewFile();
+				popupToggles[CONTENT_LACK_WARNING] = false;
+				// save changes first?
+				if (program.editor.getDirtiness())
+				{
+					program.gui.popupToggles[SAVE_CONTEXT] = true;
+				}
+				else
+				{
+					program.file_system.startNewFile();
+				}
 			}
 		}
 		if (ImGui::IsItemHovered())
@@ -827,7 +848,15 @@ void Gui::addBottomBarGui()
 		ImGui::SetCursorPos(ImVec2(s.bottomBarButtonWidth + 20.0f, 0.0f));
 		if (ImGui::Button("Load", ImVec2(s.bottomBarButtonWidth, s.bottomBarHeight)))
 		{
-			openFileDialog(OPEN);
+			if (program.render.textureAtlas == nullptr)
+			{
+				popupToggles[CONTENT_LACK_WARNING] = true;
+			}
+			else
+			{
+				popupToggles[CONTENT_LACK_WARNING] = false;
+				openFileDialog(OPEN);
+			}
 		}
 		if (ImGui::IsItemHovered())
 		{
@@ -842,7 +871,15 @@ void Gui::addBottomBarGui()
 		ImGui::SetCursorPos(ImVec2((s.bottomBarButtonWidth + 20.0f) * 2, 0.0f));
 		if (ImGui::Button("Save", ImVec2(s.bottomBarButtonWidth, s.bottomBarHeight)))
 		{
-			openFileDialog(SAVE);
+			if (program.render.textureAtlas == nullptr)
+			{
+				popupToggles[CONTENT_LACK_WARNING] = true;
+			}
+			else
+			{
+				popupToggles[CONTENT_LACK_WARNING] = false;
+				openFileDialog(SAVE);
+			}
 		}
 		if (ImGui::IsItemHovered())
 		{
@@ -857,7 +894,15 @@ void Gui::addBottomBarGui()
 		ImGui::SetCursorPos(ImVec2((s.bottomBarButtonWidth + 20.0f) * 3, 0.0f));
 		if (ImGui::Button("Save as", ImVec2(s.bottomBarButtonWidth, s.bottomBarHeight)))
 		{
-			openFileDialog(SAVE_AS);
+			if (program.render.textureAtlas == nullptr)
+			{
+				popupToggles[CONTENT_LACK_WARNING] = true;
+			}
+			else
+			{
+				popupToggles[CONTENT_LACK_WARNING] = false;
+				openFileDialog(SAVE_AS);
+			}
 		}
 		if (ImGui::IsItemHovered())
 		{
@@ -872,7 +917,15 @@ void Gui::addBottomBarGui()
 		ImGui::SetCursorPos(ImVec2(window->SCREEN_WIDTH - ((s.bottomBarButtonWidth * 4) + 60), 0.0f));
 		if (ImGui::Button("Reload textures", ImVec2(s.bottomBarButtonWidth, s.bottomBarHeight)))
 		{
-			program.file_system.updateTextures();
+			if (program.render.textureAtlas == nullptr)
+			{
+				popupToggles[CONTENT_LACK_WARNING] = true;
+			}
+			else
+			{
+				popupToggles[CONTENT_LACK_WARNING] = false;
+				program.file_system.updateTextures();
+			}
 		}
 		if (ImGui::IsItemHovered())
 		{
@@ -884,6 +937,10 @@ void Gui::addBottomBarGui()
 			ImGui::BulletText("tries to give tiles textures with the same name ");
 			ImGui::PopTextWrapPos();
 			ImGui::EndTooltip();
+		}
+		if (program.render.textureAtlas == nullptr)
+		{
+			ImGui::PopStyleColor(3);
 		}
 
 		ImGui::SetCursorPos(ImVec2(window->SCREEN_WIDTH - ((s.bottomBarButtonWidth * 3) + 40), 0.0f));
@@ -1020,10 +1077,28 @@ void Gui::addPopupGui()
 		{
 			guiWantKeyboard = guiIO->WantCaptureKeyboard ? true : guiWantKeyboard;
 
+			if (program.render.textureAtlas == nullptr)
+			{
+				ImGui::PushStyleColor(ImGuiCol_Button, gd.buttonDisabled);
+				ImGui::PushStyleColor(ImGuiCol_ButtonActive, gd.buttonDisabledActive);
+				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, gd.buttonDisabledHovered);
+			}
 			if (ImGui::Button("Yes", ImVec2(s.bottomBarButtonWidth, s.bottomBarHeight)))
 			{
-				popupToggles[REOPEN_CONTEXT] = false;
-				program.blf_converter.load_file(program.file_system.blfFile.c_str());
+				if (program.render.textureAtlas == nullptr)
+				{
+					popupToggles[CONTENT_LACK_WARNING] = true;
+				}
+				else
+				{
+					popupToggles[CONTENT_LACK_WARNING] = false;
+					popupToggles[REOPEN_CONTEXT] = false;
+					program.blf_converter.load_file(program.file_system.blfFile.c_str());
+				}
+			}
+			if (program.render.textureAtlas == nullptr)
+			{
+				ImGui::PopStyleColor(3);
 			}
 			ImGui::SameLine();
 			ImGui::Dummy(ImVec2(128.0F, 1.0F));
@@ -1040,6 +1115,24 @@ void Gui::addPopupGui()
 		{
 			ImGui::End();
 		}
+	}
+	if (popupToggles[CONTENT_LACK_WARNING])
+	{
+		ImGui::OpenPopup("Select a content folder first!", ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_Modal);
+	}
+	ImGui::SetNextWindowPos(centeredPos, ImGuiCond_FirstUseEver);
+	if (ImGui::BeginPopupModal("Select a content folder first!", &popupToggles[CONTENT_LACK_WARNING], ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_Modal))
+	{
+		guiWantKeyboard = guiIO->WantCaptureKeyboard ? true : guiWantKeyboard;
+
+		ImGui::Text("A content folder must be loaded to edit levels");
+
+		if (ImGui::Button("Ok", ImVec2(s.bottomBarButtonWidth * 2.2, s.bottomBarHeight)))
+		{
+			ImGui::CloseCurrentPopup();
+			popupToggles[CONTENT_LACK_WARNING] = false;
+		}
+		ImGui::EndPopup();
 	}
 	// bla bla bla
 }
@@ -1074,6 +1167,7 @@ void Gui::openFileDialog(GUI_PROMPT type)
 			{
 				startDir = program.file_system.contentDir == "" ? startDir : program.file_system.contentDir;
 			}
+			ImGuiFileDialog::Instance()->SetExtentionInfos(".blf", gd.blfFileColor, "");
 			ImGuiFileDialog::Instance()->OpenDialog("OpenFile", "Load a BLF file", ".blf", startDir.c_str(), 1);
 			break;
 		}
@@ -1104,6 +1198,7 @@ void Gui::openFileDialog(GUI_PROMPT type)
 				startDir = program.file_system.contentDir == "" ? startDir : program.file_system.contentDir;
 			}
 
+			ImGuiFileDialog::Instance()->SetExtentionInfos(".blf", gd.blfFileColor, "");
 			ImGuiFileDialog::Instance()->OpenDialog("SaveFileAs", "Save current BLF file as...", ".blf", startDir.c_str(), 1, nullptr, ImGuiFileDialogFlags_ConfirmOverwrite);
 			break;
 		}
@@ -1127,6 +1222,7 @@ void Gui::checkFileDialog()
 				{
 					// change content dir
 					program.file_system.contentDir = ImGuiFileDialog::Instance()->GetCurrentPath() + "\\";
+					std::cout << "path: " << program.file_system.contentDir << std::endl;
 					program.file_system.changeSetting<std::string>("dirs.content", program.file_system.contentDir, libconfig::Setting::TypeString);
 					// load textures from freshly selected directory
 					program.file_system.updateTextures();

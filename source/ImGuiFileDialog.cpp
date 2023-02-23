@@ -1344,13 +1344,13 @@ namespace IGFD
 				if (sorts_specs->SpecsDirty && !m_FileList.empty())
 				{
 					if (sorts_specs->Specs->ColumnUserID == 0)
-						SortFields(SortingFieldEnum::FIELD_FILENAME, true);
+						SortFields(SortingFieldEnum::FIELD_FILENAME, true, true);
 					else if (sorts_specs->Specs->ColumnUserID == 1)
-						SortFields(SortingFieldEnum::FIELD_TYPE, true);
+						SortFields(SortingFieldEnum::FIELD_TYPE, true, true);
 					else if (sorts_specs->Specs->ColumnUserID == 2)
-						SortFields(SortingFieldEnum::FIELD_SIZE, true);
+						SortFields(SortingFieldEnum::FIELD_SIZE, true, true);
 					else //if (sorts_specs->Specs->ColumnUserID == 3) => alwayd true for the moment, to uncomment if we add a fourth column
-						SortFields(SortingFieldEnum::FIELD_DATE, true);
+						SortFields(SortingFieldEnum::FIELD_DATE, true, true);
 
 					sorts_specs->SpecsDirty = false;
 				}
@@ -2006,7 +2006,7 @@ namespace IGFD
 		}
 	}
 
-	void IGFD::FileDialog::SortFields(SortingFieldEnum vSortingField, bool vCanChangeOrder)
+	void IGFD::FileDialog::SortFields(SortingFieldEnum vSortingField, bool vCanChangeOrder, bool flip)
 	{
 		if (vSortingField != SortingFieldEnum::FIELD_NONE)
 		{
@@ -2018,7 +2018,7 @@ namespace IGFD
 
 		if (vSortingField == SortingFieldEnum::FIELD_FILENAME)
 		{
-			if (vCanChangeOrder && m_SortingField == vSortingField)
+			if (vCanChangeOrder && m_SortingField == vSortingField && flip)
 				m_SortingDirection[0] = !m_SortingDirection[0];
 
 			if (m_SortingDirection[0])
@@ -2247,7 +2247,7 @@ namespace IGFD
 				free(files);
 			}
 
-			SortFields(m_SortingField);
+			SortFields(m_SortingField, true, false);
 		}
 	}
 
