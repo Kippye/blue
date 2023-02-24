@@ -26,9 +26,8 @@ class Window
 		std::string title = "";
 		CURSOR_TYPE cursor = NORMAL;
 		GLFWcursor* cursors[2] = {};
-		float SCREEN_WIDTH = 800.0f;
-		float SCREEN_HEIGHT = 600.0f;
-		float lastX = SCREEN_WIDTH / 2, lastY = SCREEN_HEIGHT / 2;
+		int SCREEN_WIDTH = 800;
+		int SCREEN_HEIGHT = 600;
 		bool firstMouseMovement = true;
 		bool hasFocus = true;
 		bool shouldClose = false;

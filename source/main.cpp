@@ -18,12 +18,23 @@
  * [X] tiling inaccuracies when using larger atlases & textures
  * [X] reload textures + select place tool = grid disappears
  * [X] crash when loading a file but there are no textures - "fixed" by making doing so impossible
- * [ ] crash when a tile is selected and textures are reloaded then a tile is placed - i gotta somehow create an atlas with just the grid and missing textures before any actual textures exist
- * [ ] weirdly just moving around placing things caused a crash
- * [ ] push to back is VERY broken, either add Z position or fix it - it's messing with textures and crap
+ * [X] grid texture doesn't seen to be actually loaded from the program's textures
+ * [X?] reloading textures needs to be made more stable
+ * [X] box selection additive doesn't work
+ * [X] drag gizmo not reset when switching from box draw to drag select -  NOTE: maybe just make 2 separate gizmos?
+ * [X] make the drag select do size calculation the same way as box place
+ * [X] can i reuse the indices vector in drag selection?
+ * [X] box selection and draw gizmo doesn't disappear when the drag is ended over gui
+ * [ ] box placement primary mode sometimes the tile isn't actually visible
+ * [ ] box placement primary mode places more than 1 tile
+ * [ ] fix box place gizmo size / tiling
+ * [ ] box drag can draw wayyy too tiny tiles
+ * [ ] handle the tile that is being resized / moved being deleted by the user (causes crash) 
  * [ ] place cursor (and probably the actual place position too) is too far behind mouse cursor
- * [ ] reloading textures needs to be made more stable
- * [ ] cursor glitches weirdly and sometimes just doesn't show
+ * [ ] push to back is VERY broken, either add Z position or fix it - it's messing with textures and crap
+ * [?] weirdly just moving around placing things caused a crash
+ * [?] cursor glitches weirdly and sometimes just doesn't show
+ * [?] crash when a tile is selected and textures are reloaded then a tile is placed - i gotta somehow create an atlas with just the grid and missing textures before any actual textures exist
  * [C] can't save directories that contain specific characters to config - it doesn't seem to be caused by characters
  * // UI // 
  * [X] add io.WantCaptureMouse and io.WantCaptureKeyboard checks to ignore input when file dialogues are open
@@ -35,10 +46,10 @@
  * [X] section (or separate window) at the bottom of properties panel that lets you set the settings on newly placed tiles
  * [X] grid mode toggle (if tiles have already been placed, they will be snapped to the grid)
  * [X] set default file dialog sort mode to name ascending
- * [ ] grid settings under editor tab? - opacity, toggle ALSO make it toggle by pressing G
- * [ ] beautify file dialog
  * [ ] make a new gui style
+ * [ ] beautify file dialog
  * [ ] look for a font to use?
+ * [ ] grid settings under editor tab? - opacity, toggle ALSO make it toggle by pressing G
  * [?] make fitting window paddings per window
  * [C] [replaced by tile selector] some kind of dropdown for texture selection in the properties panel
  * [C] status gui that shows what process is currently done (mostly useful for stuff like reloading textures, opening or saving a BLF file, etc)
@@ -64,17 +75,17 @@
  * 		- only really 2 of each are required: overlap always or never, grid snap normal or automatic
  * 		- this means they could just be made toggles instead of enums: Auto-snap, Overlap
  * [X?] make tiles that have lost their texture use missing.png (either loaded from the content folder or stored in /textures or hardcoded) but maybe keep the textureName
- * [2] variable grid size
- * [ ] create gizmos for drag selection boxes
- * [ ] create gizmos for box place preview
- * [ ] fix box selection / placement (it weirdly follows the camera rather than staying in the same spot and changing size)
- * [ ] also make box select work by creating an overlay, not selecting tiles? and then selecting all tiles when the drag is ended?
- * [ ] some way to show / hide place cursor? people might find it annoying when removing tiles
- * [ ] move tool (with mouse)
- * [ ] resize tool ‍GRRRRR
+ * [X] create gizmos for drag selection boxes
+ * [X] fix box selection / placement (it weirdly follows the camera rather than staying in the same spot and changing size)
+ * [X] move tool (with mouse)
+ * [X] resize tool ‍GRRRRR
+ * [.] create gizmos for box place preview
  * [ ] copy selection
  * [ ] paste
  * [ ] cut selection
+ * [ ] some way to show / hide place cursor? people might find it annoying when removing tiles
+ * [ ] zoom into the cursor position
+ * [ ] variable grid size
  * [ ] undo, redo, if at all doable
  * // OTHER //
  * [X] fix up editor tile class
@@ -101,18 +112,24 @@
  *    [X] convert tiles to and from blf files
  *    [X] save / open blf files
  */
-/* [ ] RELEASE 1.1 RENDERING UPDATE:
+/* [X] RELEASE 1.1 RENDERING UPDATE:
  *	  [X] Fix tiling inaccuracy
- *	  [X?] Add missing.png
- * 	  [C] Fix cursor bug?
+ *	  [X] Add missing.png
  * 	  [X] Built-in grid.png?
+ * 	  [C] Fix cursor bug?
 */
 /* [ ] RELEASE 1.2 TOOLS UPDATE:
- *	  [ ] Add move tool
- *    [ ] Add resize / scale tool
- *    [ ] Add gizmos for all the tools
+ *    [X] Fix box selection & placement
+ *	  [X] Add move tool
+ *    [X] Add resize / scale tool
+ *    [X] Add gizmos for all the tools
+ *    [ ] Fix box place tool
+ *    [ ] Make move & resize more stable and clean
  *    [ ] Add copy / cut / paste
- *    [ ] Fix box selection & placement
+ * [ ] RELEASE 1.3 GUI UPDATE:
+ *    [ ] Create a new gui style for pretty much everything
+ *    [ ] Customize the file dialogue
+ *    [ ] Use a different, less debug-looking font
 */
 
 class E_Tile;

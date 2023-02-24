@@ -82,9 +82,9 @@ void FileSystem::vectorToIgnoreBuffer()
 	// clear first, jic
 	std::fill(std::begin(ignoreListBuffer), std::end(ignoreListBuffer), '\0');
 
-	for (int str = 0; str < ignoreList.size(); str++)
+	for (size_t str = 0; str < ignoreList.size(); str++)
 	{
-		for (int chr = 0; chr < ignoreList[str].length(); chr++)
+		for (size_t chr = 0; chr < ignoreList[str].length(); chr++)
 		{
 			if (index == sizeof(ignoreListBuffer)) { std::cerr << "reached char buffer size when converting from ignoreList vector!" << std::endl; return; }
 			ignoreListBuffer[index] = ignoreList[str][chr];
@@ -145,7 +145,7 @@ std::vector<std::string>& FileSystem::getInDir(const char* directory, bool useIg
 		{
 			bool isAcceptedExtension = false;
 
-			for (int i = 0; i < acceptedExtensions.size(); i++)
+			for (size_t i = 0; i < acceptedExtensions.size(); i++)
 			{
 				if (entry.path().extension().string() == acceptedExtensions[i])
 				{
@@ -209,7 +209,7 @@ std::vector<std::string>& FileSystem::getInDirRecursive(const char* directory, b
 		{
 			bool isAcceptedExtension = false;
 
-			for (int i = 0; i < acceptedExtensions.size(); i++)
+			for (size_t i = 0; i < acceptedExtensions.size(); i++)
 			{
 				if (entry.path().extension().string() == acceptedExtensions[i])
 				{
@@ -305,7 +305,7 @@ void FileSystem::loadGUITextures()
 	std::vector<std::string>& fileNames = getInDirRecursive(guiTextureFolder.c_str(), false, true, false, false, imageExtensions);
 	std::vector<E_Texture*>& textures = program.textureLoader.loadTextures(filesInFolder, guiTextureFolder);
 
-	for (int i = 0; i < fileNames.size(); i++)
+	for (size_t i = 0; i < fileNames.size(); i++)
 	{
 		program.gui.guiTextures.insert({fileNames[i], textures[i]->ID});
 	}
@@ -342,12 +342,12 @@ void FileSystem::tryLoadConfigs()
 	}
 	catch(const FileIOException &fioex)
 	{
-		std::cerr << "I/O error while reading user configuration." << std::endl;
+		std::cerr << "I/O error while reading user configuration from: [" << config_file << "]: " << fioex.what() << std::endl;
 		return;
 	}
 	catch(const ParseException &pex)
 	{
-		std::cerr << "parse error at " << pex.getFile() << ":" << pex.getLine()
+		std::cerr << "Parse error at " << pex.getFile() << ":" << pex.getLine()
 		<< " - " << pex.getError() << std::endl;
 		return;
 	}
@@ -437,11 +437,11 @@ void FileSystem::trySaveConfigs()
 	try
 	{
 		config.writeFile(config_file);
-		std::cerr << "configuration successfully written to: " << config_file << std::endl;
+		std::cout << "Configuration successfully written to: " << config_file << std::endl;
 	}
 	catch(const FileIOException &fioex)
 	{
-		std::cerr << "I/O error while writing file: " << config_file << std::endl;
+		std::cerr << "I/O error while writing file: [" << config_file << "]: " << fioex.what() << std::endl;
 		return;
 	}
 

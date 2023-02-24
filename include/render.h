@@ -47,13 +47,13 @@ class Render
 
 		std::vector<glm::vec4> instanceTransformData = {};
 		std::vector<glm::vec4> instanceTextureData = {};
-		std::vector<glm::vec4> instanceAtlasData = {};
+		std::vector<glm::uvec4> instanceAtlasData = {};
 		std::vector<glm::vec4> instanceColorData = {};
 		std::vector<glm::vec4> instanceAdditionalData = {};
 
 		std::vector<glm::vec4> GinstanceTransformData = {};
 		std::vector<glm::vec4> GinstanceTextureData = {};
-		std::vector<glm::vec4> GinstanceAtlasData = {};
+		std::vector<glm::uvec4> GinstanceAtlasData = {};
 		std::vector<glm::vec4> GinstanceColorData = {};
 		std::vector<glm::vec4> GinstanceAdditionalData = {};
 

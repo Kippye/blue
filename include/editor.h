@@ -17,7 +17,10 @@ enum Tool
     SELECT, // select placed tiles by clicking, dragging, or ctrl clicking (multiple selection)
     PLACE, // place currently selected tile (only necessary after switching to another tool)
 	BOX, // box draw tiles or a single tile, or delete tiles in a box area
-    MOVE // moves current selection, can't be selected if nothing is selected
+	// NOTE: these only work for single tiles, because for multiple, using the property editor (i.e. the offset) is more accessible and easy to make
+	// NOTE: maybe i should try to make these work as just gizmos that appear on the selected tile
+    MOVE, // moves currently selected tile, can't be selected if nothing or more than 1 tile is selected
+	SCALE, // resizes currently selected tile, can't be selected if nothing or more than 1 tile is selected
 };
 
 struct TileOptions
@@ -36,16 +39,29 @@ class Editor
 	private:
         Tool selectedTool = SELECT;
 		bool dirty = false; // are there any unsaved changes?
+		glm::vec4 scaleDraggerColor = glm::vec4(1.0f, 0.55f, 0.0f, 1.0f);
+		glm::vec4 moveDraggerColors[3] = {
+			glm::vec4(0.25f, 0.25f, 1.0f, 1.0f),
+			glm::vec4(0.25f, 1.0f, 0.25f, 1.0f),
+			glm::vec4(1.0f, 0.25f, 0.25f, 1.0f)
+		};
+		// TL, TR, BL, BR
+		int scaleDraggerGizmoIDs[4] = { -1, -1, -1, -1 };
+		int moveDraggerGizmoIDs[3] = { -1, -1, -1 };
     public:
 		// editor data
         std::vector<E_Tile> tiles = {};
 		std::vector<Gizmo> gizmos = {};
 		int placeCursorID = -1;
 		int gridGizmoID = -1;
+		int dragGizmoID = -1;
+		int activeDraggerID = -1;
+
 		std::vector<std::string> tags = std::vector(MAX_TAGS, std::string("NA"));
 		// tool data
         glm::vec2& toolPos = glm::vec2(0.0f);
-        glm::vec2 cachedToolPos = glm::vec2(0.0f);
+		glm::vec2 dragBegin = glm::vec2(0.0f);
+		std::vector<E_Tile*> lastSelectionArea = {};
 		bool overlap = true;
 		bool autosnap = false;
 		// editor settings
@@ -68,6 +84,7 @@ class Editor
 		bool checkForOverlaps(Bounding_Box &box, glm::vec4 &pos);
 		E_Tile* positionToTile(glm::vec4 &pos, int &index, bool grid = false);
 		E_Tile* ID_to_tile(int ID, int &index);
+		Gizmo* positionToGizmo(glm::vec4 &pos, int &index, GizmoType acceptedTypes, bool grid = false);
 		Gizmo* ID_to_gizmo(int ID, int &index);
 		int ID_to_gizmo_index(int ID);
 		std::vector<E_Tile*>* getTilesInArea(Bounding_Box area, glm::vec4 &pos, std::vector<int> &indices);
@@ -104,10 +121,10 @@ class Editor
 		// update a tile's visual instance data
 		void updateTileVisuals(unsigned int ID);
 		// GIZMOS
-		void moveGizmo(int index, glm::vec2 newPos);
-        void moveGizmo(unsigned int ID, glm::vec2 newPos);
-		void resizeGizmo(int index, glm::vec2 newSize);
-		void resizeGizmo(unsigned int ID, glm::vec2 newSize);
+		void moveGizmo(int index, glm::vec2 newPos, bool snappable = false);
+        void moveGizmo(unsigned int ID, glm::vec2 newPos, bool snappable = false);
+		void resizeGizmo(int index, glm::vec2 newSize, bool snappable = false);
+		void resizeGizmo(unsigned int ID, glm::vec2 newSize, bool snappable = false);
 		// update a gizmo's visual instance data
 		void updateGizmoVisuals(int index);
 		// update a gizmo's visual instance data

@@ -24,7 +24,7 @@ void Window::initialize()
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 	glfwWindowHint(GLFW_FOCUS_ON_SHOW, GLFW_TRUE);
-	// glfwWindowHint(GLFW_SCALE_TO_MONITOR, GLFW_TRUE); might be needed for bigger monitors?
+	//glfwWindowHint(GLFW_SCALE_TO_MONITOR, GLFW_TRUE); //might be needed for bigger monitors?
 
 	window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "blue", NULL, NULL);
 

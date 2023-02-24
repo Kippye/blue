@@ -48,7 +48,7 @@ class Shader
 		}
 		catch (std::ifstream::failure& e)
 		{
-			std::cout << "ERROR:SHADER::FILE_NOT_SUCCESSFULLY_READ" << std::endl;
+			std::cout << "ERROR:SHADER::FILE_NOT_SUCCESSFULLY_READ " << e.code() << ": " << e.what() << std::endl;
 		}
 		// turn strings into required const char array pointers
 		const char* vShaderCode = vertexCode.c_str();
@@ -116,7 +116,7 @@ class Shader
 		}
 		catch (std::ifstream::failure& e)
 		{
-			std::cout << "ERROR:SHADER::FILE_NOT_SUCCESSFULLY_READ" << std::endl;
+			std::cout << "ERROR:SHADER::FILE_NOT_SUCCESSFULLY_READ " << e.code() << ": " << e.what() << std::endl;
 		}
 		// turn strings into required const char array pointers
 		const char* vShaderCode = vertexCode.c_str();

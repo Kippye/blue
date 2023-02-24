@@ -351,7 +351,7 @@ void Gui::addPropertiesGui()
 						/// tags
 						if (ImGui::CollapsingHeader("Tags")) 
 						{
-							for (int i = 0; i < MAX_TAGS; i++)
+							for (size_t i = 0; i < MAX_TAGS; i++)
 							{
 								// declaring character array (+1 for null terminator)
 								char* buf = new char[program.editor.tags[i].length() + 1];
@@ -384,7 +384,7 @@ void Gui::addPropertiesGui()
 						if (ImGui::InputFloat2("Offset", pos, "", ImGuiInputTextFlags_EnterReturnsTrue))
 						{
 							// add this offset to every selected tile's position
-							for (int i = 0; i < selection.size(); i++)
+							for (size_t i = 0; i < selection.size(); i++)
 							{
 								program.editor.moveTile(selection[i]->ID, selection[i]->location.Position + glm::vec4(pos[0] - lastPos[0], pos[1] - lastPos[1], 0.0f, 0.0f));
 							}
@@ -395,7 +395,7 @@ void Gui::addPropertiesGui()
 						// size
 						if (ImGui::DragFloat2("Size", size))
 						{
-							for (int i = 0; i < selection.size(); i++)
+							for (size_t i = 0; i < selection.size(); i++)
 							{
 								program.editor.resizeTile(selection[i]->ID, glm::vec2(size[0], size[1]));
 							}
@@ -404,7 +404,7 @@ void Gui::addPropertiesGui()
 						// angle
 						if (ImGui::DragFloat("Angle", angle, 1.0F, 0.0f, 360.0f))
 						{
-							for (int i = 0; i < selection.size(); i++)
+							for (size_t i = 0; i < selection.size(); i++)
 							{
 								program.editor.rotateTile(selection[i]->ID, mymath::rad((double)*angle));
 							}
@@ -416,35 +416,35 @@ void Gui::addPropertiesGui()
 						ImGui::Text("Physics");
 						if (ImGui::Checkbox("CollisionsEnabled", &selection[0]->physics.CollisionsEnabled))
 						{
-							for (int i = 0; i < selection.size(); i++)
+							for (size_t i = 0; i < selection.size(); i++)
 							{
 								selection[i]->physics.CollisionsEnabled = selection[0]->physics.CollisionsEnabled;
 							}
 						}			
 						if (ImGui::Checkbox("Static", &selection[0]->physics.Static))
 						{
-							for (int i = 0; i < selection.size(); i++)
+							for (size_t i = 0; i < selection.size(); i++)
 							{
 								selection[i]->physics.Static = selection[0]->physics.Static;
 							}
 						}
 						if (ImGui::DragFloat("Bounce", &selection[0]->physics.Bounce, 0.1F))
 						{
-							for (int i = 0; i < selection.size(); i++)
+							for (size_t i = 0; i < selection.size(); i++)
 							{
 								selection[i]->physics.Bounce = selection[0]->physics.Bounce;
 							}
 						}
 						if (ImGui::DragFloat("Density", &selection[0]->physics.Density, 0.1F))
 						{
-							for (int i = 0; i < selection.size(); i++)
+							for (size_t i = 0; i < selection.size(); i++)
 							{
 								selection[i]->physics.Density = selection[0]->physics.Density;
 							}
 						}
 						if (ImGui::DragFloat("Friction", &selection[0]->physics.Friction, 0.1F))
 						{
-							for (int i = 0; i < selection.size(); i++)
+							for (size_t i = 0; i < selection.size(); i++)
 							{
 								selection[i]->physics.Friction = selection[0]->physics.Friction;
 							}
@@ -458,7 +458,7 @@ void Gui::addPropertiesGui()
 						// texturemode
 						if (ImGui::Combo("TextureMode", &(int)selection[0]->visuals.TextureMode, se.tileTextureModeOptions, 2))
 						{
-							for (int i = 0; i < selection.size(); i++)
+							for (size_t i = 0; i < selection.size(); i++)
 							{
 								selection[i]->visuals.TextureMode = selection[0]->visuals.TextureMode;
 								program.editor.updateTileVisuals(selection[i]->ID);
@@ -469,7 +469,7 @@ void Gui::addPropertiesGui()
 						// TextureSize
 						if (ImGui::DragFloat2("TextureSize", textureSize))
 						{
-							for (int i = 0; i < selection.size(); i++)
+							for (size_t i = 0; i < selection.size(); i++)
 							{
 								selection[i]->visuals.TextureSize.x = textureSize[0];
 								selection[i]->visuals.TextureSize.y = textureSize[1];
@@ -481,7 +481,7 @@ void Gui::addPropertiesGui()
 						// color
 						if (ImGui::ColorEdit3("Color", color, ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_InputRGB))
 						{
-							for (int i = 0; i < selection.size(); i++)
+							for (size_t i = 0; i < selection.size(); i++)
 							{
 								selection[i]->visuals.Color.x = color[0];
 								selection[i]->visuals.Color.y = color[1];
@@ -494,7 +494,7 @@ void Gui::addPropertiesGui()
 						// opacity
 						if (ImGui::DragFloat("Opacity", opacity, 0.1F, 0.0f, 1.0f))
 						{
-							for (int i = 0; i < selection.size(); i++)
+							for (size_t i = 0; i < selection.size(); i++)
 							{
 								selection[i]->visuals.Opacity = *opacity;
 								program.editor.updateTileVisuals(selection[i]->ID);
@@ -504,7 +504,7 @@ void Gui::addPropertiesGui()
 						/// tags
 						if (ImGui::CollapsingHeader("Tags")) 
 						{
-							for (int i = 0; i < MAX_TAGS; i++)
+							for (size_t i = 0; i < MAX_TAGS; i++)
 							{
 								// declaring character array (+1 for null terminator)
 								char* buf = new char[program.editor.tags[i].length() + 1];
@@ -522,7 +522,7 @@ void Gui::addPropertiesGui()
 
 								if (ImGui::Checkbox(std::string("##c").append(std::to_string(i)).c_str(), &selection[0]->tags[i]))
 								{
-									for (int j = 1; j < selection.size(); j++)
+									for (size_t j = 1; j < selection.size(); j++)
 									{
 										selection[j]->tags[i] = selection[0]->tags[i];
 									}
@@ -715,7 +715,7 @@ void Gui::addTextureSelectorGui()
 		{
 			// tile tiles
 			int tilesPerRow = 3;
-			int total = 0;
+			size_t total = 0;
 
 			for (int y = 0; y < (int)(tileTextures.size() / tilesPerRow + 1); y++)
 			{
@@ -753,7 +753,7 @@ void Gui::addTextureSelectorGui()
 						else if (program.editor.getTool() == PLACE)
 						{
 							// change texture of selection (pretty crappy but works ig)
-							for (int i = 0; i < selection.size(); i++)
+							for (size_t i = 0; i < selection.size(); i++)
 							{
 								selection[i]->visuals.atlasLocation.x = tileTextures[total]->atlasLocation.x;
 								selection[i]->visuals.atlasLocation.y = tileTextures[total]->atlasLocation.y;
@@ -1127,7 +1127,7 @@ void Gui::addPopupGui()
 
 		ImGui::Text("A content folder must be loaded to edit levels");
 
-		if (ImGui::Button("Ok", ImVec2(s.bottomBarButtonWidth * 2.2, s.bottomBarHeight)))
+		if (ImGui::Button("Ok", ImVec2(s.bottomBarButtonWidth * 2.2f, s.bottomBarHeight)))
 		{
 			ImGui::CloseCurrentPopup();
 			popupToggles[CONTENT_LACK_WARNING] = false;

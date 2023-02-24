@@ -12,6 +12,12 @@ const int MAX_TAGS = 5;
 class mymath
 {
 	public:
+		// TODO: edit the rounding functions when custom grid size is added
+
+		static float floor_to_grid(float f)
+		{
+			return floor(f);
+		}
 		static glm::vec2 floor_to_grid(glm::vec2 pos)
 		{
 			pos.x = floor(pos.x);
@@ -23,6 +29,10 @@ class mymath
 			pos.x = floor(pos.x);
 			pos.y = floor(pos.y);
 			return pos;
+		}
+		static float round_to_grid(float f)
+		{
+			return round(f);
 		}
 		static glm::vec2 round_to_grid(glm::vec2 pos)
 		{

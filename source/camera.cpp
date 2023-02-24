@@ -63,7 +63,7 @@ void Camera::updateView()
 	// update matrices
 	view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 	// projection  				   					FOV													ASPECT RATIO									CLIP RANGE
-	projection = glm::perspective(glm::radians(FOV), (float)(program.windowManager.SCREEN_WIDTH / program.windowManager.SCREEN_HEIGHT), 0.1f, 100.0f);
+	projection = glm::perspective(glm::radians(FOV), (float(program.windowManager.SCREEN_WIDTH) / float(program.windowManager.SCREEN_HEIGHT)), 0.1f, 100.0f);
 }
 
 // calculates the world ray from eye coordinates and distance

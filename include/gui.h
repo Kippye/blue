@@ -62,11 +62,9 @@ struct GuiSelections
 {
 	public:
 		int currentTextureSelection = 0;
-		int currentTextureModeSelection = 1;
+		int currentTextureModeSelection = 0;
 		bool newTileOptionsVisible = true;
 		const char* tileTextureModeOptions[2] = { "stretch", "tile" };
-		const char* gridModeOptions[3] = { "normal", "auto", "full" };
-		const char* tileOverlapModeOptions[3] = { "never", "free", "always" };
 };
 
 struct GuiData

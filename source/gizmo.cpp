@@ -7,18 +7,28 @@ Gizmo::Gizmo()
 	lastID++;
 }
 
-Gizmo::Gizmo(Location _location, bool _permanent)
+// default gizmo with type
+Gizmo::Gizmo(GizmoType _type)
+{
+	type = _type;
+	ID = lastID;
+	lastID++;
+}
+
+Gizmo::Gizmo(Location _location, GizmoType _type, bool _permanent)
 {
 	location = _location;
+	type = _type;
 	permanent = _permanent;
 	ID = lastID;
 	lastID++;
 }
 
-Gizmo::Gizmo(Location _location, Visuals _visuals, bool _permanent)
+Gizmo::Gizmo(Location _location, Visuals _visuals, GizmoType _type, bool _permanent)
 {
 	location = _location;
 	visuals = _visuals;
+	type = _type;
 	permanent = _permanent;
 	ID = lastID;
 	lastID++;

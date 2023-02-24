@@ -463,6 +463,7 @@ TextureAtlas* TextureLoader::loadTextureAtlas(std::vector<std::string> fullPaths
 
 	auto texture_load_start_time = std::chrono::high_resolution_clock::now();
 	
+	/// PRELOADED / PROGRAM TEXTURES
 	// missing texture (loaded from the program's textures folder)
 	int missingWidth, missingHeight;
 	unsigned char* missingTexture = loadTextureData(textureFolder + "missing_blue.png", &missingWidth, &missingHeight, false);
@@ -474,6 +475,36 @@ TextureAtlas* TextureLoader::loadTextureAtlas(std::vector<std::string> fullPaths
 	unsigned char* gridTexture = loadTextureData(textureFolder + "grid_blue.png", &gridWidth, &gridHeight, false);
 	atlasTextures.push_back(gridTexture);
 	rectangles.emplace_back(rect_xywh(0, 0, gridWidth, gridHeight));
+
+	// drag gizmo texture (loaded from the program's textures folder)
+	int dragWidth, dragHeight;
+	unsigned char* dragTexture = loadTextureData(textureFolder + "drag_blue.png", &dragWidth, &dragHeight, false);
+	atlasTextures.push_back(dragTexture);
+	rectangles.emplace_back(rect_xywh(0, 0, dragWidth, dragHeight));
+
+	// dragger gizmo texture (loaded from the program's textures folder)
+	int draggerWidth, draggerHeight;
+	unsigned char* draggerTexture = loadTextureData(textureFolder + "dragger_blue.png", &draggerWidth, &draggerHeight, false);
+	atlasTextures.push_back(draggerTexture);
+	rectangles.emplace_back(rect_xywh(0, 0, draggerWidth, draggerHeight));
+
+	// // horizontal move dragger gizmo texture (loaded from the program's textures folder)
+	// int hMoveDraggerWidth, hMoveDraggerHeight;
+	// unsigned char* hMoveDraggerTexture = loadTextureData(textureFolder + "dragger_move_horizontal_blue.png", &hMoveDraggerWidth, &hMoveDraggerHeight, false);
+	// atlasTextures.push_back(hMoveDraggerTexture);
+	// rectangles.emplace_back(rect_xywh(0, 0, hMoveDraggerWidth, hMoveDraggerHeight));
+
+	// // vertical move dragger gizmo texture (loaded from the program's textures folder)
+	// int vMoveDraggerWidth, vMoveDraggerHeight;
+	// unsigned char* vMoveDraggerTexture = loadTextureData(textureFolder + "dragger_move_vertical_blue.png", &vMoveDraggerWidth, &vMoveDraggerHeight, false);
+	// atlasTextures.push_back(vMoveDraggerTexture);
+	// rectangles.emplace_back(rect_xywh(0, 0, vMoveDraggerWidth, vMoveDraggerHeight));
+
+	// // biaxial move dragger gizmo texture (loaded from the program's textures folder)
+	// int bMoveDraggerWidth, bMoveDraggerHeight;
+	// unsigned char* bMoveDraggerTexture = loadTextureData(textureFolder + "dragger_move_biaxial_blue.png", &bMoveDraggerWidth, &bMoveDraggerHeight, false);
+	// atlasTextures.push_back(bMoveDraggerTexture);
+	// rectangles.emplace_back(rect_xywh(0, 0, bMoveDraggerWidth, bMoveDraggerHeight));
 
 	for (int i = 0; i < fullPaths.size(); i++)
 	{
@@ -534,6 +565,11 @@ TextureAtlas* TextureLoader::loadTextureAtlas(std::vector<std::string> fullPaths
 
 	fullPaths.insert(fullPaths.begin(), std::string("textures\\missing_blue.png"));
 	fullPaths.insert(fullPaths.begin() + 1, std::string("textures\\grid_blue.png"));
+	fullPaths.insert(fullPaths.begin() + 2, std::string("textures\\drag_blue.png"));
+	fullPaths.insert(fullPaths.begin() + 3, std::string("textures\\dragger_blue.png"));
+	// fullPaths.insert(fullPaths.begin() + 4, std::string("textures\\dragger_move_horizontal_blue.png"));
+	// fullPaths.insert(fullPaths.begin() + 5, std::string("textures\\dragger_move_vertical_blue.png"));
+	// fullPaths.insert(fullPaths.begin() + 6, std::string("textures\\dragger_move_biaxial_blue.png"));
 
 	for (int i = 0; i < rectangles.size(); i++)
 	{

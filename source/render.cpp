@@ -96,10 +96,10 @@ void Render::updateInstanceArray(INSTANCE_ARRAY_UPDATE type)
 	if (type == INSTANCE_ARRAY_UPDATE_ALL || type & INSTANCE_ARRAY_UPDATE_3)
 	{
 		glBindBuffer(GL_ARRAY_BUFFER, instanceAtlasVBO);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4) * instanceAtlasData.size(), instanceAtlasData.data(), GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(glm::uvec4) * instanceAtlasData.size(), instanceAtlasData.data(), GL_STATIC_DRAW);
 
 		glEnableVertexAttribArray(2);
-		glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+		glVertexAttribPointer(2, 4, GL_UNSIGNED_INT, GL_FALSE, 4 * sizeof(unsigned int), (void*)0);
 		glVertexAttribDivisor(2, 1); // tell OpenGL this is an instanced vertex attribute.
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
@@ -157,10 +157,10 @@ void Render::updateGizmoInstanceArray(INSTANCE_ARRAY_UPDATE type)
 	if (type == INSTANCE_ARRAY_UPDATE_ALL || type & INSTANCE_ARRAY_UPDATE_3)
 	{
 		glBindBuffer(GL_ARRAY_BUFFER, instanceAtlasVBO_G);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4) * GinstanceAtlasData.size(), GinstanceAtlasData.data(), GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(glm::uvec4) * GinstanceAtlasData.size(), GinstanceAtlasData.data(), GL_STATIC_DRAW);
 
 		glEnableVertexAttribArray(2);
-		glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+		glVertexAttribPointer(2, 4, GL_UNSIGNED_INT, GL_FALSE, 4 * sizeof(unsigned int), (void*)0);
 		glVertexAttribDivisor(2, 1); // tell OpenGL this is an instanced vertex attribute.
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
@@ -197,7 +197,7 @@ void Render::render()
 	timeCounter += deltaTime;
 	mouse_button_delay += deltaTime;
 
-	if (mouse_button_delay >= 0.1f && mouse_button_delay < 100.0f)
+	if (mouse_button_delay >= 0.05f && mouse_button_delay < 100.0f)
 	{
 		mouse_repeat = true;
 		mouse_button_delay = 1000.0f;
@@ -251,7 +251,7 @@ void Render::set_tile_selection(int index, bool to)
 
 void Render::set_tile_selection(std::vector<int> &indices, bool to)
 {
-	for (int i = 0; i < indices.size(); i++)
+	for (size_t i = 0; i < indices.size(); i++)
 	{
 		instanceAdditionalData[indices[i]].y = float(to);
 	}
@@ -303,7 +303,7 @@ void Render::add_to_render_list(E_Tile &tile)
 
 void Render::add_to_render_list(std::vector<E_Tile> &tiles)
 {
-	for (int i = 0; i < tiles.size(); i++)
+	for (size_t i = 0; i < tiles.size(); i++)
 	{
 		add_to_instance_data(tiles[i]);
 	}

@@ -113,6 +113,9 @@ void Input::processInput(GLFWwindow* window)
 	{
 		program.camera.moveCamera(program.camera.cameraRight * program.render.deltaTime);
 	}
+
+	// reset mouse movement as it only updates when the mouse is ACTUALLY moved
+	mouseMovement = glm::vec2(0.0f);
 }
 
 void Input::key_event(GLFWwindow* window, int key, int scancode, int action, int mods)

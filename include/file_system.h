@@ -62,5 +62,6 @@ class FileSystem
 			}
 
 			root.lookup(setting_name) = new_value;
+			return &root.lookup(setting_name);
 		}
 };
