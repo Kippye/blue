@@ -25,16 +25,19 @@
  * [X] make the drag select do size calculation the same way as box place
  * [X] can i reuse the indices vector in drag selection?
  * [X] box selection and draw gizmo doesn't disappear when the drag is ended over gui
- * [ ] box placement primary mode sometimes the tile isn't actually visible
- * [ ] box placement primary mode places more than 1 tile
- * [ ] fix box place gizmo size / tiling
- * [ ] box drag can draw wayyy too tiny tiles
- * [ ] handle the tile that is being resized / moved being deleted by the user (causes crash) 
+ * [X] box drag can draw wayyy too tiny tiles
+ * [X] TEXTUREMODE_TILE gets offset quite strangely only on the Y axis
+ * [X] having 1 tile selected and placing more causes a crash -- tested pre-gizmos, it was a pre-existing issue! - fixed by just making selecting a different tool deselect all tiles
+ * [X] handle the tile that is being resized / moved being deleted by the user (causes crash) 
+ * [X] fix box place gizmo size / tiling 
+ * [X] if tiles are placed with box draw and then nextTile (size) is modified, it causes the gizmo to become visible again
+ * [ ] box placement primary mode places more than 1 tile -- related to above issue -- this is caused by the mouse button weirdly clicking again, causing dragBegin to change and a 0;0 tile (or even multiple) to be created
  * [ ] place cursor (and probably the actual place position too) is too far behind mouse cursor
- * [ ] push to back is VERY broken, either add Z position or fix it - it's messing with textures and crap
+ * [ ] fix box place primary mode TEXTUREMODE_TILE gizmo having the same kind of texture tiling offset issue as every tile did before if the gizmo is used in negative directions - fixing this would probably require using some additional instance data...
+ * [ ] push to back is VERY broken, either add functionality to Z position or fix it - it's messing with textures and crap
  * [?] weirdly just moving around placing things caused a crash
- * [?] cursor glitches weirdly and sometimes just doesn't show
- * [?] crash when a tile is selected and textures are reloaded then a tile is placed - i gotta somehow create an atlas with just the grid and missing textures before any actual textures exist
+ * [?] editor cursor glitches weirdly and sometimes just doesn't show
+ * [?] crash when a tile is selected and textures are reloaded then a tile is placed
  * [C] can't save directories that contain specific characters to config - it doesn't seem to be caused by characters
  * // UI // 
  * [X] add io.WantCaptureMouse and io.WantCaptureKeyboard checks to ignore input when file dialogues are open
@@ -79,14 +82,17 @@
  * [X] fix box selection / placement (it weirdly follows the camera rather than staying in the same spot and changing size)
  * [X] move tool (with mouse)
  * [X] resize tool ‍GRRRRR
- * [.] create gizmos for box place preview
+ * [X] create gizmos for box place preview
+ * [X] box place secondary mode could be snapped to the size of a tile, since it won't place any half tiles anyway
  * [ ] copy selection
  * [ ] paste
  * [ ] cut selection
- * [ ] some way to show / hide place cursor? people might find it annoying when removing tiles
+ * [ ] select all button (only visible for select tool, like select by texture)
  * [ ] zoom into the cursor position
  * [ ] variable grid size
  * [ ] undo, redo, if at all doable
+ * [ ] explorer that shows a list of all the tiles, that can optionally be named as well and selected from here
+ * [ ] some way to show / hide place cursor? people might find it annoying when removing tiles
  * // OTHER //
  * [X] fix up editor tile class
  * [X] only recreate transforms array when a tile is modified (use some kind of event system)
@@ -158,8 +164,6 @@ void Program::loop()
 {
 	while (quitProgram == false)
 	{
-		//std::cout << "Loop" << std::endl;
-
 		input.processInput(windowManager.window);
 		//std::cout << "Processed input" << std::endl;
 		// update the camera view direction (not really needed but eh)
@@ -177,6 +181,7 @@ void Program::loop()
 		}
 		editor.update_gizmos();
 		render.render();
+		render.instanceDataUpdates = 0;
 		//std::cout << "Rendered" << std::endl;
 		glfwPollEvents();
 		//std::cout << "Polled GLFW events" << std::endl;

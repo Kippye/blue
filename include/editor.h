@@ -14,13 +14,9 @@ class Gizmo;
 
 enum Tool
 {
-    SELECT, // select placed tiles by clicking, dragging, or ctrl clicking (multiple selection)
-    PLACE, // place currently selected tile (only necessary after switching to another tool)
-	BOX, // box draw tiles or a single tile, or delete tiles in a box area
-	// NOTE: these only work for single tiles, because for multiple, using the property editor (i.e. the offset) is more accessible and easy to make
-	// NOTE: maybe i should try to make these work as just gizmos that appear on the selected tile
-    MOVE, // moves currently selected tile, can't be selected if nothing or more than 1 tile is selected
-	SCALE, // resizes currently selected tile, can't be selected if nothing or more than 1 tile is selected
+    SELECT, // select placed tiles by clicking, dragging, or shift clicking (multiple selection)
+    PLACE, // place copies of current nextTile or remove single tiles
+	BOX // box draw tiles or a single tile
 };
 
 struct TileOptions
@@ -48,6 +44,8 @@ class Editor
 		// TL, TR, BL, BR
 		int scaleDraggerGizmoIDs[4] = { -1, -1, -1, -1 };
 		int moveDraggerGizmoIDs[3] = { -1, -1, -1 };
+		const float minBoxDrawSize = 0.2f;
+		const float minScaleSize = 0.1f;
     public:
 		// editor data
         std::vector<E_Tile> tiles = {};
@@ -105,6 +103,7 @@ class Editor
 
 		// tool functions
         void tool_use();
+		void end_tool_drag(int mouseButton);
         void tool_use_secondary();
         void updateToolPos(glm::vec2 &mousePos);
 		// tile manipulation functions

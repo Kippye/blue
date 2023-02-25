@@ -8,42 +8,59 @@
 
 // constants
 const int MAX_TAGS = 5;
+const float GRID_SIZE = 1.0f;
 
 class mymath
 {
 	public:
 		// TODO: edit the rounding functions when custom grid size is added
 
-		static float floor_to_grid(float f)
+		static float floor_to_grid(float f, float gridSize = GRID_SIZE)
 		{
-			return floor(f);
+			return floor(f / gridSize) * gridSize;
 		}
-		static glm::vec2 floor_to_grid(glm::vec2 pos)
+		static glm::vec2 floor_to_grid(glm::vec2 pos, float gridSize = GRID_SIZE)
 		{
-			pos.x = floor(pos.x);
-			pos.y = floor(pos.y);
+			pos.x = floor_to_grid(pos.x, gridSize);
+			pos.y = floor_to_grid(pos.y, gridSize);
 			return pos;
 		}
-		static glm::vec4 floor_to_grid(glm::vec4 pos)
+		static glm::vec4 floor_to_grid(glm::vec4 pos, float gridSize = GRID_SIZE)
 		{
-			pos.x = floor(pos.x);
-			pos.y = floor(pos.y);
+			pos.x = floor_to_grid(pos.x, gridSize);
+			pos.y = floor_to_grid(pos.y, gridSize);
 			return pos;
 		}
-		static float round_to_grid(float f)
+		static float ceil_to_grid(float f, float gridSize = GRID_SIZE)
 		{
-			return round(f);
+			return ceil(f / gridSize) * gridSize;
 		}
-		static glm::vec2 round_to_grid(glm::vec2 pos)
+		static glm::vec2 ceil_to_grid(glm::vec2 pos, float gridSize = GRID_SIZE)
 		{
-			pos.x = round(pos.x);
-			pos.y = round(pos.y);
+			pos.x = ceil_to_grid(pos.x, gridSize);
+			pos.y = ceil_to_grid(pos.y, gridSize);
 			return pos;
 		}
-		static glm::vec4 round_to_grid(glm::vec4 pos)
+		static glm::vec4 ceil_to_grid(glm::vec4 pos, float gridSize = GRID_SIZE)
 		{
-			pos.x = round(pos.x);
-			pos.y = round(pos.y);
+			pos.x = ceil_to_grid(pos.x, gridSize);
+			pos.y = ceil_to_grid(pos.y, gridSize);
+			return pos;
+		}
+		static float round_to_grid(float f, float gridSize = GRID_SIZE)
+		{
+			return round(f / gridSize) * gridSize;
+		}
+		static glm::vec2 round_to_grid(glm::vec2 pos, float gridSize = GRID_SIZE)
+		{
+			pos.x = round_to_grid(pos.x, gridSize);
+			pos.y = round_to_grid(pos.y, gridSize);
+			return pos;
+		}
+		static glm::vec4 round_to_grid(glm::vec4 pos, float gridSize = GRID_SIZE)
+		{
+			pos.x = round_to_grid(pos.x, gridSize);
+			pos.y = round_to_grid(pos.y, gridSize);
 			return pos;
 		}
 		static double rad(double deg)

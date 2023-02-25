@@ -22,7 +22,7 @@ Tool Editor::getTool()
 void Editor::setTool(Tool tool)
 {
 	// having things selected while using the place tool could fuck things up big time
-	if (selection.size() > 0 && (tool == SELECT ^ tool == MOVE))
+	if (selection.size() > 0 && tool != SELECT)
 	{
 		deselect_all();
 	}
@@ -46,6 +46,18 @@ void Editor::setTool(Tool tool)
 			resizeGizmo(index, glm::vec2(0.0f, 0.0f));
 			placeCursor->visuals.Opacity = 0;
 			updateGizmoVisuals(index);
+		}
+	}
+
+	if ((selectedTool == SELECT && tool != SELECT) || (selectedTool == BOX && tool != BOX))
+	{
+		if (program.input.lmb_down)
+		{
+			end_tool_drag(GLFW_MOUSE_BUTTON_LEFT);
+		}
+		if (program.input.rmb_down)
+		{
+			end_tool_drag(GLFW_MOUSE_BUTTON_RIGHT);
 		}
 	}
 
@@ -308,7 +320,10 @@ void Editor::reset_next_tile()
 	{
 		int index;
 		Gizmo* placeCursor = ID_to_gizmo(placeCursorID, index);
-		resizeGizmo(index, nextTile.location.Size);
+		if (selectedTool == PLACE)
+		{
+			resizeGizmo(index, nextTile.location.Size);
+		}
 		placeCursor->visuals.TextureMode = nextTile.visuals.TextureMode;
 		placeCursor->visuals.TextureSize.x = nextTile.visuals.TextureSize.x;
 		placeCursor->visuals.TextureSize.y = nextTile.visuals.TextureSize.y;
@@ -335,7 +350,7 @@ void Editor::updateToolPos(glm::vec2 &mousePos)
 			boundingBoxPos.x = std::min(worldMousePos.x, dragBegin.x);
 			boundingBoxPos.y = std::min(worldMousePos.y, dragBegin.y);
 
-			if (activeDraggerID != -1)
+			if (selection.size() == 1 && activeDraggerID != -1 /* NOTE: might cause issues && lastSelectionArea.size() == 0 */)
 			{
 				int tIndex;
 				bool activeDraggerFound = false;
@@ -491,7 +506,11 @@ void Editor::updateToolPos(glm::vec2 &mousePos)
 
 					int oldTileIndex = 0;
 					ID_to_tile(oldTile->ID, oldTileIndex);
-					update_tile_selection(oldTile, oldTileIndex, false);
+
+					if (oldTileIndex != -1)
+					{
+						update_tile_selection(oldTile, oldTileIndex, false);
+					}
 				}
 			}
 
@@ -512,34 +531,7 @@ void Editor::updateToolPos(glm::vec2 &mousePos)
 		// drag ended
 		else if (program.input.lmb_down == false && program.input.lmb_down_last == true)
 		{
-			// reset the active dragger gizmo
-			if (activeDraggerID != -1)
-			{
-				int index;
-				Gizmo* activeDraggerGizmo = ID_to_gizmo(activeDraggerID, index);
-				if (activeDraggerGizmo->type == GizmoType_MoveDragger)
-				{
-					for (int i = 0; i < sizeof(moveDraggerGizmoIDs) / sizeof(int); i++)
-					{
-						if (activeDraggerID == moveDraggerGizmoIDs[i])
-						{
-							activeDraggerGizmo->visuals.Color = moveDraggerColors[i];
-							break;
-						}
-					}
-				}
-				else
-				{
-					activeDraggerGizmo->visuals.Color = scaleDraggerColor;
-				}
-				activeDraggerID = -1;
-				updateGizmoVisuals(index);
-			}
-			// hide the drag area gizmo
-			int index;
-			Gizmo* dragGizmo = ID_to_gizmo(dragGizmoID, index);
-			resizeGizmo(index, glm::vec2(0.0f));
-			lastSelectionArea = {};
+			end_tool_drag(GLFW_MOUSE_BUTTON_LEFT);
 		}
 	}
 	else if (selectedTool == PLACE)
@@ -562,8 +554,25 @@ void Editor::updateToolPos(glm::vec2 &mousePos)
 			startPos.y = std::min(worldMousePos.y, dragBegin.y);
 
 			// apply snapping if needed
-			startPos = program.input.ctrl_down || autosnap ? mymath::round_to_grid(startPos) : startPos;
-			areaSize = program.input.ctrl_down || autosnap ? mymath::round_to_grid(areaSize) : areaSize;
+			if (program.input.ctrl_down || autosnap)
+			{
+				glm::vec2 dragBeginSnapped = mymath::floor_to_grid(dragBegin); 
+				startPos.x = startPos.x < dragBeginSnapped.x ? mymath::floor_to_grid(startPos.x) : dragBeginSnapped.x;
+				areaSize.x = startPos.x < dragBeginSnapped.x ? mymath::ceil_to_grid(dragBeginSnapped.x - startPos.x) : mymath::ceil_to_grid(areaSize.x);
+				startPos.y = startPos.y < dragBeginSnapped.y ? mymath::floor_to_grid(startPos.y) : dragBeginSnapped.y;
+				areaSize.y = startPos.y < dragBeginSnapped.y ? mymath::ceil_to_grid(dragBeginSnapped.y - startPos.y) : mymath::ceil_to_grid(areaSize.y);
+			}
+
+			float minSize = program.input.ctrl_down || autosnap ? 1.0f : minBoxDrawSize;
+
+			if (startPos.x < (program.input.ctrl_down || autosnap ? mymath::round_to_grid(dragBegin.x) : dragBegin.x))
+			{
+				startPos.x = dragBegin.x - startPos.x < minSize ? dragBegin.x - minSize : startPos.x;
+			}
+			if (startPos.y < (program.input.ctrl_down || autosnap ? mymath::round_to_grid(dragBegin.y) : dragBegin.y))
+			{
+				startPos.y = dragBegin.y - startPos.y < minSize ? dragBegin.y - minSize : startPos.y;
+			}
 
 			// still dragging
 			if (program.input.lmb_down)
@@ -571,21 +580,23 @@ void Editor::updateToolPos(glm::vec2 &mousePos)
 				// update the gizmo
 				int index;
 				Gizmo* placeCursor = ID_to_gizmo(placeCursorID, index);
+
 				moveGizmo(index, startPos);
-				resizeGizmo(index, areaSize);
+				resizeGizmo(index, glm::max(areaSize, glm::vec2(minSize)));
+				//resizeGizmo(index, areaSize);
 			}
 			// just released lmb, draw the tile
 			else
 			{
+				// safety thing, should have little to no effect
+				program.input.lmb_down_last = false;
 				// not overlapping when not supposed to, place a tile
 				if (overlap == true || checkForOverlaps(Bounding_Box(areaSize), startPos))
 				{
 					// place the tile
-					add_tile(tiles.emplace_back(Location(startPos, glm::vec3(areaSize, 1.0f)), nextTile.physics, nextTile.visuals, nextTile.tags));
+					add_tile(tiles.emplace_back(Location(startPos, glm::max(glm::vec3(areaSize, 1.0f), glm::vec3(minSize, minSize, 1.0f))), nextTile.physics, nextTile.visuals, nextTile.tags));
 				}
-				int index;
-				Gizmo* placeCursor = ID_to_gizmo(placeCursorID, index);
-				resizeGizmo(index, glm::vec2(0.0f));
+				end_tool_drag(GLFW_MOUSE_BUTTON_LEFT);
 			}
 		}
 		// drawing in the secondary mode
@@ -593,16 +604,32 @@ void Editor::updateToolPos(glm::vec2 &mousePos)
 		{
 			glm::vec4 worldMousePos = program.camera.screen_to_world(mousePos);
 
-			// get area size
-			glm::vec2 areaSize = glm::vec2(abs(worldMousePos.x - dragBegin.x), abs(worldMousePos.y - dragBegin.y));
 			// find the start position depending on drag start and end positions (because size be retarded like that)
 			glm::vec4 startPos = glm::vec4(0.0f);
 			startPos.x = std::min(worldMousePos.x, dragBegin.x);
 			startPos.y = std::min(worldMousePos.y, dragBegin.y);
+			glm::vec4 endPos = glm::vec4(0.0f);
+			endPos.x = std::max(worldMousePos.x, dragBegin.x);
+			endPos.y = std::max(worldMousePos.y, dragBegin.y);
 
-			// apply snapping if needed
-			startPos = program.input.ctrl_down || autosnap ? mymath::round_to_grid(startPos) : startPos;
-			areaSize = mymath::round_to_grid(areaSize);
+			// apply snapping TO THE DRAG START POINT if needed
+			if (program.input.ctrl_down || autosnap)
+			{
+				glm::vec2 dragBeginSnapped = mymath::floor_to_grid(dragBegin); 
+				startPos.x = startPos.x < dragBeginSnapped.x ? startPos.x : dragBeginSnapped.x;
+				startPos.y = startPos.y < dragBeginSnapped.y ? startPos.y : dragBeginSnapped.y;
+				endPos.x = startPos.x < dragBeginSnapped.x ? dragBeginSnapped.x : endPos.x;
+				endPos.y = startPos.y < dragBeginSnapped.y ? dragBeginSnapped.y : endPos.y;
+			}
+
+			startPos.x = startPos.x < dragBegin.x ? mymath::floor_to_grid(startPos.x, nextTile.location.Size.x) : startPos.x;
+			startPos.y = startPos.y < dragBegin.y ? mymath::floor_to_grid(startPos.y, nextTile.location.Size.y) : startPos.y;
+
+			// get area size
+			glm::vec2 areaSize = glm::vec2(abs(endPos.x - startPos.x), abs(endPos.y - startPos.y));
+			areaSize.x = startPos.x < dragBegin.x ? mymath::ceil_to_grid(areaSize.x, nextTile.location.Size.x) : mymath::ceil_to_grid(areaSize.x, nextTile.location.Size.x);
+			areaSize.y = startPos.y < dragBegin.y ? mymath::ceil_to_grid(areaSize.y, nextTile.location.Size.y) : mymath::ceil_to_grid(areaSize.y, nextTile.location.Size.y);
+			// if x < 0 then size = area snapped pos = lih dragBegin - area?
 
 			// still dragging
 			if (program.input.rmb_down)
@@ -610,10 +637,19 @@ void Editor::updateToolPos(glm::vec2 &mousePos)
 				// update the gizmo
 				int index;
 				Gizmo* placeCursor = ID_to_gizmo(placeCursorID, index);
-				// size = 2;2 area = 4;4 ts = 0.5; 0.5
-				placeCursor->visuals.TextureSize.x = nextTile.location.Size.x / areaSize.x; 
-				placeCursor->visuals.TextureSize.y = nextTile.location.Size.y / areaSize.y;
-				placeCursor->visuals.TextureMode = TEXTUREMODE_STRETCH;
+
+				// if nextTile is TEXTUREMODE_TILE, to get the actual size of each individual tiled texture, one has to 
+				if (nextTile.visuals.TextureMode == TEXTUREMODE_TILE)
+				{
+					placeCursor->visuals.TextureSize.x = nextTile.visuals.TextureSize.x; /// areaSize.x; 
+					placeCursor->visuals.TextureSize.y = nextTile.visuals.TextureSize.y; /// areaSize.y;
+				}
+				else
+				{
+					placeCursor->visuals.TextureSize.x = nextTile.location.Size.x * nextTile.visuals.TextureSize.x; /// areaSize.x; 
+					placeCursor->visuals.TextureSize.y = nextTile.location.Size.y * nextTile.visuals.TextureSize.y; /// areaSize.y;
+				}
+				placeCursor->visuals.TextureMode = TEXTUREMODE_TILE;
 				updateGizmoVisuals(index); 
 				moveGizmo(index, startPos);
 				resizeGizmo(index, areaSize);
@@ -621,11 +657,13 @@ void Editor::updateToolPos(glm::vec2 &mousePos)
 			// just released rmb, draw the tiles
 			else
 			{
+				program.input.rmb_down_last = false;
 				std::vector<E_Tile> tilesToPlace = {};
 
-				for (int y = 0; y < areaSize.y; y += nextTile.location.Size.y)
+				// TODO: when tile size is < 1, something (probably this) causes a freeze + crash
+				for (float y = 0; y < areaSize.y - nextTile.location.Size.y / 2.0f; y += nextTile.location.Size.y)
 				{
-					for (int x = 0; x < areaSize.x; x += nextTile.location.Size.x)
+					for (float x = 0; x < areaSize.x - nextTile.location.Size.x / 2.0f; x += nextTile.location.Size.x)
 					{
 						// check for overlaps if required
 						if (overlap == false)
@@ -647,9 +685,7 @@ void Editor::updateToolPos(glm::vec2 &mousePos)
 
 				tiles.insert(tiles.end(), tilesToPlace.begin(), tilesToPlace.end());
 				add_tile(tilesToPlace);
-				int index;
-				Gizmo* placeCursor = ID_to_gizmo(placeCursorID, index);
-				resizeGizmo(index, glm::vec2(0.0f));
+				end_tool_drag(GLFW_MOUSE_BUTTON_RIGHT);
 			}
 		}
 	}
@@ -657,6 +693,70 @@ void Editor::updateToolPos(glm::vec2 &mousePos)
 	if (!program.gui.guiHovered && !program.file_system.contextOpen)
 	{
 		toolPos = mousePos;
+	}
+}
+
+// For some tools (select), handles the complete functionality of when a drag is ended, for others (box place) it's mostly visual changes
+void Editor::end_tool_drag(int mouseButton)
+{
+	switch(selectedTool)
+	{
+		case SELECT:
+		{
+			if (mouseButton == GLFW_MOUSE_BUTTON_LEFT)
+			{
+				// reset the active dragger gizmo
+				if (activeDraggerID != -1)
+				{
+					int index;
+					Gizmo* activeDraggerGizmo = ID_to_gizmo(activeDraggerID, index);
+					if (activeDraggerGizmo->type == GizmoType_MoveDragger)
+					{
+						for (int i = 0; i < sizeof(moveDraggerGizmoIDs) / sizeof(int); i++)
+						{
+							if (activeDraggerID == moveDraggerGizmoIDs[i])
+							{
+								activeDraggerGizmo->visuals.Color = moveDraggerColors[i];
+								break;
+							}
+						}
+					}
+					else
+					{
+						activeDraggerGizmo->visuals.Color = scaleDraggerColor;
+					}
+					activeDraggerID = -1;
+					updateGizmoVisuals(index);
+				}
+				// hide the drag area gizmo
+				int index;
+				Gizmo* dragGizmo = ID_to_gizmo(dragGizmoID, index);
+				resizeGizmo(index, glm::vec2(0.0f));
+				lastSelectionArea = {};
+			}
+			else if (mouseButton == GLFW_MOUSE_BUTTON_RIGHT) {}
+			break;
+		}
+		case PLACE:
+		{
+			break;
+		}
+		case BOX:
+		{
+			if (mouseButton == GLFW_MOUSE_BUTTON_LEFT)
+			{
+				int index;
+				Gizmo* placeCursor = ID_to_gizmo(placeCursorID, index);
+				resizeGizmo(index, glm::vec2(0.0f));
+			}
+			else if (mouseButton == GLFW_MOUSE_BUTTON_RIGHT)
+			{
+				int index;
+				Gizmo* placeCursor = ID_to_gizmo(placeCursorID, index);
+				resizeGizmo(index, glm::vec2(0.0f));
+			}
+			break;
+		}
 	}
 }
 
@@ -730,7 +830,6 @@ void Editor::tool_use()
 		}
 		case PLACE:
 		{
-			if (nextTile.visuals.textureName == "") return;
 			// get target position
 			glm::vec4 pos = program.camera.screen_to_world(toolPos);
 			pos = program.input.ctrl_down || autosnap ? mymath::floor_to_grid(pos) : pos;
@@ -752,6 +851,8 @@ void Editor::tool_use()
 			placeCursor->visuals.atlasLocation = nextTile.visuals.atlasLocation;
 			placeCursor->visuals.textureName = nextTile.visuals.textureName;
 			placeCursor->visuals.TextureMode = TEXTUREMODE_STRETCH;
+			placeCursor->visuals.TextureSize.x = nextTile.visuals.TextureSize.x; 
+			placeCursor->visuals.TextureSize.y = nextTile.visuals.TextureSize.y;
 			placeCursor->visuals.Color.x = nextTile.visuals.Color.x;
 			placeCursor->visuals.Color.y = nextTile.visuals.Color.y;
 			placeCursor->visuals.Color.z = nextTile.visuals.Color.z;
@@ -1188,8 +1289,11 @@ void Editor::update_gizmos()
 			{
 				int index;
 				Gizmo* scaleDragger = ID_to_gizmo(scaleDraggerGizmoIDs[i], index);
-				scaleDragger->visuals.Opacity = 0.0f;
-				updateGizmoVisuals(index);
+				if (scaleDragger->visuals.Opacity > 0.0f)
+				{
+					scaleDragger->visuals.Opacity = 0.0f;
+					updateGizmoVisuals(index);
+				}
 			}
 		}
 		for (int i = 0; i < sizeof(moveDraggerGizmoIDs) / sizeof(int); i++)
@@ -1198,8 +1302,11 @@ void Editor::update_gizmos()
 			{
 				int index;
 				Gizmo* moveDragger = ID_to_gizmo(moveDraggerGizmoIDs[i], index);
-				moveDragger->visuals.Opacity = 0.0f;
-				updateGizmoVisuals(index);
+				if (moveDragger->visuals.Opacity > 0.0f)
+				{
+					moveDragger->visuals.Opacity = 0.0f;
+					updateGizmoVisuals(index);
+				}
 			}
 		}
 	}
@@ -1213,8 +1320,11 @@ void Editor::add_tile(E_Tile &tile)
 
 void Editor::add_tile(std::vector<E_Tile> &tiles)
 {
-	program.render.add_to_render_list(tiles);
-	setDirtiness(true);
+	if (tiles.size() > 0)
+	{
+		program.render.add_to_render_list(tiles);
+		setDirtiness(true);
+	}
 }
 
 void Editor::remove_tile(int index)

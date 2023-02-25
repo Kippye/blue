@@ -38,6 +38,7 @@ class Render
 	public:
 		bool mouse_repeat = false;
 		float deltaTime = 0.0f, lastFrame = 0.0f, mouse_button_delay = 0.0f, FPS = 0.0f;
+		unsigned int instanceDataUpdates = 0;
 
 		glm::mat4 projection = glm::mat4(1.0f);
 

@@ -561,10 +561,13 @@ void Gui::addPropertiesGui()
 						{
 							program.editor.nextTile.location.Size.x = size[0];
 							program.editor.nextTile.location.Size.y = size[1];
-							if (program.editor.placeCursorID != -1)
+							if (program.editor.getTool() == PLACE)
 							{
-								int index = program.editor.ID_to_gizmo_index(program.editor.placeCursorID);
-								program.editor.resizeGizmo(index, program.editor.nextTile.location.Size);
+								if (program.editor.placeCursorID != -1)
+								{
+									int index = program.editor.ID_to_gizmo_index(program.editor.placeCursorID);
+									program.editor.resizeGizmo(index, program.editor.nextTile.location.Size);
+								}
 							}
 						}
 						float angle[1] = { mymath::deg(program.editor.nextTile.location.Angle) };
@@ -988,6 +991,7 @@ void Gui::addPopupGui()
 			ImGui::Text(("tile count: " + std::to_string(program.editor.tiles.size())).c_str());
 			ImGui::Text(("position: " + (glm::to_string(program.camera.cameraPos))).c_str());
 			ImGui::Text(("mouse pos: " + (glm::to_string(program.input.mousePos))).c_str());
+			ImGui::Text(("instance updates / frame: " + std::to_string(program.render.instanceDataUpdates)).c_str());
 			ImGui::End();
 		}
 		else

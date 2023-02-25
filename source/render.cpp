@@ -80,6 +80,7 @@ void Render::updateInstanceArray(INSTANCE_ARRAY_UPDATE type)
 		glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
 		glVertexAttribDivisor(0, 1); // tell OpenGL this is an instanced vertex attribute.
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		instanceDataUpdates++;
 	}
 
 	if (type == INSTANCE_ARRAY_UPDATE_ALL || type & INSTANCE_ARRAY_UPDATE_2)
@@ -91,6 +92,7 @@ void Render::updateInstanceArray(INSTANCE_ARRAY_UPDATE type)
 		glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
 		glVertexAttribDivisor(1, 1); // tell OpenGL this is an instanced vertex attribute.
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		instanceDataUpdates++;
 	}
 
 	if (type == INSTANCE_ARRAY_UPDATE_ALL || type & INSTANCE_ARRAY_UPDATE_3)
@@ -102,6 +104,7 @@ void Render::updateInstanceArray(INSTANCE_ARRAY_UPDATE type)
 		glVertexAttribPointer(2, 4, GL_UNSIGNED_INT, GL_FALSE, 4 * sizeof(unsigned int), (void*)0);
 		glVertexAttribDivisor(2, 1); // tell OpenGL this is an instanced vertex attribute.
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		instanceDataUpdates++;
 	}
 
 	if (type == INSTANCE_ARRAY_UPDATE_ALL || type & INSTANCE_ARRAY_UPDATE_4)
@@ -113,6 +116,7 @@ void Render::updateInstanceArray(INSTANCE_ARRAY_UPDATE type)
 		glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
 		glVertexAttribDivisor(3, 1); // tell OpenGL this is an instanced vertex attribute.
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		instanceDataUpdates++;
 	}
 
 	if (type == INSTANCE_ARRAY_UPDATE_ALL || type & INSTANCE_ARRAY_UPDATE_5)
@@ -124,6 +128,7 @@ void Render::updateInstanceArray(INSTANCE_ARRAY_UPDATE type)
 		glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
 		glVertexAttribDivisor(4, 1); // tell OpenGL this is an instanced vertex attribute.
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		instanceDataUpdates++;
 	}
 }
 
@@ -141,6 +146,7 @@ void Render::updateGizmoInstanceArray(INSTANCE_ARRAY_UPDATE type)
 		glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
 		glVertexAttribDivisor(0, 1); // tell OpenGL this is an instanced vertex attribute.
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		instanceDataUpdates++;
 	}
 
 	if (type == INSTANCE_ARRAY_UPDATE_ALL || type & INSTANCE_ARRAY_UPDATE_2)
@@ -152,6 +158,7 @@ void Render::updateGizmoInstanceArray(INSTANCE_ARRAY_UPDATE type)
 		glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
 		glVertexAttribDivisor(1, 1); // tell OpenGL this is an instanced vertex attribute.
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		instanceDataUpdates++;
 	}
 
 	if (type == INSTANCE_ARRAY_UPDATE_ALL || type & INSTANCE_ARRAY_UPDATE_3)
@@ -163,6 +170,7 @@ void Render::updateGizmoInstanceArray(INSTANCE_ARRAY_UPDATE type)
 		glVertexAttribPointer(2, 4, GL_UNSIGNED_INT, GL_FALSE, 4 * sizeof(unsigned int), (void*)0);
 		glVertexAttribDivisor(2, 1); // tell OpenGL this is an instanced vertex attribute.
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		instanceDataUpdates++;
 	}
 
 	if (type == INSTANCE_ARRAY_UPDATE_ALL || type & INSTANCE_ARRAY_UPDATE_3)
@@ -174,6 +182,7 @@ void Render::updateGizmoInstanceArray(INSTANCE_ARRAY_UPDATE type)
 		glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
 		glVertexAttribDivisor(3, 1); // tell OpenGL this is an instanced vertex attribute.
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		instanceDataUpdates++;
 	}
 
 	if (type == INSTANCE_ARRAY_UPDATE_ALL || type & INSTANCE_ARRAY_UPDATE_4)
@@ -185,6 +194,7 @@ void Render::updateGizmoInstanceArray(INSTANCE_ARRAY_UPDATE type)
 		glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
 		glVertexAttribDivisor(4, 1); // tell OpenGL this is an instanced vertex attribute.
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		instanceDataUpdates++;
 	}
 }
 
@@ -266,6 +276,7 @@ void Render::add_to_instance_data(E_Tile &tile)
 	instanceAtlasData.emplace_back(tile.visuals.atlasLocation.x, tile.visuals.atlasLocation.y, tile.visuals.atlasLocation.z, tile.visuals.atlasLocation.w);
 	instanceColorData.emplace_back(tile.visuals.Color.x, tile.visuals.Color.y, tile.visuals.Color.z, tile.visuals.Opacity);
 	instanceAdditionalData.emplace_back(tile.visuals.TextureMode == TEXTUREMODE_TILE, tile.selected, 0.0f, 0.0f);
+	instanceDataUpdates++;
 }
 
 void Render::add_gizmo_to_instance_data(Gizmo &gizmo)
@@ -275,6 +286,7 @@ void Render::add_gizmo_to_instance_data(Gizmo &gizmo)
 	GinstanceAtlasData.emplace_back(gizmo.visuals.atlasLocation.x, gizmo.visuals.atlasLocation.y, gizmo.visuals.atlasLocation.z, gizmo.visuals.atlasLocation.w);
 	GinstanceColorData.emplace_back(gizmo.visuals.Color.x, gizmo.visuals.Color.y, gizmo.visuals.Color.z, gizmo.visuals.Opacity);
 	GinstanceAdditionalData.emplace_back(gizmo.visuals.TextureMode == TEXTUREMODE_TILE, 0.0f, 0.0f, 1.0f);
+	instanceDataUpdates++;
 }
 
 void Render::erase_from_instance_data(int index)
@@ -284,6 +296,7 @@ void Render::erase_from_instance_data(int index)
 	instanceAtlasData.erase(instanceAtlasData.begin() + index);
 	instanceColorData.erase(instanceColorData.begin() + index);
 	instanceAdditionalData.erase(instanceAdditionalData.begin() + index);
+	instanceDataUpdates++;
 }
 
 void Render::erase_gizmo_from_instance_data(int index)
@@ -293,6 +306,7 @@ void Render::erase_gizmo_from_instance_data(int index)
 	GinstanceAtlasData.erase(GinstanceAtlasData.begin() + index);
 	GinstanceColorData.erase(GinstanceColorData.begin() + index);
 	GinstanceAdditionalData.erase(GinstanceAdditionalData.begin() + index);
+	instanceDataUpdates++;
 }
 
 void Render::add_to_render_list(E_Tile &tile)

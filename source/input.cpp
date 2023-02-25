@@ -50,7 +50,9 @@ void Input::processInput(GLFWwindow* window)
 				}
 
 				if (!isToolIgnored)
-				program.editor.tool_use();
+				{
+					program.editor.tool_use();
+				}
 
 				program.render.mouse_button_delay = 0.0f;
 			}

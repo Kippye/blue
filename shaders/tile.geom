@@ -30,27 +30,15 @@ uniform vec2 inTexAtlasSize;
 
 // x = atlasCoord.X / atlasSize.X + texPixelSize.X / atlasSize.X
 
-vec2 getTexCoord(vec2 atlasPos)
+vec2 getTexCoord(vec2 cornerPos)
 {
-	return gs_in[0].atlasCoord / inTexAtlasSize + (gs_in[0].texPixelSize / inTexAtlasSize * vec2(atlasPos.x, 1.0f - atlasPos.y));
+	return gs_in[0].atlasCoord / inTexAtlasSize + (gs_in[0].texPixelSize / inTexAtlasSize * vec2(cornerPos.x, -cornerPos.y));// + vec2(0.0f, gs_in[0].texPixelSize.y / inTexAtlasSize.y);
 }
-
-// vec2 getTexCoord(vec2 atlasPos)
-// {
-// 	return vec2(((atlasPos.x / atlasSize.x) * 16) + (gs_in[0].atlasCoord.x / atlasSize.x) * 16,
-// 	1 - (((atlasPos.y / atlasSize.y) * 16) + (((atlasSize.y / 16 - 1) - gs_in[0].atlasCoord.y) / atlasSize.y) * 16));
-// }
 
 vec2 getBottomLeftTexCoord()
 {
-	return gs_in[0].atlasCoord / inTexAtlasSize;
+	return getTexCoord(vec2(0.0f, 0.0f));
 }
-
-// vec2 getBottomLeftTexCoord()
-// {
-// 	return vec2(((0 / atlasSize.x) * 16) + (gs_in[0].atlasCoord.x / atlasSize.x) * 16,
-// 	1 - (((0 / atlasSize.y) * 16) + (((atlasSize.y / 16 - 1) - gs_in[0].atlasCoord.y) / atlasSize.y) * 16));
-// }
 
 void main() {
 	// BOTTOM LEFT
