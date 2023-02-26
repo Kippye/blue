@@ -50,6 +50,7 @@ class Editor
 		// editor data
         std::vector<E_Tile> tiles = {};
 		std::vector<Gizmo> gizmos = {};
+		std::vector<TileOptions> copyBuffer = {};
 		int placeCursorID = -1;
 		int gridGizmoID = -1;
 		int dragGizmoID = -1;
@@ -80,9 +81,9 @@ class Editor
 
 		// utility functions
 		bool checkForOverlaps(Bounding_Box &box, glm::vec4 &pos);
-		E_Tile* positionToTile(glm::vec4 &pos, int &index, bool grid = false);
+		E_Tile* positionToTile(glm::vec4 &pos, int &index);
 		E_Tile* ID_to_tile(int ID, int &index);
-		Gizmo* positionToGizmo(glm::vec4 &pos, int &index, GizmoType acceptedTypes, bool grid = false);
+		Gizmo* positionToGizmo(glm::vec4 &pos, int &index, GizmoType acceptedTypes);
 		Gizmo* ID_to_gizmo(int ID, int &index);
 		int ID_to_gizmo_index(int ID);
 		std::vector<E_Tile*>* getTilesInArea(Bounding_Box area, glm::vec4 &pos, std::vector<int> &indices);
@@ -96,6 +97,11 @@ class Editor
 		void deselect_all();
 		void delete_selection();
 		void delete_all();
+		void copy_selection();
+		void cut_selection();
+		void paste();
+		void undo();
+		void redo();
 
 		void clear_tags();
 

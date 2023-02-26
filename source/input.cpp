@@ -149,6 +149,41 @@ void Input::key_event(GLFWwindow* window, int key, int scancode, int action, int
 				if (program.gui.guiWantKeyboard) { return; }
 				program.editor.delete_selection();
 			break;
+			case GLFW_KEY_Z: // undo (NOT IMPLEMENTED)
+				if (program.gui.guiWantKeyboard) { return; }
+				if (ctrl_down)
+				{
+					program.editor.undo();
+				}
+			break;
+			case GLFW_KEY_Y: // redo (NOT IMPLEMENTED)
+				if (program.gui.guiWantKeyboard) { return; }
+				if (ctrl_down)
+				{
+					program.editor.redo();
+				}
+			break;
+			case GLFW_KEY_X: // cut
+				if (program.gui.guiWantKeyboard) { return; }
+				if (ctrl_down)
+				{
+					program.editor.cut_selection();
+				}
+			break;
+			case GLFW_KEY_C: // copy
+				if (program.gui.guiWantKeyboard) { return; }
+				if (ctrl_down)
+				{
+					program.editor.copy_selection();
+				}
+			break;
+			case GLFW_KEY_V: // paste
+				if (program.gui.guiWantKeyboard) { return; }
+				if (ctrl_down)
+				{
+					program.editor.paste();
+				}
+			break;
 			/// program manipulators
 			case GLFW_KEY_ESCAPE: // exit the program
 				if (program.gui.guiFocused) { return; }

@@ -35,6 +35,12 @@
  * [ ] place cursor (and probably the actual place position too) is too far behind mouse cursor
  * [ ] fix box place primary mode TEXTUREMODE_TILE gizmo having the same kind of texture tiling offset issue as every tile did before if the gizmo is used in negative directions - fixing this would probably require using some additional instance data...
  * [ ] push to back is VERY broken, either add functionality to Z position or fix it - it's messing with textures and crap
+ * [ ] properties gui gets REALLY messed up sometimes, example: copy 2 tiles, paste them a bunch of times
+ * [ ] pasting a tile while manipulating one using gizmos causes a freeze-crash
+ * - not connected to rendering, it seems
+ * - not connected to updateToolPos either??
+ * - not connected to the properties gui
+ * - only explanation i can think of is that creating new tiles somehow messes up the pointers in selection?
  * [?] weirdly just moving around placing things caused a crash
  * [?] editor cursor glitches weirdly and sometimes just doesn't show
  * [?] crash when a tile is selected and textures are reloaded then a tile is placed
@@ -84,10 +90,10 @@
  * [X] resize tool ‍GRRRRR
  * [X] create gizmos for box place preview
  * [X] box place secondary mode could be snapped to the size of a tile, since it won't place any half tiles anyway
- * [ ] copy selection
- * [ ] paste
- * [ ] cut selection
- * [ ] select all button (only visible for select tool, like select by texture)
+ * [X] copy selection
+ * [X] paste
+ * [X] cut selection
+ * [ ] select all button (only visible for select tool, like select by texture) - shortcut == what? could be CTRL + A but it violates my rule of not using movement keys CTRL + 1?
  * [ ] zoom into the cursor position
  * [ ] variable grid size
  * [ ] undo, redo, if at all doable
@@ -129,9 +135,9 @@
  *	  [X] Add move tool
  *    [X] Add resize / scale tool
  *    [X] Add gizmos for all the tools
+ *    [X] Add copy / cut / paste
  *    [ ] Fix box place tool
  *    [ ] Make move & resize more stable and clean
- *    [ ] Add copy / cut / paste
  * [ ] RELEASE 1.3 GUI UPDATE:
  *    [ ] Create a new gui style for pretty much everything
  *    [ ] Customize the file dialogue

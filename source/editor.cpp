@@ -99,11 +99,8 @@ bool Editor::checkForOverlaps(Bounding_Box &box, glm::vec4 &pos)
 	return false;
 }
 
-E_Tile* Editor::positionToTile(glm::vec4 &pos, int &index, bool grid)
+E_Tile* Editor::positionToTile(glm::vec4 &pos, int &index)
 {
-	// TODO: use an optimized function when the open blf file is in grid only mode
-	//~ if (grid){}
-
 	// reverse loop so we get the top-most tile and also speed up removing recently placed tiles
 	for (index = tiles.size() - 1; index >= 0; index--)
 	{
@@ -128,11 +125,8 @@ E_Tile* Editor::ID_to_tile(int ID, int &index)
 	return nullptr;
 }
 
-Gizmo* Editor::positionToGizmo(glm::vec4 &pos, int &index, GizmoType acceptedTypes, bool grid)
+Gizmo* Editor::positionToGizmo(glm::vec4 &pos, int &index, GizmoType acceptedTypes)
 {
-	// TODO: use an optimized function when the open blf file is in grid only mode
-	//~ if (grid){}
-
 	for (index = gizmos.size() - 1; index >= 0; index--)
 	{
 		if (acceptedTypes & gizmos[index].type && gizmos[index].location.box.contains_position(gizmos[index].location.Position, pos))
@@ -280,6 +274,80 @@ void Editor::delete_selection()
 	}
 
 	setDirtiness(true);
+}
+
+void Editor::copy_selection()
+{
+	if (selection.size() == 0)
+	{
+		return;
+	}
+	copyBuffer.clear();
+
+	glm::vec2 lowestPos = glm::vec2(selection[0]->location.Position.x, selection[0]->location.Position.y);
+
+	for (int i = 0; i < selection.size(); i++)
+	{
+		if (selection[i]->location.Position.x < lowestPos.x)
+		{
+			lowestPos.x = selection[i]->location.Position.x;
+		}
+		if (selection[i]->location.Position.y < lowestPos.y)
+		{
+			lowestPos.y = selection[i]->location.Position.y;
+		}
+	}
+
+	for (int i = 0; i < selection.size(); i++)
+	{
+		TileOptions tileCopyInfo;
+		tileCopyInfo.location = selection[i]->location;
+		tileCopyInfo.location.Position.x = tileCopyInfo.location.Position.x - lowestPos.x;
+		tileCopyInfo.location.Position.y = tileCopyInfo.location.Position.y - lowestPos.y;
+		tileCopyInfo.physics = selection[i]->physics;
+		tileCopyInfo.visuals = selection[i]->visuals;
+		for (int j = 0; j < MAX_TAGS; j++)
+		{
+			tileCopyInfo.tags[j] = selection[i]->tags[j];
+		}
+		copyBuffer.push_back(tileCopyInfo);
+	}
+}
+
+void Editor::cut_selection()
+{
+	// not the most optimized (many more loops), but definitely the most clean way to do this
+	copy_selection();
+	delete_selection();
+}
+
+// TODO: add a new overload of add_tile that accepts a vector of TileOptions to speed this up significantly
+void Editor::paste()
+{
+	glm::vec4 mouseWorldPos = program.camera.screen_to_world(program.input.mousePos);
+	// i made both autosnap and holding shift down when pasting (to just make it easier) snap the start position to the grid
+	mouseWorldPos = autosnap || program.input.shift_down ? mymath::floor_to_grid(mouseWorldPos) : mouseWorldPos;
+
+	for (int i = 0; i < copyBuffer.size(); i++)
+	{
+		// positions in the copy buffer tiles are stored as offsets from 0; 0 (bottom left corner of the copy buffer tiles)
+		add_tile(tiles.emplace_back(
+			Location(mouseWorldPos + copyBuffer[i].location.Position, copyBuffer[i].location.Size), 
+			copyBuffer[i].physics, 
+			copyBuffer[i].visuals, 
+			copyBuffer[i].tags
+		));
+	}
+}
+
+// TODO Implement
+void Editor::undo()
+{
+}
+
+// TODO Implement
+void Editor::redo()
+{
 }
 
 void Editor::clear_tags()
