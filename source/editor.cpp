@@ -1074,9 +1074,9 @@ void Editor::update_atlas_coords(TextureAtlas* atlas)
 		}
 		else
 		{
-			atLocation = updatedAtlasLocations[tiles[i].visuals.textureName];
+			atLocation = updatedAtlasLocations[gizmos[i].visuals.textureName];
 		}
-		std::cout << "Gizmo textureName: " << gizmos[i].visuals.textureName << std::endl;
+		//std::cout << "Gizmo textureName: " << gizmos[i].visuals.textureName << std::endl;
 
 		gizmos[i].visuals.atlasLocation = atLocation;
 		program.render.GinstanceAtlasData[i].x = atLocation.x;

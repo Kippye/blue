@@ -476,7 +476,7 @@ TextureAtlas* TextureLoader::loadTextureAtlas(std::vector<std::string> fullPaths
 
 	auto end_time2 = std::chrono::high_resolution_clock::now();
 	auto duration2 = std::chrono::duration_cast<std::chrono::milliseconds>(end_time2 - texture_load_start_time).count();
-	std::cout << "Texture loaded & rectangles created in " << duration2 << std::endl;
+	std::cout << "Atlas textures loaded & rectangles created in " << duration2 << " ms" << std::endl;
 	
 	auto report_result = [&rectangles](const rect_wh& result_size) {
 		std::cout << "Packed atlas size: " << result_size.w << "; " << result_size.h << std::endl;
@@ -509,7 +509,7 @@ TextureAtlas* TextureLoader::loadTextureAtlas(std::vector<std::string> fullPaths
 
 	auto end_time = std::chrono::high_resolution_clock::now();
 	auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
-	std::cout << "Atlas packed in " << duration << std::endl;
+	std::cout << "Atlas packed in " << duration << " ms" << std::endl;
 
 	TextureAtlas* textureAtlas = new TextureAtlas();
 

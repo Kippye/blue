@@ -5,6 +5,7 @@
 #include <vector>
 #include <iostream>
 #include <libconfig.h++>
+#include <filesystem>
 
 using namespace libconfig;
 
@@ -22,18 +23,19 @@ class FileSystem
 		std::string blfDir = "";
 		std::string blfFile = "";
 
-		char defaultIgnoreListBuffer[1024] = { "scripts, shaders, logo.png, logograss.png, resizedragger.png" };
+		char defaultIgnoreListBuffer[1024] = { "close.png, cursor.png, dragger-cursor.png, logo.png, logograss.png, resizedragger.png" };
 		char ignoreListBuffer[1024] = {};
 
 		bool contextOpen = false;
 
-		bool check_if_is_ignored(std::string name);
+		bool check_ignored(std::string name);
+		bool check_path_ignored(std::filesystem::path path, std::filesystem::path* highestParentPath);
 		void ignore_buffer_to_vector();
 		void vectorToIgnoreBuffer();
 		void update_editor_config();
 
 		std::vector<std::string>& getInDir(const char* directory, bool useIgnoreList = true, bool filesOnly = true, bool fullPath = false, bool extension = true, std::vector<std::string> acceptedExtensions = {});
-		std::vector<std::string>& getInDirRecursive(const char* directory, bool useIgnoreList = true, bool filesOnly = true, bool fullPath = false, bool extension = true, std::vector<std::string> acceptedExtensions = {});
+		std::vector<std::string>& getInDirRecursive(const char* directory, bool useIgnoreList = true, bool filesOnly = true, bool fullPath = false, bool extension = true, std::vector<std::string> acceptedExtensions = {}, std::filesystem::path* highestParentPath = nullptr);
 
 		void updateTextures();
 

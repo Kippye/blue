@@ -35,6 +35,7 @@ class Render
 		Shader shader;
 
 		float timeCounter = 0.0f;
+		double timeSinceStart = 0.0;
 	public:
 		bool mouse_repeat = false;
 		float deltaTime = 0.0f, lastFrame = 0.0f, mouse_button_delay = 0.0f, FPS = 0.0f;

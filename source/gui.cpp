@@ -1113,7 +1113,7 @@ void Gui::addPopupGui()
 			guiWantKeyboard = guiIO->WantCaptureKeyboard ? true : guiWantKeyboard;
 
 			ImGui::InputTextMultiline("filenames & directories to ignore", program.file_system.ignoreListBuffer, IM_ARRAYSIZE(program.file_system.ignoreListBuffer), ImVec2(600, 400));
-			if (ImGui::Button("Save", ImVec2(s.bottomBarButtonWidth, s.bottomBarHeight)))
+			if (ImGui::Button("Apply", ImVec2(s.bottomBarButtonWidth, s.bottomBarHeight)))
 			{
 				program.file_system.ignore_buffer_to_vector();
 				program.file_system.updateTextures();
@@ -1333,7 +1333,6 @@ void Gui::checkFileDialog()
 				{
 					// change content dir
 					program.file_system.contentDir = ImGuiFileDialog::Instance()->GetCurrentPath() + "\\";
-					std::cout << "path: " << program.file_system.contentDir << std::endl;
 					program.file_system.changeSetting<std::string>("dirs.content", program.file_system.contentDir, libconfig::Setting::TypeString);
 					// load textures from freshly selected directory
 					program.file_system.updateTextures();

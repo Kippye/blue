@@ -1,24 +1,64 @@
 #include <file_system.h>
 #include <main.h>
 
-#include <filesystem>
 #include <sstream>
 
 // TEMP
 #include <chrono>
 
 #define DEBUG_FILE_LOADING false
+namespace fs = std::filesystem;
 
 class Program;
 extern Program program;
 
-bool FileSystem::check_if_is_ignored(std::string name)
+bool FileSystem::check_ignored(std::string name)
 {
 	for (std::string ignoreString : ignoreList)
 	{
 		if (ignoreString == name)
 		{
 			return true;
+		}
+	}
+
+	return false;
+}
+
+bool FileSystem::check_path_ignored(fs::path path, fs::path* highestParentPath)
+{
+	fs::path pc = path;
+
+	bool debug = false;
+
+	if (highestParentPath == nullptr)
+	{
+		highestParentPath = &fs::path("C:\\");
+	}
+	// check initial filename
+	if (debug) std::cout  << pc.string() << std::endl;
+	if (check_ignored(pc.filename().string())) { return true; }
+
+	unsigned int safetyCounter = 0;
+
+	if (debug) std::cout << pc.parent_path().string() << "; " << highestParentPath->string() << "; " << (pc.parent_path().compare(*highestParentPath)) << "; " << (pc.parent_path() == *highestParentPath) << std::endl;
+
+	while (pc.has_parent_path() && pc.parent_path().compare(*highestParentPath) != 0)
+	{
+		pc = pc.parent_path();
+		if (debug) std::cout << "Parent path: " << pc.string() << std::endl;
+
+		if (check_ignored(pc.filename().string()))
+		{
+			if (debug) std::cout << "Path " << pc.string() << " is ignored" << std::endl;
+			return true;
+		}
+
+		safetyCounter++;
+		if (safetyCounter > 100)
+		{
+			debug::print_error("FileSystem::check_path_ignored: Surpassed the loop limit [100] in parent path ignore check loop");
+			return false;
 		}
 	}
 
@@ -63,7 +103,8 @@ void FileSystem::ignore_buffer_to_vector()
 
 		// add new ignore file to the settings
 		std::string name = "ignore_" + std::to_string(i);
-		dirs["ignores"].add(name.c_str(), Setting::TypeString) = out;
+		dirs["ignores"].add(Setting::TypeString) = out;
+
 		i++;
 	}
 
@@ -86,7 +127,7 @@ void FileSystem::vectorToIgnoreBuffer()
 	{
 		for (size_t chr = 0; chr < ignoreList[str].length(); chr++)
 		{
-			if (index == sizeof(ignoreListBuffer)) { std::cerr << "reached char buffer size when converting from ignoreList vector!" << std::endl; return; }
+			if (index == sizeof(ignoreListBuffer)) { debug::print_warning("FileSystem::vectorToIgnoreBuffer: Reached char buffer size when converting from ignoreList vector!"); return; }
 			ignoreListBuffer[index] = ignoreList[str][chr];
 			index++;
 			// add separators and space for visual clarity
@@ -136,9 +177,9 @@ std::vector<std::string>& FileSystem::getInDir(const char* directory, bool useIg
 
 	if (directory == "") { if (DEBUG_FILE_LOADING) std::cout << "Tried getting a directory without dir being set" << std::endl; return *fileNames; }
 
-	for (const auto& entry : std::filesystem::directory_iterator(directory))
+	for (const auto& entry : fs::directory_iterator(directory))
 	{
-		if (useIgnoreList && check_if_is_ignored(entry.path().filename().string())) { continue; } // on the ignore list, ignore
+		if (useIgnoreList && check_ignored(entry.path().filename().string())) { continue; } // on the ignore list, ignore
 		if (filesOnly && entry.path().extension().string() == "") { continue; } // we only want files, not directories
 
 		if (acceptedExtensions.size() > 0)
@@ -171,7 +212,7 @@ std::vector<std::string>& FileSystem::getInDir(const char* directory, bool useIg
 
 			else // dir/fn
 			{
-				std::filesystem::path path = entry.path();
+				fs::path path = entry.path();
 				path.replace_extension();
 				fileNames->push_back(path.string());
 			}
@@ -194,15 +235,15 @@ std::vector<std::string>& FileSystem::getInDir(const char* directory, bool useIg
 	return *fileNames;
 }
 
-std::vector<std::string>& FileSystem::getInDirRecursive(const char* directory, bool useIgnoreList, bool filesOnly, bool fullPath, bool extension, std::vector<std::string> acceptedExtensions)
+std::vector<std::string>& FileSystem::getInDirRecursive(const char* directory, bool useIgnoreList, bool filesOnly, bool fullPath, bool extension, std::vector<std::string> acceptedExtensions, fs::path* highestParentPath)
 {
 	std::vector<std::string>* fileNames = new std::vector<std::string>();
 
 	if (directory == "") { if (DEBUG_FILE_LOADING) std::cout << "Tried loading without dir being set" << std::endl; return *fileNames; }
 
-	for (const auto& entry : std::filesystem::recursive_directory_iterator(directory))
+	for (const auto& entry : fs::recursive_directory_iterator(directory))
 	{
-		if (useIgnoreList && check_if_is_ignored(entry.path().filename().string())) { continue; } // on the ignore list, ignore
+		if (useIgnoreList && check_path_ignored(entry.path(), highestParentPath)) { continue; } // on the ignore list, ignore
 		if (filesOnly && entry.path().extension().string() == "") { continue; } // we only want files, ignore it
 
 		if (acceptedExtensions.size() > 0)
@@ -235,7 +276,7 @@ std::vector<std::string>& FileSystem::getInDirRecursive(const char* directory, b
 
 			else // dir/fn
 			{
-				std::filesystem::path path = entry.path();
+				fs::path path = entry.path();
 				path.replace_extension();
 				fileNames->push_back(path.string());
 			}
@@ -269,7 +310,7 @@ void FileSystem::updateTextures()
 	if (contentDir != "")
 	{
 		std::cout << "Creating texture atlas..." << std::endl;
-		std::vector<std::string>& filesInContent = getInDirRecursive(contentDir.c_str(), true, true, true, true, imageExtensions);
+		std::vector<std::string>& filesInContent = getInDirRecursive(contentDir.c_str(), true, true, true, true, imageExtensions, &fs::path(contentDir.substr(0, contentDir.length() - 1)));
 		program.gui.tileTextures = program.textureLoader.loadTextures(filesInContent, false);
 		// NOTE: sometimes this randomly causes a crash at "Loading textures from content..."
 		program.render.textureAtlas = loadContentAsAtlas();
@@ -279,7 +320,7 @@ void FileSystem::updateTextures()
 		}
 		auto load_as_atlas_time = std::chrono::high_resolution_clock::now();
 		auto duration2 = std::chrono::duration_cast<std::chrono::milliseconds>(load_as_atlas_time - start_time).count();
-		std::cout << "Atlas created in " << duration2 << std::endl;
+		std::cout << "Atlas created in " << duration2 << " ms" << std::endl;
 		auto coord_update_start_time = std::chrono::high_resolution_clock::now();
 		std::cout << "Updating editor atlas coordinates..." << std::endl;
 		// only waste time on updating these if they're already something else
@@ -288,12 +329,12 @@ void FileSystem::updateTextures()
 			program.editor.update_atlas_coords(program.render.textureAtlas);
 		//}
 		auto duration3 = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - coord_update_start_time).count();
-		std::cout << "Editor atlas coordinate update completed in " << duration3 << std::endl;
+		std::cout << "Editor atlas coordinate update completed in " << duration3 << " ms" << std::endl;
 	}
 
 	auto end_time = std::chrono::high_resolution_clock::now();
 	auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
-	std::cout << "Texture update completed in " << duration << std::endl;
+	std::cout << "Texture update completed in " << duration << " ms" << std::endl;
 }
 
 void FileSystem::loadGUITextures()
@@ -301,7 +342,7 @@ void FileSystem::loadGUITextures()
 	std::cout << "Loading GUI textures..." << std::endl;
 
 	std::string guiTextureFolder = program.textureLoader.textureFolder + "gui/";
-	std::vector<std::string>& filesInFolder = getInDirRecursive(guiTextureFolder.c_str(), true, true, false, true, imageExtensions);
+	std::vector<std::string>& filesInFolder = getInDirRecursive(guiTextureFolder.c_str(), false, true, false, true, imageExtensions);
 	std::vector<std::string>& fileNames = getInDirRecursive(guiTextureFolder.c_str(), false, true, false, false, imageExtensions);
 	std::vector<E_Texture*>& textures = program.textureLoader.loadTextures(filesInFolder, guiTextureFolder);
 
@@ -316,7 +357,7 @@ TextureAtlas* FileSystem::loadContentAsAtlas()
 {
 	std::cout << "Loading textures from content..." << std::endl;
 	if (contentDir == "") { std::cout << "Tried to load content without the folder being set" << std::endl; return nullptr; }
-	std::vector<std::string>& filesInContent = getInDirRecursive(contentDir.c_str(), true, true, true, true, imageExtensions);
+	std::vector<std::string>& filesInContent = getInDirRecursive(contentDir.c_str(), true, true, true, true, imageExtensions, &fs::path(contentDir.substr(0, contentDir.length() - 1)));
 	TextureAtlas* atlas = program.textureLoader.loadTextureAtlas(filesInContent, false);
 	std::cout << "Textures loaded from content" << std::endl;
 	return atlas;

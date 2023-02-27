@@ -6,6 +6,7 @@
 
 #include <main.h>
 #include <render.h>
+#include <chrono>
 
 class Program;
 extern Program program;
@@ -205,6 +206,7 @@ void Render::render()
 	deltaTime = currentFrame - lastFrame;
 	lastFrame = currentFrame;
 	timeCounter += deltaTime;
+	timeSinceStart += deltaTime;
 	mouse_button_delay += deltaTime;
 
 	if (mouse_button_delay >= 0.05f && mouse_button_delay < 100.0f)
@@ -222,8 +224,6 @@ void Render::render()
 		timeCounter = 0.0f;
 	}
 
-	//glClearColor(0.5f, 0.2f, 1.0f, 1.0f); // cartoony sky
-	//glClearColor(0.1f, 0.1f, 0.2f, 1.0f); // dark gray color
 	glClearColor(program.editor.backgroundColor.r, program.editor.backgroundColor.g, program.editor.backgroundColor.b, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -233,6 +233,7 @@ void Render::render()
 	// set uniforms
 	shader.setMat4("view", program.camera.view);
 	shader.setMat4("projection", program.camera.projection);
+	shader.setFloat("time", timeSinceStart);
 
 	if (textureAtlas != nullptr)
 	{

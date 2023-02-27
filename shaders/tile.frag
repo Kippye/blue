@@ -14,6 +14,7 @@ flat in int shouldTile;
 flat in int selected;
 
 uniform sampler2D texture1;
+uniform float time;
 
 void main()
 {
@@ -47,5 +48,5 @@ void main()
 	// convert from the "local" texture coordinates to atlas coordinates
 	finalCoords = bottomLeftTexCoord + tiledTexCoord * (texPixelSize / atlasSize);
 
-	FragColor = texture(texture1, finalCoords) * color + selectionColor;
+	FragColor = texture(texture1, finalCoords) * color + (selectionColor * (min(sin(time * 2.0f) + 1.5f, 2.0f)));
 };

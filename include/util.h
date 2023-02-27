@@ -9,6 +9,23 @@
 // constants
 const int MAX_TAGS = 5;
 
+class debug
+{
+	public:
+		static void print_info(const char* text)
+		{
+
+		}
+		static void print_warning(const char* text)
+		{
+
+		}
+		static void print_error(const char* text)
+		{
+
+		}
+};
+
 class mymath
 {
 	public:
