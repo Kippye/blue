@@ -131,6 +131,11 @@ void Input::key_event(GLFWwindow* window, int key, int scancode, int action, int
 			case GLFW_KEY_1:
 				if (program.gui.guiWantKeyboard || program.gui.tileTextures.size() == 0) { return; }
 				program.editor.setTool(SELECT);
+
+				if (ctrl_down)
+				{
+					program.editor.select_all();
+				}
 			break;
 			case GLFW_KEY_2:
 				if (program.gui.guiWantKeyboard || program.gui.tileTextures.size() == 0) { return; }
@@ -148,6 +153,20 @@ void Input::key_event(GLFWwindow* window, int key, int scancode, int action, int
 			case GLFW_KEY_DELETE: // delete
 				if (program.gui.guiWantKeyboard) { return; }
 				program.editor.delete_selection();
+			break;
+			case GLFW_KEY_B: // push to back (DEPRECATED)
+				if (program.gui.guiWantKeyboard) { return; }
+				if (ctrl_down)
+				{
+					program.editor.push_selection_to_back();
+				}
+			break;
+			case GLFW_KEY_T:
+				if (program.gui.guiWantKeyboard) { return; }
+				if (ctrl_down)
+				{
+					program.editor.select_by_texture(program.editor.nextTile.visuals.textureName);
+				}
 			break;
 			case GLFW_KEY_Z: // undo (NOT IMPLEMENTED)
 				if (program.gui.guiWantKeyboard) { return; }
@@ -245,22 +264,7 @@ void Input::key_event(GLFWwindow* window, int key, int scancode, int action, int
 				}
 			break;
 			case GLFW_KEY_G:
-				// unnecessary safety check check
-				if (program.editor.gridGizmoID != -1)
-				{
-					int index;
-					Gizmo* gridGizmo = program.editor.ID_to_gizmo(program.editor.gridGizmoID, index);
-					if (gridGizmo->visuals.Opacity > 0)
-					{
-						gridGizmo->visuals.Opacity = 0.0f;
-					}
-					else
-					{
-						// TODO: revert to value set in config instead?
-						gridGizmo->visuals.Opacity = 0.75f;
-					}
-					program.editor.updateGizmoVisuals(index);
-				}
+				program.editor.set_grid_visible(!program.editor.gridVisible);
 			break;
 			case GLFW_KEY_K:
 				if (ctrl_down) // switch grid mode
@@ -290,6 +294,7 @@ void Input::key_event(GLFWwindow* window, int key, int scancode, int action, int
 			case (GLFW_KEY_LEFT_ALT):
 			alt_down = false;
 			break;
+			// remove these?
 			case (GLFW_MOUSE_BUTTON_LEFT):
 			lmb_down = false;
 			break;
@@ -308,16 +313,28 @@ void Input::mouse_button_event(GLFWwindow* window, int key, int action, int mods
 	{
 		if (key == GLFW_MOUSE_BUTTON_LEFT)
 		{
-			//glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 			program.windowManager.hasFocus = true;
 			program.render.mouse_button_delay = 0.0f;
 			program.editor.tool_use();
+			clickCounter++;
 		}
 		else if (key == GLFW_MOUSE_BUTTON_RIGHT)
 		{
 			program.windowManager.hasFocus = true;
 			program.render.mouse_button_delay = 0.0f;
 			program.editor.tool_use_secondary();
+		}
+	}
+	else if (action == GLFW_RELEASE)
+	{
+		switch (key)
+		{
+			case (GLFW_MOUSE_BUTTON_LEFT):
+			lmb_down = false;
+			break;
+			case (GLFW_MOUSE_BUTTON_RIGHT):
+			rmb_down = false;
+			break;
 		}
 	}
 }

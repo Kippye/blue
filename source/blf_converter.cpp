@@ -81,7 +81,7 @@ void BLF_Converter::write_file(const char* path)
 		createDefinition<BLF_Tile>()
 	};
 
-	std::vector<E_Tile>& editor_tiles = program.editor.tiles;
+	std::deque<E_Tile>& editor_tiles = program.editor.tiles;
 
 	std::cout << "(BLF) Writing " << editor_tiles.size() << " tiles." << std::endl;
 

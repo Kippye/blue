@@ -21,7 +21,7 @@ Tool Editor::getTool()
 
 void Editor::setTool(Tool tool)
 {
-	// having things selected while using the place tool could fuck things up big time
+	// having things selected while using the place tool could mess things up big time, that hasn't been accounted for (yet) nor is it that useful
 	if (selection.size() > 0 && tool != SELECT)
 	{
 		deselect_all();
@@ -86,6 +86,30 @@ void Editor::setDirtiness(bool to)
 	program.windowManager.setTitle(program.windowManager.title.c_str());
 }
 
+void Editor::set_grid_visible(bool to)
+{
+	// unnecessary safety check check
+	if (program.editor.gridGizmoID != -1 && to != gridVisible)
+	{
+		int index;
+		Gizmo* gridGizmo = program.editor.ID_to_gizmo(program.editor.gridGizmoID, index);
+		gridGizmo->visuals.Opacity = to ? 0.75f : 0.0f;
+		program.editor.updateGizmoVisuals(index);
+
+		gridVisible = to;
+	}
+}
+
+void Editor::update_grid_size(float newSize)
+{
+	mymath::gridSize = newSize;
+
+	int index;
+	Gizmo* gridGizmo = program.editor.ID_to_gizmo(program.editor.gridGizmoID, index);
+	gridGizmo->visuals.TextureSize = glm::vec2(newSize);
+	program.editor.updateGizmoVisuals(index);
+}
+
 bool Editor::checkForOverlaps(Bounding_Box &box, glm::vec4 &pos)
 {
 	for (int index = tiles.size() - 1; index >= 0; index--)
@@ -106,7 +130,7 @@ E_Tile* Editor::positionToTile(glm::vec4 &pos, int &index)
 	{
 		if (tiles[index].location.box.contains_position(tiles[index].location.Position, pos))
 		{
-			return &tiles[index]; // return so we only get 1 tile each click, otherwise shit would be pretty weird, innit?
+			return &tiles[index];
 		}
 	}
 	return nullptr;
@@ -119,7 +143,7 @@ E_Tile* Editor::ID_to_tile(int ID, int &index)
 	{
 		if (tiles[index].ID == ID)
 		{
-			return &tiles[index]; // return so we only get 1 tile each click, otherwise shit would be pretty weird, innit?
+			return &tiles[index];
 		}
 	}
 	return nullptr;
@@ -179,17 +203,17 @@ std::vector<E_Tile*>* Editor::getTilesInArea(Bounding_Box area, glm::vec4 &pos, 
 	return tilesInArea;
 }
 
-void Editor::update_tile_selection(E_Tile* tile, int index, bool to)
+void Editor::update_tile_selection(int index, bool to)
 {
-	tile->selected = to;
+	tiles[index].selected = to;
 	program.render.set_tile_selection(index, to);
 }
 
-void Editor::update_tile_selection(int ID, bool to)
+void Editor::update_tile_selection(unsigned int ID, bool to)
 {
 	int index = 0;
 	E_Tile* tile = ID_to_tile(ID, index);
-	update_tile_selection(tile, index, to);
+	update_tile_selection(index, to);
 }
 
 void Editor::select_by_texture(std::string textureName)
@@ -202,7 +226,7 @@ void Editor::select_by_texture(std::string textureName)
 		if (tiles[i].visuals.textureName == textureName)
 		{
 			selection.push_back(&tiles[i]);
-			update_tile_selection(&tiles[i], i, true);
+			update_tile_selection(i, true);
 		}
 	}
 }
@@ -220,6 +244,24 @@ void Editor::push_selection_to_back()
 	}
 
 	program.render.updateInstanceArray();
+}
+
+void Editor::select_all()
+{
+	if (tiles.size() == 0) { return; }
+
+	std::vector<int> indices = {};
+
+	for (int i = 0; i < tiles.size(); i++)
+	{
+		if (tiles[i].selected == false)
+		{
+			indices.push_back(i);
+			tiles[i].selected = true;
+			selection.push_back(&tiles[i]);
+		}
+	}
+	program.render.set_tile_selection(indices, true);
 }
 
 void Editor::deselect_all()
@@ -577,21 +619,22 @@ void Editor::updateToolPos(glm::vec2 &mousePos)
 
 					if (oldTileIndex != -1)
 					{
-						update_tile_selection(oldTile, oldTileIndex, false);
+						update_tile_selection(oldTileIndex, false);
 					}
 				}
 			}
 
-			for (int i = 0; i < tilesInArea.size(); i++)
-			{
-				E_Tile* tile = tilesInArea[i];
-				
+			int i = 0;
+
+			for (E_Tile* tile : tilesInArea)
+			{				
 				if (tile->selected == false)
 				{
 					selection.push_back(tile);
 					tile->selected = true;
 					program.render.set_tile_selection(indices[i], true);
 				}
+				i++;
 			}
 
 			lastSelectionArea = tilesInArea;
@@ -651,19 +694,21 @@ void Editor::updateToolPos(glm::vec2 &mousePos)
 
 				moveGizmo(index, startPos);
 				resizeGizmo(index, glm::max(areaSize, glm::vec2(minSize)));
-				//resizeGizmo(index, areaSize);
 			}
 			// just released lmb, draw the tile
 			else
 			{
+				if (abs(dragBegin.x - worldMousePos.x) > minBoxDrawSize / 2.0f && abs(dragBegin.y - worldMousePos.y) > minBoxDrawSize / 2.0f)
+				{
+					// not overlapping when not supposed to, place a tile
+					if (overlap == true || checkForOverlaps(Bounding_Box(areaSize), startPos))
+					{
+						// place the tile
+						add_tile(tiles.emplace_back(Location(startPos, glm::max(glm::vec3(areaSize, 1.0f), glm::vec3(minSize, minSize, 1.0f))), nextTile.physics, nextTile.visuals, nextTile.tags));
+					}
+				}
 				// safety thing, should have little to no effect
 				program.input.lmb_down_last = false;
-				// not overlapping when not supposed to, place a tile
-				if (overlap == true || checkForOverlaps(Bounding_Box(areaSize), startPos))
-				{
-					// place the tile
-					add_tile(tiles.emplace_back(Location(startPos, glm::max(glm::vec3(areaSize, 1.0f), glm::vec3(minSize, minSize, 1.0f))), nextTile.physics, nextTile.visuals, nextTile.tags));
-				}
 				end_tool_drag(GLFW_MOUSE_BUTTON_LEFT);
 			}
 		}
@@ -726,33 +771,37 @@ void Editor::updateToolPos(glm::vec2 &mousePos)
 			else
 			{
 				program.input.rmb_down_last = false;
-				std::vector<E_Tile> tilesToPlace = {};
 
-				// TODO: when tile size is < 1, something (probably this) causes a freeze + crash
-				for (float y = 0; y < areaSize.y - nextTile.location.Size.y / 2.0f; y += nextTile.location.Size.y)
+				if (abs(dragBegin.x - worldMousePos.x) > nextTile.location.Size.x / 2.0f && abs(dragBegin.y - worldMousePos.y) > nextTile.location.Size.y / 2.0f)
 				{
-					for (float x = 0; x < areaSize.x - nextTile.location.Size.x / 2.0f; x += nextTile.location.Size.x)
+					std::vector<E_Tile> tilesToPlace = {};
+
+					// TODO: when tile size is < 1, something (probably this) causes a freeze + crash
+					for (float y = 0; y < areaSize.y - nextTile.location.Size.y / 2.0f; y += nextTile.location.Size.y)
 					{
-						// check for overlaps if required
-						if (overlap == false)
+						for (float x = 0; x < areaSize.x - nextTile.location.Size.x / 2.0f; x += nextTile.location.Size.x)
 						{
-							// not overlapping
-							if (!checkForOverlaps(Bounding_Box(nextTile.location.Size), startPos + glm::vec4(x, y, 0.0f, 0.0f)))
+							// check for overlaps if required
+							if (overlap == false)
+							{
+								// not overlapping
+								if (!checkForOverlaps(Bounding_Box(nextTile.location.Size), startPos + glm::vec4(x, y, 0.0f, 0.0f)))
+								{
+									E_Tile tile = E_Tile(Location(startPos + glm::vec4(x, y, 0.0f, 0.0f), nextTile.location.Size), nextTile.physics, nextTile.visuals, nextTile.tags);
+									tilesToPlace.push_back(tile);
+								}
+							}
+							else
 							{
 								E_Tile tile = E_Tile(Location(startPos + glm::vec4(x, y, 0.0f, 0.0f), nextTile.location.Size), nextTile.physics, nextTile.visuals, nextTile.tags);
 								tilesToPlace.push_back(tile);
 							}
 						}
-						else
-						{
-							E_Tile tile = E_Tile(Location(startPos + glm::vec4(x, y, 0.0f, 0.0f), nextTile.location.Size), nextTile.physics, nextTile.visuals, nextTile.tags);
-							tilesToPlace.push_back(tile);
-						}
 					}
-				}
 
-				tiles.insert(tiles.end(), tilesToPlace.begin(), tilesToPlace.end());
-				add_tile(tilesToPlace);
+					tiles.insert(tiles.end(), tilesToPlace.begin(), tilesToPlace.end());
+					add_tile(tilesToPlace);
+				}
 				end_tool_drag(GLFW_MOUSE_BUTTON_RIGHT);
 			}
 		}
@@ -891,7 +940,7 @@ void Editor::tool_use()
 				if (tile->selected == false)
 				{
 					selection.push_back(tile);
-					update_tile_selection(tile, index, true);
+					update_tile_selection(index, true);
 				}
 			}
 			break;
@@ -907,8 +956,9 @@ void Editor::tool_use()
 				// overlapping when not supposed to, don't place a tile
 				return;
 			}
-			// place the tile
+
 			add_tile(tiles.emplace_back(Location(pos, nextTile.location.Size), nextTile.physics, nextTile.visuals, nextTile.tags));
+
 			break;
 		}
 		case BOX:
@@ -954,12 +1004,12 @@ void Editor::tool_use_secondary()
 					}
 				}
 
-				update_tile_selection(tile, index, false);
+				update_tile_selection(index, false);
 				return;
 			}
 			// tile wasn't selected before, add to selection
 			selection.push_back(tile);
-			update_tile_selection(tile, index, true);
+			update_tile_selection(index, true);
 			break;
 		}
 		case PLACE:

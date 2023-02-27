@@ -100,7 +100,7 @@ void Gui::addEditorGui()
 	ImGui::SetNextWindowSizeConstraints(ImVec2(-1, 64.0f), ImVec2(window->SCREEN_WIDTH - (s.tileSelectorPaneWidth + s.propertiesPaneWidth), window->SCREEN_HEIGHT / 8));
 	ImGui::SetNextWindowSize(ImVec2(window->SCREEN_WIDTH - (s.tileSelectorPaneWidth + s.propertiesPaneWidth), s.editorPaneHeight));
 	ImGui::SetNextWindowPos(ImVec2(s.tileSelectorPaneWidth, 0.0f));
-	ImGui::Begin("Level editor", p_close, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoNav);
+	ImGui::Begin("Level editor", p_close, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoNav);
 		s.editorPaneHeight = ImGui::GetWindowHeight();
 		/// add tool buttons
 		float currentToolButtonX = 0.0f;
@@ -135,9 +135,10 @@ void Gui::addEditorGui()
 				ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
 				ImGui::Text("select tool ");
 				ImGui::BulletText("select tiles with LMB (hold SHIFT to add to selection) ");
-				ImGui::BulletText("add / remove from selection with RMB ");
-				ImGui::BulletText("box select by dragging LMB ");
+				ImGui::BulletText("add / remove single tiles from selection with RMB ");
+				ImGui::BulletText("box select by dragging LMB (hold SHIFT to add to selection) ");
 				ImGui::BulletText("selected tiles' properties will be shown in the properties tab ");
+				ImGui::BulletText("shortcut: 1 ");
 				ImGui::PopTextWrapPos();
 			ImGui::EndTooltip();
 		}
@@ -157,10 +158,22 @@ void Gui::addEditorGui()
 		if (ImGui::ImageButton((void*)(intptr_t)guiTextures["place"], s.editorButtonSize))
 		{
 			// update (to) place tool
-			// not selecting a new texture since none was selected, so just reusing the last one
 			program.editor.setTool(PLACE);
 		}
 		ImGui::PopStyleColor();
+
+		if (ImGui::IsItemHovered())
+		{
+			ImGui::BeginTooltip();
+				ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+				ImGui::Text("place tool ");
+				ImGui::BulletText("place tiles with LMB (hold left CTRL to snap to grid) ");
+				ImGui::BulletText("tiles will be created with the options set in the new tiles options gui ");
+				ImGui::BulletText("remove tiles with RMB ");
+				ImGui::BulletText("shortcut: 2 ");
+				ImGui::PopTextWrapPos();
+			ImGui::EndTooltip();
+		}
 
 		currentToolButtonX += s.editorButtonDistance + s.editorButtonOffset;
 
@@ -176,8 +189,7 @@ void Gui::addEditorGui()
 		}
 		if (ImGui::ImageButton((void*)(intptr_t)guiTextures["box"], s.editorButtonSize))
 		{
-			// update (to) place tool
-			// not selecting a new texture since none was selected, so just reusing the last one
+			// update (to) box tool
 			program.editor.setTool(BOX);
 		}
 		ImGui::PopStyleColor();
@@ -190,6 +202,7 @@ void Gui::addEditorGui()
 				ImGui::BulletText("drag a box with lmb to create a tile that size ");
 				ImGui::BulletText("drag a box with rmb to fill the area with 1x1 tiles ");
 				ImGui::BulletText("hold left CTRL to snap the box start and end points to the grid ");
+				ImGui::BulletText("shortcut: 3 ");
 				ImGui::PopTextWrapPos();
 			ImGui::EndTooltip();
 		}
@@ -198,27 +211,10 @@ void Gui::addEditorGui()
 
 		ImGui::SetCursorPos(ImVec2(currentToolButtonX, 0.0f));
 
-		ImGui::SetNextItemWidth(s.editorComboWidth);
-		// push to back button
-		if (ImGui::Button("Push to back", ImVec2(s.editorComboWidth, s.editorButtonSize.y / 2)))
-		{
-			program.editor.push_selection_to_back();
-		}
-
-		if (ImGui::IsItemHovered())
-		{
-			ImGui::BeginTooltip();
-			ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
-			ImGui::Text("push back ");
-			ImGui::BulletText("pushes every selected tile to the background ");
-			ImGui::PopTextWrapPos();
-			ImGui::EndTooltip();
-		}
-
 		/// editor buttons section
 		if (program.editor.getTool() == SELECT)
 		{
-			ImGui::SetCursorPos(ImVec2(currentToolButtonX, s.editorButtonSize.y / 2 + 3.5f));
+			ImGui::SetCursorPos(ImVec2(currentToolButtonX, 0.0f));
 			ImGui::SetNextItemWidth(s.editorComboWidth);
 			// texture select button
 			if (ImGui::Button("Select by texture", ImVec2(s.editorComboWidth, s.editorButtonSize.y / 2)))
@@ -231,10 +227,98 @@ void Gui::addEditorGui()
 				ImGui::BeginTooltip();
 				ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
 				ImGui::Text("select by texture ");
-				ImGui::BulletText("selects every tile with the current texture ");
+				ImGui::BulletText("selects every tile with the texture currently chosen in the texture selector ");
+				ImGui::BulletText("shortcut: left CTRL + T ");
 				ImGui::PopTextWrapPos();
 				ImGui::EndTooltip();
 			}
+
+			ImGui::SetCursorPos(ImVec2(currentToolButtonX, s.editorButtonSize.y / 2 + 3.5f));
+			ImGui::SetNextItemWidth(s.editorComboWidth);
+			// select all button
+			if (ImGui::Button("Select all", ImVec2(s.editorComboWidth, s.editorButtonSize.y / 2)))
+			{
+				program.editor.select_all();
+			}
+
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::BeginTooltip();
+				ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+				ImGui::Text("select all ");
+				ImGui::BulletText("selects every existing tile ");
+				ImGui::BulletText("shortcut: left CTRL + 1 ");
+				ImGui::PopTextWrapPos();
+				ImGui::EndTooltip();
+			}
+		}
+
+		currentToolButtonX += s.editorComboWidth + s.editorButtonOffset;
+
+		ImGui::SetCursorPos(ImVec2(currentToolButtonX, 0.0f));
+
+		ImGui::SetNextItemWidth(s.editorComboWidth);
+		// push to back button
+		if (ImGui::Button("Copy", ImVec2(s.editorComboWidth, s.editorButtonSize.y / 2)))
+		{
+			program.editor.copy_selection();
+		}
+
+		ImGui::SetCursorPos(ImVec2(currentToolButtonX, s.editorButtonSize.y / 2 + 3.5f));
+
+		ImGui::SetNextItemWidth(s.editorComboWidth);
+		// push to back button
+		if (ImGui::Button("Cut", ImVec2(s.editorComboWidth, s.editorButtonSize.y / 2)))
+		{
+			program.editor.cut_selection();
+		}
+
+		currentToolButtonX += s.editorComboWidth + s.editorButtonOffset;
+
+		ImGui::SetCursorPos(ImVec2(currentToolButtonX, 0.0f));
+		ImGui::SetNextItemWidth(s.editorComboWidth);
+		// TODO : <DEPRECATE>
+		// push to back button
+		if (ImGui::Button("Push to back", ImVec2(s.editorComboWidth, s.editorButtonSize.y / 2)))
+		{
+			program.editor.push_selection_to_back();
+		}
+
+		if (ImGui::IsItemHovered())
+		{
+			ImGui::BeginTooltip();
+			ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+			ImGui::Text("push back ");
+			ImGui::BulletText("pushes every selected tile to the background ");
+			ImGui::BulletText("shortcut: left CTRL + B ");
+			ImGui::PopTextWrapPos();
+			ImGui::EndTooltip();
+		}
+		// TODO : </DEPRECATE>
+
+		ImGui::SetCursorPos(ImVec2(currentToolButtonX + 4.0f, s.editorButtonSize.y / 2 + 5.5f));
+		ImGui::SetNextItemWidth(s.editorComboWidth);
+		ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0.5f, 0.5f));
+		bool _gridVisible = program.editor.gridVisible;
+		if (ImGui::Selectable("Show grid", &_gridVisible, 0, ImVec2(s.editorComboWidth - 8.0f, s.editorButtonSize.y / 2 - 4.0f)))
+		{
+			program.editor.set_grid_visible(_gridVisible);
+		}
+		if (ImGui::IsItemHovered())
+		{
+			ImGui::BeginTooltip();
+			ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+			ImGui::Text("grid ");
+			ImGui::BulletText("shows or hides the grid ");
+			ImGui::BulletText("shortcut: G ");
+			ImGui::PopTextWrapPos();
+			ImGui::EndTooltip();
+		}
+		ImGui::PopStyleVar();
+		ImGui::SameLine();
+		if (ImGui::Checkbox("##gv", &_gridVisible))
+		{
+			program.editor.set_grid_visible(_gridVisible);
 		}
 
 		/// editor toggles section
@@ -242,6 +326,16 @@ void Gui::addEditorGui()
 		ImGui::SetNextItemWidth(s.editorComboWidth);
 		ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0.5f, 0.5f));
 		ImGui::Selectable("Overlap", &program.editor.overlap, 0, ImVec2(s.editorComboWidth, s.editorButtonSize.y / 2));
+		if (ImGui::IsItemHovered())
+		{
+			ImGui::BeginTooltip();
+			ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+			ImGui::Text("overlap ");
+			ImGui::BulletText("whether or not new tiles are allowed to overlap pre-existing ones ");
+			ImGui::BulletText("shortcut: left CTRL + L ");
+			ImGui::PopTextWrapPos();
+			ImGui::EndTooltip();
+		}
 		ImGui::PopStyleVar();
 		ImGui::SameLine();
 		if (ImGui::Checkbox("##ol", &program.editor.overlap)){}
@@ -250,6 +344,16 @@ void Gui::addEditorGui()
 		ImGui::SetNextItemWidth(s.editorComboWidth);
 		ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0.5f, 0.5f));
 		ImGui::Selectable("Auto-snap", &program.editor.autosnap, 0, ImVec2(s.editorComboWidth, s.editorButtonSize.y / 2));
+		if (ImGui::IsItemHovered())
+		{
+			ImGui::BeginTooltip();
+			ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+			ImGui::Text("auto-snap ");
+			ImGui::BulletText("essentialy holds left CTRL automatically to snap positions and sizes to the grid ");
+			ImGui::BulletText("shortcut: left CTRL + K ");
+			ImGui::PopTextWrapPos();
+			ImGui::EndTooltip();
+		}
 		ImGui::PopStyleVar();
 		ImGui::SameLine();
 		if (ImGui::Checkbox("##as", &program.editor.autosnap)){}
@@ -318,7 +422,6 @@ void Gui::addPropertiesGui()
 						// texturemode
 						if (ImGui::Combo("TextureMode", &(int)selection[0]->visuals.TextureMode, se.tileTextureModeOptions, 2))
 						{
-							//program.editor.changeTileVisuals(selection[0]->ID, Visuals(selection[0]->visuals.atlasCoords, selection[0]->visuals.textureName, selection[0]->visuals.TextureMode, selection[0]->visuals.TextureSize, selection[0]->visuals.Color, selection[0]->visuals.Opacity));
 							program.editor.updateTileVisuals(selection[0]->ID);
 						}
 						float textureSize[2] = { selection[0]->visuals.TextureSize.x, selection[0]->visuals.TextureSize.y };
@@ -333,7 +436,6 @@ void Gui::addPropertiesGui()
 						// color
 						if (ImGui::ColorEdit3("Color", color, ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_InputRGB))
 						{
-							//program.editor.changeTileVisuals(selection[0]->ID, Visuals(selection[0]->visuals.atlasCoords, selection[0]->visuals.textureName, selection[0]->visuals.TextureMode, selection[0]->visuals.TextureSize, glm::vec4(color[0], color[1], color[2], selection[0]->visuals.Opacity), selection[0]->visuals.Opacity));
 							selection[0]->visuals.Color.x = color[0];
 							selection[0]->visuals.Color.y = color[1];
 							selection[0]->visuals.Color.z = color[2];
@@ -343,7 +445,6 @@ void Gui::addPropertiesGui()
 						// opacity
 						if (ImGui::DragFloat("Opacity", opacity, 0.1F, 0.0f, 1.0f))
 						{
-							//program.editor.changeTileVisuals(selection[0]->ID, Visuals(selection[0]->visuals.atlasCoords, selection[0]->visuals.textureName, selection[0]->visuals.TextureMode, selection[0]->visuals.TextureSize, selection[0]->visuals.Color, opacity[0]));
 							selection[0]->visuals.Opacity = *opacity;
 							program.editor.updateTileVisuals(selection[0]->ID);
 						}
@@ -685,6 +786,12 @@ void Gui::addPropertiesGui()
 						program.editor.backgroundColor.z = color[2];
 						
 						program.file_system.update_editor_config();
+					}
+					float gridSize[1] = { mymath::gridSize };
+					// griddy size
+					if (ImGui::DragFloat("Grid size", gridSize, 0.05F, 0.05f, 100.0f))
+					{
+						program.editor.update_grid_size(gridSize[0]);
 					}
                     ImGui::EndTabItem();
                 }

@@ -341,48 +341,6 @@ std::vector<E_Texture*>& TextureLoader::loadTextures(std::vector<std::string> fu
 	return *textures;
 }
 
-// DEPRECATED
-TextureAtlas* TextureLoader::loadTextureAtlas(std::vector<std::string> fileNames, std::string directory, bool flip)
-{
-	TextureAtlas* textureAtlas = new TextureAtlas();
-
-	int tilesPerRow = ceil(sqrt(fileNames.size())) + 1;
-	int tilesPerColumn = ceil(sqrt(fileNames.size() - tilesPerRow)) + 1;
-
-	int atlasDataSize = ((16 * 16) * (tilesPerRow * tilesPerColumn));
-	unsigned char* textureAtlasData = new unsigned char[atlasDataSize];
-	// create an empty texture for the atlas
-	textureAtlas->width = tilesPerRow * 16;
-	textureAtlas->height = tilesPerColumn * 16;
-	textureAtlas->ID = createEmptyTexture(&textureAtlas->width, &textureAtlas->height);
-
-	int total = 0;
-
-	for (int y = 0; y < tilesPerColumn; y++)
-	{
-		for (int x = 0; x < tilesPerRow; x++)
-		{
-			if (total >= fileNames.size()){ break; }
-	
-			int width, height;
-			unsigned int ID;
-			unsigned char* texture = loadTextureData(fileNames[total].c_str(), &width, &height, directory, false);
-			textureAtlas->textureFiles.push_back(fileNames[total]);
-
-			// add subtexture to texture atlas
-			glBindTexture(GL_TEXTURE_2D, textureAtlas->ID);
-			glTexSubImage2D(GL_TEXTURE_2D, 0, 16 * x, 16 * y, 16, 16, GL_RGBA, GL_UNSIGNED_BYTE, texture);
-			glBindTexture(GL_TEXTURE_2D, 0);
-
-			total++;
-		}
-	}
-
-	if (DEBUG_TEXTURE_LOADING) std::cout << "LOADED TEXTURE ATLAS: " << "width: " << textureAtlas->width << "; height: " << textureAtlas->height << "; ID: " << textureAtlas->ID << std::endl;
-
-	return textureAtlas;
-}
-
 TextureAtlas* TextureLoader::loadTextureAtlas(std::vector<std::string> fullPaths, bool flip)
 {
 	auto start_time = std::chrono::high_resolution_clock::now();

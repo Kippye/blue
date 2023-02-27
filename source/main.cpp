@@ -31,16 +31,14 @@
  * [X] handle the tile that is being resized / moved being deleted by the user (causes crash) 
  * [X] fix box place gizmo size / tiling 
  * [X] if tiles are placed with box draw and then nextTile (size) is modified, it causes the gizmo to become visible again
- * [ ] box placement primary mode places more than 1 tile -- related to above issue -- this is caused by the mouse button weirdly clicking again, causing dragBegin to change and a 0;0 tile (or even multiple) to be created
+ * [X] properties gui gets REALLY messed up sometimes, example: copy 2 tiles, paste them a bunch of times
+ * [X] pasting a tile while manipulating one using gizmos causes a freeze-crash - fixed, the issue was pointers in the selection vector being invalidated by the tiles vector reallocating after push_back
+ * [X] box placement primary mode places more than 1 tile -- related to above issue -- this is caused by the mouse button weirdly clicking again, causing dragBegin to change and a 0;0 tile (or even multiple) to be created -- crappily fixed
+ * [X] the box placement bug also happens for box selection - i am still not sure if this is caused by my mouse or the program... this is now CONFIRMED to be a bug with my mouse that the program just doesn't (have to) account for
  * [ ] place cursor (and probably the actual place position too) is too far behind mouse cursor
  * [ ] fix box place primary mode TEXTUREMODE_TILE gizmo having the same kind of texture tiling offset issue as every tile did before if the gizmo is used in negative directions - fixing this would probably require using some additional instance data...
  * [ ] push to back is VERY broken, either add functionality to Z position or fix it - it's messing with textures and crap
- * [ ] properties gui gets REALLY messed up sometimes, example: copy 2 tiles, paste them a bunch of times
- * [ ] pasting a tile while manipulating one using gizmos causes a freeze-crash
- * - not connected to rendering, it seems
- * - not connected to updateToolPos either??
- * - not connected to the properties gui
- * - only explanation i can think of is that creating new tiles somehow messes up the pointers in selection?
+ * [ ] grid texture tiles wrong with some (mostly odd-numbered) grid sizes (i.e. 7, 9, 21) 
  * [?] weirdly just moving around placing things caused a crash
  * [?] editor cursor glitches weirdly and sometimes just doesn't show
  * [?] crash when a tile is selected and textures are reloaded then a tile is placed
@@ -55,10 +53,10 @@
  * [X] section (or separate window) at the bottom of properties panel that lets you set the settings on newly placed tiles
  * [X] grid mode toggle (if tiles have already been placed, they will be snapped to the grid)
  * [X] set default file dialog sort mode to name ascending
+ * [X] grid settings under editor tab? - opacity, toggle ALSO make it toggle by pressing G
  * [ ] make a new gui style
  * [ ] beautify file dialog
  * [ ] look for a font to use?
- * [ ] grid settings under editor tab? - opacity, toggle ALSO make it toggle by pressing G
  * [?] make fitting window paddings per window
  * [C] [replaced by tile selector] some kind of dropdown for texture selection in the properties panel
  * [C] status gui that shows what process is currently done (mostly useful for stuff like reloading textures, opening or saving a BLF file, etc)
@@ -93,9 +91,11 @@
  * [X] copy selection
  * [X] paste
  * [X] cut selection
- * [ ] select all button (only visible for select tool, like select by texture) - shortcut == what? could be CTRL + A but it violates my rule of not using movement keys CTRL + 1?
+ * [X] select all button (only visible for select tool, like select by texture) - shortcut == what? could be CTRL + A but it violates my rule of not using movement keys CTRL + 1?
+ * [X] shortcuts for all editor actions? B - push to back, T - select by texture?
+ * [X] buttons for all editor actions? it would fill up the empty space more but also increase ui complexity, i.e grid toggle button, copy, cut buttons (paste would not work properly)
+ * [X?] variable grid size - works, might have some issues
  * [ ] zoom into the cursor position
- * [ ] variable grid size
  * [ ] undo, redo, if at all doable
  * [ ] explorer that shows a list of all the tiles, that can optionally be named as well and selected from here
  * [ ] some way to show / hide place cursor? people might find it annoying when removing tiles
@@ -114,6 +114,7 @@
  * [X] properly support textures larger than 16x16 in rendering (i would have to get 2 sets of atlasCoords)
  * [X] optimize texture reloading - check what takes the longest and make it take less long (i think it's not the actual loading but rather applying the new textures)
  * [ ] support duplicate texture names by using paths internally (still, displaying only filenames)
+ * [ ] separate actual rendering in render.cpp from other tasks it performs so rendering can be disabled for testing
  * [?] more options when loading textures (format or smth)
  * [C] create an event system ✌
  * [C] some kind of timer system in render?
@@ -130,14 +131,15 @@
  * 	  [X] Built-in grid.png?
  * 	  [C] Fix cursor bug?
 */
-/* [ ] RELEASE 1.2 TOOLS UPDATE:
+/* [X] RELEASE 1.2 TOOLS UPDATE:
  *    [X] Fix box selection & placement
  *	  [X] Add move tool
  *    [X] Add resize / scale tool
  *    [X] Add gizmos for all the tools
  *    [X] Add copy / cut / paste
- *    [ ] Fix box place tool
- *    [ ] Make move & resize more stable and clean
+ *    [X] Fix box place tool (the multi-clicking thing)
+ * 	  [X] Select all button
+ *    [X] Make move & resize more stable and clean
  * [ ] RELEASE 1.3 GUI UPDATE:
  *    [ ] Create a new gui style for pretty much everything
  *    [ ] Customize the file dialogue

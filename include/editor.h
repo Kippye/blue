@@ -6,6 +6,7 @@
 #include <gizmo.h>
 #include <glm.hpp>
 #include <vector>
+#include <deque>
 #include <map>
 #include <string.h>
 
@@ -48,7 +49,7 @@ class Editor
 		const float minScaleSize = 0.1f;
     public:
 		// editor data
-        std::vector<E_Tile> tiles = {};
+        std::deque<E_Tile> tiles = {};
 		std::vector<Gizmo> gizmos = {};
 		std::vector<TileOptions> copyBuffer = {};
 		int placeCursorID = -1;
@@ -63,6 +64,7 @@ class Editor
 		std::vector<E_Tile*> lastSelectionArea = {};
 		bool overlap = true;
 		bool autosnap = false;
+		bool gridVisible = true;
 		// editor settings
 		glm::vec3 backgroundColor = glm::vec3(0.2f, 0.2f, 0.8f);
 
@@ -78,6 +80,8 @@ class Editor
 		void setAutosnap(bool);
 		bool getDirtiness();
 		void setDirtiness(bool);
+		void set_grid_visible(bool to);
+		void update_grid_size(float newSize);
 
 		// utility functions
 		bool checkForOverlaps(Bounding_Box &box, glm::vec4 &pos);
@@ -89,11 +93,12 @@ class Editor
 		std::vector<E_Tile*>* getTilesInArea(Bounding_Box area, glm::vec4 &pos, std::vector<int> &indices);
 
 	private:
-		void Editor::update_tile_selection(E_Tile* tile, int index, bool to);
-		void Editor::update_tile_selection(int ID, bool to);
+		void Editor::update_tile_selection(int index, bool to);
+		void Editor::update_tile_selection(unsigned int ID, bool to);
 	public:
 		void select_by_texture(std::string textureName);
 		void push_selection_to_back();
+		void select_all();
 		void deselect_all();
 		void delete_selection();
 		void delete_all();
