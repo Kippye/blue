@@ -57,6 +57,9 @@ class Editor
 		int dragGizmoID = -1;
 		int activeDraggerID = -1;
 
+		const float placeCursorHighlightDuration = 0.05f;
+		float placeCursorHighlightCounter = 0.0f;
+
 		std::vector<std::string> tags = std::vector(MAX_TAGS, std::string("NA"));
 		// tool data
         glm::vec2& toolPos = glm::vec2(0.0f);
@@ -122,14 +125,18 @@ class Editor
 
         void moveTile(int index, glm::vec2 newPos);
         void moveTile(unsigned int ID, glm::vec2 newPos);
+		void moveSelectedTiles(glm::vec2 offset);
         void resizeTile(int index, glm::vec2 newSize);
 		void resizeTile(unsigned int ID, glm::vec2 newSize);
+		void resizeSelectedTiles(glm::vec2 newSize);
 		void rotateTile(int index, double newRotation);
 		void rotateTile(unsigned int ID, double newRotation);
+		void rotateSelectedTiles(double newRotation);
 		// update a tile's visual instance data
 		void updateTileVisuals(int index);
 		// update a tile's visual instance data
 		void updateTileVisuals(unsigned int ID);
+		void updateSelectedTilesVisuals();
 		// GIZMOS
 		void moveGizmo(int index, glm::vec2 newPos, bool snappable = false);
         void moveGizmo(unsigned int ID, glm::vec2 newPos, bool snappable = false);

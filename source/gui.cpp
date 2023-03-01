@@ -28,37 +28,92 @@ void Gui::guiInit(Window* windowManager)
 	// set up platform / renderer bindings
 	ImGui_ImplGlfw_InitForOpenGL(windowManager->window, true);
 	ImGui_ImplOpenGL3_Init("#version 430");
+	guiIO->Fonts->AddFontFromFileTTF("fonts\\Noto_Sans_Mono\\NotoSansMono-VariableFont.ttf", 16.0f);
 
 	// apply premade style
+	// ImVec4* colors = ImGui::GetStyle().Colors;
+	// colors[ImGuiCol_Text]                   = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
+	// colors[ImGuiCol_TextDisabled]           = ImVec4(0.50f, 0.50f, 0.50f, 1.00f);
+	// colors[ImGuiCol_WindowBg]               = ImVec4(0.03f, 0.03f, 0.06f, 0.94f);
+	// colors[ImGuiCol_ChildBg]                = ImVec4(0.03f, 0.03f, 0.07f, 0.94f);
+	// colors[ImGuiCol_PopupBg]                = ImVec4(0.03f, 0.03f, 0.07f, 0.94f);
+	// colors[ImGuiCol_Border]                 = ImVec4(0.02f, 0.02f, 0.16f, 0.49f);
+	// colors[ImGuiCol_BorderShadow]           = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
+	// colors[ImGuiCol_FrameBg]                = ImVec4(0.13f, 0.29f, 0.53f, 0.54f);
+	// colors[ImGuiCol_FrameBgHovered]         = ImVec4(0.09f, 0.32f, 0.66f, 0.54f);
+	// colors[ImGuiCol_FrameBgActive]          = ImVec4(0.26f, 0.59f, 0.98f, 0.67f);
+	// colors[ImGuiCol_TitleBg]                = ImVec4(0.07f, 0.07f, 0.29f, 1.00f);
+	// colors[ImGuiCol_TitleBgActive]          = ImVec4(0.22f, 0.25f, 0.78f, 1.00f);
+	// colors[ImGuiCol_TitleBgCollapsed]       = ImVec4(0.00f, 0.00f, 0.00f, 0.51f);
+	// colors[ImGuiCol_MenuBarBg]              = ImVec4(0.07f, 0.05f, 0.22f, 1.00f);
+	// colors[ImGuiCol_ScrollbarBg]            = ImVec4(0.02f, 0.02f, 0.02f, 0.53f);
+	// colors[ImGuiCol_ScrollbarGrab]          = ImVec4(0.14f, 0.13f, 0.31f, 1.00f);
+	// colors[ImGuiCol_ScrollbarGrabHovered]   = ImVec4(0.16f, 0.14f, 0.41f, 1.00f);
+	// colors[ImGuiCol_ScrollbarGrabActive]    = ImVec4(0.14f, 0.12f, 0.49f, 1.00f);
+	// colors[ImGuiCol_CheckMark]              = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
+	// colors[ImGuiCol_SliderGrab]             = ImVec4(0.24f, 0.52f, 0.88f, 1.00f);
+	// colors[ImGuiCol_SliderGrabActive]       = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
+	// colors[ImGuiCol_Button]                 = ImVec4(0.20f, 0.47f, 0.78f, 0.40f);
+	// colors[ImGuiCol_ButtonHovered]          = ImVec4(0.25f, 0.55f, 0.91f, 1.00f);
+	// colors[ImGuiCol_ButtonActive]           = ImVec4(0.00f, 0.51f, 1.00f, 1.00f);
+	// colors[ImGuiCol_Header]                 = ImVec4(0.26f, 0.59f, 0.98f, 0.31f);
+	// colors[ImGuiCol_HeaderHovered]          = ImVec4(0.26f, 0.59f, 0.98f, 0.80f);
+	// colors[ImGuiCol_HeaderActive]           = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
+	// colors[ImGuiCol_Separator]              = ImVec4(0.04f, 0.04f, 0.17f, 0.50f);
+	// colors[ImGuiCol_SeparatorHovered]       = ImVec4(0.10f, 0.40f, 0.75f, 0.78f);
+	// colors[ImGuiCol_SeparatorActive]        = ImVec4(0.10f, 0.40f, 0.75f, 1.00f);
+	// colors[ImGuiCol_ResizeGrip]             = ImVec4(0.26f, 0.59f, 0.98f, 0.20f);
+	// colors[ImGuiCol_ResizeGripHovered]      = ImVec4(0.26f, 0.59f, 0.98f, 0.67f);
+	// colors[ImGuiCol_ResizeGripActive]       = ImVec4(0.26f, 0.59f, 0.98f, 0.95f);
+	// colors[ImGuiCol_Tab]                    = ImVec4(0.18f, 0.35f, 0.58f, 0.86f);
+	// colors[ImGuiCol_TabHovered]             = ImVec4(0.26f, 0.59f, 0.98f, 0.80f);
+	// colors[ImGuiCol_TabActive]              = ImVec4(0.20f, 0.41f, 0.68f, 1.00f);
+	// colors[ImGuiCol_TabUnfocused]           = ImVec4(0.07f, 0.10f, 0.15f, 0.97f);
+	// colors[ImGuiCol_TabUnfocusedActive]     = ImVec4(0.14f, 0.26f, 0.42f, 1.00f);
+	// colors[ImGuiCol_PlotLines]              = ImVec4(0.61f, 0.61f, 0.61f, 1.00f);
+	// colors[ImGuiCol_PlotLinesHovered]       = ImVec4(1.00f, 0.43f, 0.35f, 1.00f);
+	// colors[ImGuiCol_PlotHistogram]          = ImVec4(0.90f, 0.70f, 0.00f, 1.00f);
+	// colors[ImGuiCol_PlotHistogramHovered]   = ImVec4(1.00f, 0.60f, 0.00f, 1.00f);
+	// colors[ImGuiCol_TableHeaderBg]          = ImVec4(0.19f, 0.19f, 0.20f, 1.00f);
+	// colors[ImGuiCol_TableBorderStrong]      = ImVec4(0.31f, 0.31f, 0.35f, 1.00f);
+	// colors[ImGuiCol_TableBorderLight]       = ImVec4(0.23f, 0.23f, 0.25f, 1.00f);
+	// colors[ImGuiCol_TableRowBg]             = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
+	// colors[ImGuiCol_TableRowBgAlt]          = ImVec4(1.00f, 1.00f, 1.00f, 0.06f);
+	// colors[ImGuiCol_TextSelectedBg]         = ImVec4(0.26f, 0.59f, 0.98f, 0.35f);
+	// colors[ImGuiCol_DragDropTarget]         = ImVec4(1.00f, 1.00f, 0.00f, 0.90f);
+	// colors[ImGuiCol_NavHighlight]           = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
+	// colors[ImGuiCol_NavWindowingHighlight]  = ImVec4(1.00f, 1.00f, 1.00f, 0.70f);
+	// colors[ImGuiCol_NavWindowingDimBg]      = ImVec4(0.80f, 0.80f, 0.80f, 0.20f);
+	// colors[ImGuiCol_ModalWindowDimBg]       = ImVec4(0.80f, 0.80f, 0.80f, 0.35f);
 	ImVec4* colors = ImGui::GetStyle().Colors;
 	colors[ImGuiCol_Text]                   = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
 	colors[ImGuiCol_TextDisabled]           = ImVec4(0.50f, 0.50f, 0.50f, 1.00f);
-	colors[ImGuiCol_WindowBg]               = ImVec4(0.03f, 0.03f, 0.06f, 0.94f);
-	colors[ImGuiCol_ChildBg]                = ImVec4(0.03f, 0.03f, 0.07f, 0.94f);
-	colors[ImGuiCol_PopupBg]                = ImVec4(0.03f, 0.03f, 0.07f, 0.94f);
-	colors[ImGuiCol_Border]                 = ImVec4(0.02f, 0.02f, 0.16f, 0.49f);
+	colors[ImGuiCol_WindowBg]               = ImVec4(0.00f, 0.05f, 0.39f, 0.92f);
+	colors[ImGuiCol_ChildBg]                = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
+	colors[ImGuiCol_PopupBg]                = ImVec4(0.10f, 0.16f, 0.48f, 1.00f);
+	colors[ImGuiCol_Border]                 = ImVec4(0.00f, 0.00f, 0.39f, 0.50f);
 	colors[ImGuiCol_BorderShadow]           = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
-	colors[ImGuiCol_FrameBg]                = ImVec4(0.13f, 0.29f, 0.53f, 0.54f);
-	colors[ImGuiCol_FrameBgHovered]         = ImVec4(0.09f, 0.32f, 0.66f, 0.54f);
-	colors[ImGuiCol_FrameBgActive]          = ImVec4(0.26f, 0.59f, 0.98f, 0.67f);
-	colors[ImGuiCol_TitleBg]                = ImVec4(0.07f, 0.07f, 0.29f, 1.00f);
-	colors[ImGuiCol_TitleBgActive]          = ImVec4(0.22f, 0.25f, 0.78f, 1.00f);
+	colors[ImGuiCol_FrameBg]                = ImVec4(0.03f, 0.27f, 0.62f, 1.00f);
+	colors[ImGuiCol_FrameBgHovered]         = ImVec4(0.12f, 0.40f, 0.81f, 0.71f);
+	colors[ImGuiCol_FrameBgActive]          = ImVec4(0.24f, 0.50f, 0.88f, 0.47f);
+	colors[ImGuiCol_TitleBg]                = ImVec4(0.01f, 0.00f, 0.18f, 1.00f);
+	colors[ImGuiCol_TitleBgActive]          = ImVec4(0.03f, 0.00f, 0.61f, 1.00f);
 	colors[ImGuiCol_TitleBgCollapsed]       = ImVec4(0.00f, 0.00f, 0.00f, 0.51f);
-	colors[ImGuiCol_MenuBarBg]              = ImVec4(0.07f, 0.05f, 0.22f, 1.00f);
+	colors[ImGuiCol_MenuBarBg]              = ImVec4(0.10f, 0.12f, 0.27f, 1.00f);
 	colors[ImGuiCol_ScrollbarBg]            = ImVec4(0.02f, 0.02f, 0.02f, 0.53f);
-	colors[ImGuiCol_ScrollbarGrab]          = ImVec4(0.14f, 0.13f, 0.31f, 1.00f);
-	colors[ImGuiCol_ScrollbarGrabHovered]   = ImVec4(0.16f, 0.14f, 0.41f, 1.00f);
-	colors[ImGuiCol_ScrollbarGrabActive]    = ImVec4(0.14f, 0.12f, 0.49f, 1.00f);
-	colors[ImGuiCol_CheckMark]              = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
+	colors[ImGuiCol_ScrollbarGrab]          = ImVec4(0.13f, 0.15f, 0.49f, 1.00f);
+	colors[ImGuiCol_ScrollbarGrabHovered]   = ImVec4(0.20f, 0.22f, 0.56f, 0.00f);
+	colors[ImGuiCol_ScrollbarGrabActive]    = ImVec4(0.23f, 0.25f, 0.58f, 0.00f);
+	colors[ImGuiCol_CheckMark]              = ImVec4(0.92f, 0.96f, 1.00f, 1.00f);
 	colors[ImGuiCol_SliderGrab]             = ImVec4(0.24f, 0.52f, 0.88f, 1.00f);
 	colors[ImGuiCol_SliderGrabActive]       = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
-	colors[ImGuiCol_Button]                 = ImVec4(0.20f, 0.47f, 0.78f, 0.40f);
-	colors[ImGuiCol_ButtonHovered]          = ImVec4(0.25f, 0.55f, 0.91f, 1.00f);
-	colors[ImGuiCol_ButtonActive]           = ImVec4(0.00f, 0.51f, 1.00f, 1.00f);
-	colors[ImGuiCol_Header]                 = ImVec4(0.26f, 0.59f, 0.98f, 0.31f);
-	colors[ImGuiCol_HeaderHovered]          = ImVec4(0.26f, 0.59f, 0.98f, 0.80f);
-	colors[ImGuiCol_HeaderActive]           = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
-	colors[ImGuiCol_Separator]              = ImVec4(0.04f, 0.04f, 0.17f, 0.50f);
+	colors[ImGuiCol_Button]                 = ImVec4(0.04f, 0.32f, 0.73f, 0.54f);
+	colors[ImGuiCol_ButtonHovered]          = ImVec4(0.12f, 0.40f, 0.81f, 0.31f);
+	colors[ImGuiCol_ButtonActive]           = ImVec4(0.24f, 0.50f, 0.88f, 0.12f);
+	colors[ImGuiCol_Header]                 = ImVec4(0.01f, 0.03f, 1.00f, 0.57f);
+	colors[ImGuiCol_HeaderHovered]          = ImVec4(0.15f, 0.17f, 1.00f, 0.27f);
+	colors[ImGuiCol_HeaderActive]           = ImVec4(0.31f, 0.33f, 0.99f, 0.16f);
+	colors[ImGuiCol_Separator]              = ImVec4(0.43f, 0.43f, 0.50f, 0.50f);
 	colors[ImGuiCol_SeparatorHovered]       = ImVec4(0.10f, 0.40f, 0.75f, 0.78f);
 	colors[ImGuiCol_SeparatorActive]        = ImVec4(0.10f, 0.40f, 0.75f, 1.00f);
 	colors[ImGuiCol_ResizeGrip]             = ImVec4(0.26f, 0.59f, 0.98f, 0.20f);
@@ -417,6 +472,17 @@ void Gui::addPropertiesGui()
 						ImGui::Separator();
 						ImGui::Dummy(ImVec2(0.0f, s.propertySectionSeparator));
 						ImGui::Text("Visual");
+						// texture icon
+						int tileTextureIndex = 0;
+						for (int i = 0; i < tileTextures.size(); i++)
+						{
+							if (selection[0]->visuals.textureName == tileTextures[i]->path)
+							{
+								tileTextureIndex = i;
+								break;
+							}
+						}
+						ImGui::Image((void*)(intptr_t)tileTextures[tileTextureIndex]->ID, ImVec2(64, 64));
 						// texture name
 						ImGui::Text(("Texture: " + selection[0]->visuals.textureName + " (" + std::to_string(selection[0]->visuals.atlasLocation.z) + "x" + std::to_string(selection[0]->visuals.atlasLocation.w) + ")").c_str());
 						// texturemode
@@ -473,6 +539,11 @@ void Gui::addPropertiesGui()
 
 								}
 							}
+							se.tagsVisible = true;
+						}
+						else
+						{
+							se.tagsVisible = false;
 						}
 					}
 					else if (selection.size() > 0) // multiselect
@@ -485,10 +556,7 @@ void Gui::addPropertiesGui()
 						if (ImGui::InputFloat2("Offset", pos, "", ImGuiInputTextFlags_EnterReturnsTrue))
 						{
 							// add this offset to every selected tile's position
-							for (size_t i = 0; i < selection.size(); i++)
-							{
-								program.editor.moveTile(selection[i]->ID, selection[i]->location.Position + glm::vec4(pos[0] - lastPos[0], pos[1] - lastPos[1], 0.0f, 0.0f));
-							}
+							program.editor.moveSelectedTiles(glm::vec2(pos[0], pos[1]));
 
 							pos[0] = 0.0f, pos[1] = 0.0f;
 						}
@@ -496,19 +564,13 @@ void Gui::addPropertiesGui()
 						// size
 						if (ImGui::DragFloat2("Size", size))
 						{
-							for (size_t i = 0; i < selection.size(); i++)
-							{
-								program.editor.resizeTile(selection[i]->ID, glm::vec2(size[0], size[1]));
-							}
+							program.editor.resizeSelectedTiles(glm::vec2(size[0], size[1]));
 						}
 						float angle[1] = { mymath::deg(selection[0]->location.Angle) };
 						// angle
 						if (ImGui::DragFloat("Angle", angle, 1.0F, 0.0f, 360.0f))
 						{
-							for (size_t i = 0; i < selection.size(); i++)
-							{
-								program.editor.rotateTile(selection[i]->ID, mymath::rad((double)*angle));
-							}
+							program.editor.rotateSelectedTiles(mymath::rad((double)*angle));
 						}
 
 						/// physics
@@ -562,8 +624,8 @@ void Gui::addPropertiesGui()
 							for (size_t i = 0; i < selection.size(); i++)
 							{
 								selection[i]->visuals.TextureMode = selection[0]->visuals.TextureMode;
-								program.editor.updateTileVisuals(selection[i]->ID);
 							}
+							program.editor.updateSelectedTilesVisuals();
 						}
 
 						float textureSize[2] = { selection[0]->visuals.TextureSize.x, selection[0]->visuals.TextureSize.y };
@@ -574,8 +636,8 @@ void Gui::addPropertiesGui()
 							{
 								selection[i]->visuals.TextureSize.x = textureSize[0];
 								selection[i]->visuals.TextureSize.y = textureSize[1];
-								program.editor.updateTileVisuals(selection[i]->ID);
 							}
+							program.editor.updateSelectedTilesVisuals();
 						}
 
 						float color[3] = { selection[0]->visuals.Color.x, selection[0]->visuals.Color.y, selection[0]->visuals.Color.z };
@@ -587,8 +649,8 @@ void Gui::addPropertiesGui()
 								selection[i]->visuals.Color.x = color[0];
 								selection[i]->visuals.Color.y = color[1];
 								selection[i]->visuals.Color.z = color[2];
-								program.editor.updateTileVisuals(selection[i]->ID);
 							}
+							program.editor.updateSelectedTilesVisuals();
 						}
 
 						float opacity[1] = { selection[0]->visuals.Opacity };
@@ -598,8 +660,8 @@ void Gui::addPropertiesGui()
 							for (size_t i = 0; i < selection.size(); i++)
 							{
 								selection[i]->visuals.Opacity = *opacity;
-								program.editor.updateTileVisuals(selection[i]->ID);
-							}			
+							}
+							program.editor.updateSelectedTilesVisuals();
 						}
 
 						/// tags
@@ -629,6 +691,11 @@ void Gui::addPropertiesGui()
 									}
 								}
 							}
+							se.tagsVisible = true;
+						}
+						else
+						{
+							se.tagsVisible = false;
 						}
 					}
 					// 0 tiles selected
@@ -636,13 +703,34 @@ void Gui::addPropertiesGui()
 					{
 						ImGui::Text("no tiles selected");
 					}
-					// if (selection.size() > 0)
-					// {
-					// 	/// SEPARATOR
-					// 	ImGui::Dummy(ImVec2(0.0f, 40.0f));
-					// }
-					ImGui::SetCursorPosY(556.0f);
-					// TODO: Add tags, reset button
+
+					if (selection.size() == 0)
+					{
+						ImGui::SetCursorPosY(558.0f);
+					}
+					else if (selection.size() > 1)
+					{
+						if (se.tagsVisible == false)
+						{
+							ImGui::SetCursorPosY(558.0f - 64.0f - 4.0f);
+						}
+						else
+						{
+							ImGui::SetCursorPosY(558.0f + 132.0f - 64.0f - 4.0f);
+						}
+					}
+					else if (selection.size() == 1)
+					{
+						if (se.tagsVisible == false)
+						{
+							ImGui::SetCursorPosY(558.0f);
+						}
+						else
+						{
+							ImGui::SetCursorPosY(558.0f + 132.0f);
+						}
+					}
+
 					/// OPTIONS SECTION
 					// This was here, but i am not sure why ImGui::SetNextItemOpen(se.newTileOptionsVisible);
 					if (ImGui::CollapsingHeader("New tile options"))//, ImGuiTreeNodeFlags_
@@ -692,6 +780,17 @@ void Gui::addPropertiesGui()
 						ImGui::Separator();
 						ImGui::Dummy(ImVec2(0.0f, s.propertySectionSeparator));
 						ImGui::Text("Visual");
+						// texture icon
+						int tileTextureIndex = 0;
+						for (int i = 0; i < tileTextures.size(); i++)
+						{
+							if (program.editor.nextTile.visuals.textureName == tileTextures[i]->path)
+							{
+								tileTextureIndex = i;
+								break;
+							}
+						}
+						ImGui::Image((void*)(intptr_t)tileTextures[tileTextureIndex]->ID, ImVec2(64, 64));
 						// texture name
 						ImGui::Text(("Texture: " + program.textureLoader.getAtlasTexturePath(program.render.textureAtlas, program.editor.nextTile.visuals.atlasLocation) + " (" + std::to_string(program.editor.nextTile.visuals.atlasLocation.z) + "x" + std::to_string(program.editor.nextTile.visuals.atlasLocation.w) + ")").c_str());
 						// texturemode
@@ -770,6 +869,11 @@ void Gui::addPropertiesGui()
 
 								}
 							}
+							se.tagsVisible = true;
+						}
+						else
+						{
+							se.tagsVisible = false;
 						}
 						se.newTileOptionsVisible = !se.newTileOptionsVisible;
 					}
@@ -787,11 +891,30 @@ void Gui::addPropertiesGui()
 						
 						program.file_system.update_editor_config();
 					}
+
+					if (program.render.textureAtlas == nullptr)
+					{
+						ImGui::PushStyleColor(ImGuiCol_FrameBg, gd.buttonDisabled);
+						ImGui::PushStyleColor(ImGuiCol_FrameBgActive, gd.buttonDisabledActive);
+						ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, gd.buttonDisabledHovered);
+					}
 					float gridSize[1] = { mymath::gridSize };
 					// griddy size
 					if (ImGui::DragFloat("Grid size", gridSize, 0.05F, 0.05f, 100.0f))
 					{
-						program.editor.update_grid_size(gridSize[0]);
+						if (program.render.textureAtlas == nullptr)
+						{
+							popupToggles[CONTENT_LACK_WARNING] = true;
+						}
+						else
+						{
+							popupToggles[CONTENT_LACK_WARNING] = false;
+							program.editor.update_grid_size(std::clamp(gridSize[0], 0.05f, 100.0f));
+						}
+					}
+					if (program.render.textureAtlas == nullptr)
+					{
+						ImGui::PopStyleColor(3);
 					}
                     ImGui::EndTabItem();
                 }
@@ -848,19 +971,17 @@ void Gui::addTextureSelectorGui()
 
 					// the atlas coords and textureName of this button
 					// NOTE: this is unnecessary to call EVERY frame for EVERY button, instead call it only when textures are updated!
-					glm::uvec4 atLocation = glm::uvec4(0); // program.textureLoader.getAtlasCoords(program.render.textureAtlas, total);
-					std::string textureName = "brick.png";//program.textureLoader.getAtlasTexturePath(program.render.textureAtlas, atLocation);
 					// check if a tile was selected
 					if (ImGui::ImageButton((void*)(intptr_t)tileTextures[total]->ID, ImVec2(64, 64)))
 					{
 						// std::cout << atLocation.x << "; " << atLocation.y << "; " << atLocation.z << "; " << atLocation.w << std::endl;
 						// std::cout << textureName << std::endl;
 
-						if (program.editor.getTool() == SELECT)
-						{
-							program.editor.select_by_texture(textureName);
-						}
-						else if (program.editor.getTool() == PLACE)
+						// if (program.editor.getTool() == SELECT)
+						// {
+						// 	program.editor.select_by_texture(textureName);
+						// }
+						if (program.editor.getTool() == PLACE)
 						{
 							// change texture of selection (pretty crappy but works ig)
 							for (size_t i = 0; i < selection.size(); i++)
@@ -1229,16 +1350,16 @@ void Gui::addPopupGui()
 	}
 	if (popupToggles[CONTENT_LACK_WARNING])
 	{
-		ImGui::OpenPopup("Select a content folder first!", ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_Modal);
+		ImGui::OpenPopup("Select a content folder first!", ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_Modal);
 	}
 	ImGui::SetNextWindowPos(centeredPos, ImGuiCond_FirstUseEver);
-	if (ImGui::BeginPopupModal("Select a content folder first!", &popupToggles[CONTENT_LACK_WARNING], ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_Modal))
+	if (ImGui::BeginPopupModal("Select a content folder first!", &popupToggles[CONTENT_LACK_WARNING], ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_Modal))
 	{
 		guiWantKeyboard = guiIO->WantCaptureKeyboard ? true : guiWantKeyboard;
 
-		ImGui::Text("A content folder must be loaded to edit levels");
+		ImGui::Text("A content folder must be loaded to use this feature");
 
-		if (ImGui::Button("Ok", ImVec2(s.bottomBarButtonWidth * 2.2f, s.bottomBarHeight)))
+		if (ImGui::Button("Ok", ImVec2(ImGui::GetWindowSize().x, s.bottomBarHeight)))
 		{
 			ImGui::CloseCurrentPopup();
 			popupToggles[CONTENT_LACK_WARNING] = false;

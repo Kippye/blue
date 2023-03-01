@@ -10,7 +10,8 @@ flat out vec2 texPixelSize;
 flat out vec2 atlasSize;
 flat out vec4 color;
 flat out int shouldTile;
-flat out int selected;
+flat out float selected;
+flat out int isGizmo;
 // from vec shader
 layout (points) in;
 in VS_OUT
@@ -22,7 +23,8 @@ in VS_OUT
 	vec2 texPixelSize;
 	vec4 color;
 	int shouldTile;
-	int selected;
+	float selected;
+	int isGizmo;
 	mat4 matrix;
 } gs_in[];
 
@@ -44,54 +46,58 @@ void main() {
 	// BOTTOM LEFT
 	gl_Position = gs_in[0].matrix * vec4(gs_in[0].pos.x, gs_in[0].pos.y, 0.0f, 1.0f);
 		TexCoord = getTexCoord(vec2(0.0f, 0.0f));
+		bottomLeftTexCoord = getBottomLeftTexCoord();
+		atlasSize = inTexAtlasSize;
 		tileSize = gs_in[0].size;
 		textureSize = gs_in[0].texSize;
 		atlasCoord = gs_in[0].atlasCoord;
 		texPixelSize = gs_in[0].texPixelSize;
-		atlasSize = inTexAtlasSize;
+		color = gs_in[0].color;
 		shouldTile = gs_in[0].shouldTile;
 		selected = gs_in[0].selected;
-		color = gs_in[0].color;
-		bottomLeftTexCoord = getBottomLeftTexCoord();
+		isGizmo = gs_in[0].isGizmo;
     EmitVertex();
 	// BOTTOM RIGHT
 	gl_Position = gs_in[0].matrix * vec4(gs_in[0].pos.x + gs_in[0].size.x, gs_in[0].pos.y, 0.0f, 1.0f);
 		TexCoord = getTexCoord(vec2(1.0f, 0.0f));
+		bottomLeftTexCoord = getBottomLeftTexCoord();
+		atlasSize = inTexAtlasSize;
 		tileSize = gs_in[0].size;
 		textureSize = gs_in[0].texSize;
 		atlasCoord = gs_in[0].atlasCoord;
 		texPixelSize = gs_in[0].texPixelSize;
-		atlasSize = inTexAtlasSize;
+		color = gs_in[0].color;
 		shouldTile = gs_in[0].shouldTile;
 		selected = gs_in[0].selected;
-		color = gs_in[0].color;
-		bottomLeftTexCoord = getBottomLeftTexCoord();
+		isGizmo = gs_in[0].isGizmo;
 	EmitVertex();
 	// TOP LEFT
 	gl_Position = gs_in[0].matrix * vec4(gs_in[0].pos.x, gs_in[0].pos.y + gs_in[0].size.y, 0.0f, 1.0f);
 		TexCoord = getTexCoord(vec2(0.0f, 1.0f));
+		bottomLeftTexCoord = getBottomLeftTexCoord();
+		atlasSize = inTexAtlasSize;
 		tileSize = gs_in[0].size;
 		textureSize = gs_in[0].texSize;
 		atlasCoord = gs_in[0].atlasCoord;
 		texPixelSize = gs_in[0].texPixelSize;
-		atlasSize = inTexAtlasSize;
+		color = gs_in[0].color;
 		shouldTile = gs_in[0].shouldTile;
 		selected = gs_in[0].selected;
-		color = gs_in[0].color;
-		bottomLeftTexCoord = getBottomLeftTexCoord();
+		isGizmo = gs_in[0].isGizmo;
 	EmitVertex();
 	// TOP RIGHT
 	gl_Position = gs_in[0].matrix * vec4(gs_in[0].pos.x + gs_in[0].size.x, gs_in[0].pos.y + gs_in[0].size.y, 0.0f, 1.0f);
 		TexCoord = getTexCoord(vec2(1.0f, 1.0f));
+		bottomLeftTexCoord = getBottomLeftTexCoord();
+		atlasSize = inTexAtlasSize;
 		tileSize = gs_in[0].size;
 		textureSize = gs_in[0].texSize;
 		atlasCoord = gs_in[0].atlasCoord;
 		texPixelSize = gs_in[0].texPixelSize;
-		atlasSize = inTexAtlasSize;
+		color = gs_in[0].color;
 		shouldTile = gs_in[0].shouldTile;
 		selected = gs_in[0].selected;
-		color = gs_in[0].color;
-		bottomLeftTexCoord = getBottomLeftTexCoord();
+		isGizmo = gs_in[0].isGizmo;
 	EmitVertex();
 
     EndPrimitive();

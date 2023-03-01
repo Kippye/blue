@@ -36,11 +36,14 @@
  * [X] box placement primary mode places more than 1 tile -- related to above issue -- this is caused by the mouse button weirdly clicking again, causing dragBegin to change and a 0;0 tile (or even multiple) to be created -- crappily fixed
  * [X] the box placement bug also happens for box selection - i am still not sure if this is caused by my mouse or the program... this is now CONFIRMED to be a bug with my mouse that the program just doesn't (have to) account for
  * [X] saving any ignores causes a crash, at least fix this even if ignores are kind of broken anyway
+ * [X] changing grid size while no content is loaded causes a freeze-crash - fixed by making it not editable in this case
+ * [X] clicking in the editor view without a content folder loaded causes a crash OBVIOUSLY...
+ * [X] drag placement doesn't work with the camera anymore
+ * [X] push to back is VERY broken, either add functionality to Z position or fix it - it's messing with textures and crap
+ * [X] ignore inputs if ignore popup is focused
  * [ ] place cursor (and probably the actual place position too) is too far behind mouse cursor
  * [ ] fix box place primary mode TEXTUREMODE_TILE gizmo having the same kind of texture tiling offset issue as every tile did before if the gizmo is used in negative directions - fixing this would probably require using some additional instance data...
- * [ ] push to back is VERY broken, either add functionality to Z position or fix it - it's messing with textures and crap
  * [ ] grid texture tiles wrong with some (mostly odd-numbered) grid sizes (i.e. 7, 9, 21) 
- * [ ] ignore inputs if ignore popup is focused or smth
  * [?] weirdly just moving around placing things caused a crash
  * [?] editor cursor glitches weirdly and sometimes just doesn't show
  * [?] crash when a tile is selected and textures are reloaded then a tile is placed
@@ -98,12 +101,11 @@
  * [X] buttons for all editor actions? it would fill up the empty space more but also increase ui complexity, i.e grid toggle button, copy, cut buttons (paste would not work properly)
  * [X?] variable grid size - works, might have some issues
  * [X] animate selected tile color with time sine, makes it more clear what is selected
- * [ ] i think it would be a nice touch if i added a little animation / flash to the place cursor when a tile is placed (currently the kind of just has to trust that one was placed since one can't see the tile behind the cursor)
- * [ ] display tile texture visually in properties for both singular selected tiles and the next tile options
+ * [X] i think it would be a nice touch if i added a little animation / flash to the place cursor when a tile is placed (currently the kind of just has to trust that one was placed since one can't see the tile behind the cursor)
+ * [X] display tile texture visually in properties for both singular selected tiles and the next tile options
  * [ ] zoom into the cursor position
  * [ ] undo, redo, if at all doable
  * [ ] explorer that shows a list of all the tiles, that can optionally be named as well and selected from here
- * [ ] some way to show / hide place cursor? people might find it annoying when removing tiles
  * // OTHER //
  * [X] fix up editor tile class
  * [X] only recreate transforms array when a tile is modified (use some kind of event system)
@@ -118,8 +120,13 @@
  * [X] properly support textures larger than 16x16 in the texture atlas
  * [X] properly support textures larger than 16x16 in rendering (i would have to get 2 sets of atlasCoords)
  * [X] optimize texture reloading - check what takes the longest and make it take less long (i think it's not the actual loading but rather applying the new textures)
+ * [ ] the camera class hasn't been updated in ages, i think it should be made so that the camera is "moved" every frame to update lastMovement, but the view is only updated if there is actual movement - also update input.cpp after this
+ * [ ] i could trade performance when placing for performance in many other operations by essentially having a map that maps tiles' IDs to their indices, which would be easy to update when tiles are placed but have to be almost entirely remade when they are removed
+ * [ ] it would be cleaner to create a specific bool for whether a content folder has been properly loaded than checking a random vector's size in the gui class
+ * [ ] Z position functionality
  * [ ] support duplicate texture names by using paths internally (still, displaying only filenames)
  * [ ] separate actual rendering in render.cpp from other tasks it performs so rendering can be disabled for testing
+ * [ ] add editor function implementations for groups of objects - it would speed up things like moving 14000 tiles by only performing 1 instance update
  * [ ] a way to manage projects, kind of. the user could have like a list of BLF files that would be associated with one project and some others associated with another
  * 		they could then switch between projects and easily access all the needed BLF files and also get the correct content file. there could also be separate configuration files for projects (mostly for ignore lists & folders)
  * [?] more options when loading textures (format or smth)
@@ -149,11 +156,12 @@
  *    [X] Make move & resize more stable and clean
  */
 /* [ ] RELEASE 1.3 GUI & TEXTURES UPDATE:
+ *    [X] Placement feedback
+ * 	  [X] Visual texture in properties panel
+ *    [X] Fixed push to back so there's a temporary solution for Z positioning (in editor only)
+ *    [X] Use a different, less debug-looking font
  *    [ ] Create a new gui style for pretty much everything
  *    [ ] Customize the file dialogue
- *    [ ] Use a different, less debug-looking font
- *    [ ] Place feedback
- * 	  [ ] Visual texture in properties panel
 */
 
 class E_Tile;
@@ -172,7 +180,7 @@ Program::Program()
 	input.setup();
 	render.setup();
 
-	// load UI textures
+	// load textures
 	file_system.loadGUITextures();
 	file_system.updateTextures();
 	gui.guiInit(&windowManager);

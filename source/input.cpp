@@ -13,12 +13,18 @@ void Input::processInput(GLFWwindow* window)
 {
 	if (program.file_system.contextOpen) { return; }
 
-	if (program.windowManager.hasFocus)
+	if (program.windowManager.hasFocus && program.gui.tileTextures.size() > 0)
+	{
 		program.editor.updateToolPos(mousePos);
+	}
 	if (program.gui.guiHovered)
+	{
 		program.windowManager.setCursor(NORMAL);
+	}
 	else
+	{
 		program.windowManager.setCursor(DRAW);
+	}
 
 	/// bools
 	// modifiers, wait why do i even have these? oh right cus there aint no modifiers here...
@@ -31,72 +37,77 @@ void Input::processInput(GLFWwindow* window)
 	rmb_down_last = rmb_down;
 	rmb_down = (!program.gui.guiHovered && glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS);
 	/// drawing
-	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
+	if (program.gui.tileTextures.size() > 0)
 	{
-		// did the cursor or the camera move?
-		if (glm::length2(mouseMovement) > 1.0f || glm::length2(program.camera.lastMovement) > 1.0f)
+		if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
 		{
-			// has the repetition delay passed?
-			if (program.render.mouse_repeat)
+			// did the cursor or the camera move?
+			if (glm::length2(mouseMovement) > 1.0f || glm::length2(program.camera.lastMovement) > 0.0f)
 			{
-				bool isToolIgnored = false;
-				// not using a tool that shouldnt be repeated
-				for (Tool tool : ignoreRepeatLMB)
+				// has the repetition delay passed?
+				if (program.render.mouseRepeat)
 				{
-					if (tool == program.editor.getTool())
+					bool isToolIgnored = false;
+					// not using a tool that shouldnt be repeated
+					for (Tool tool : ignoreRepeatLMB)
 					{
-						isToolIgnored = true;
+						if (tool == program.editor.getTool())
+						{
+							isToolIgnored = true;
+						}
 					}
-				}
 
-				if (!isToolIgnored)
+					if (!isToolIgnored)
+					{
+						program.editor.tool_use();
+					}
+
+					program.render.mouseButtonDelay = 0.0f;
+				}
+				// if the cursor stopped for a while and then moved again, restart the delay
+				else if (program.render.mouseButtonDelay > 100.0f)
 				{
-					program.editor.tool_use();
+					program.render.mouseButtonDelay = 0.0f;
 				}
-
-				program.render.mouse_button_delay = 0.0f;
-			}
-			// if the cursor stopped for a while and then moved again, restart the delay
-			else if (program.render.mouse_button_delay > 100.0f)
-			{
-				program.render.mouse_button_delay = 0.0f;
 			}
 		}
-	}
-	/// drag deleting
-	else if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
-	{
-		// did the cursor or the camera move?
-		if (glm::length2(mouseMovement) > 1.0f || glm::length2(program.camera.lastMovement) > 1.0f)
+		/// drag deleting
+		else if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
 		{
-			// has the repetition delay passed?
-			if (program.render.mouse_repeat)
+			// did the cursor or the camera move?
+			if (glm::length2(mouseMovement) > 1.0f || glm::length2(program.camera.lastMovement) > 0.0f)
 			{
-				bool isToolIgnored = false;
-				// not using a tool that shouldnt be repeated
-				for (Tool tool : ignoreRepeatRMB)
+				// has the repetition delay passed?
+				if (program.render.mouseRepeat)
 				{
-					if (tool == program.editor.getTool())
+					bool isToolIgnored = false;
+					// not using a tool that shouldnt be repeated
+					for (Tool tool : ignoreRepeatRMB)
 					{
-						isToolIgnored = true;
+						if (tool == program.editor.getTool())
+						{
+							isToolIgnored = true;
+						}
 					}
+
+					if (!isToolIgnored)
+					program.editor.tool_use_secondary();
+
+					program.render.mouseButtonDelay = 0.0f;
 				}
-
-				if (!isToolIgnored)
-				program.editor.tool_use_secondary();
-
-				program.render.mouse_button_delay = 0.0f;
-			}
-			// if the cursor stopped for a while and then moved again, restart the delay
-			else if (program.render.mouse_button_delay > 100.0f)
-			{
-				program.render.mouse_button_delay = 0.0f;
+				// if the cursor stopped for a while and then moved again, restart the delay
+				else if (program.render.mouseButtonDelay > 100.0f)
+				{
+					program.render.mouseButtonDelay = 0.0f;
+				}
 			}
 		}
 	}
 
 	/// check any situations in which we would not want to control the camera or send inputs to other listeners
 	if (program.gui.guiWantKeyboard) { return; }
+
+	glm::vec3 cameraPosBefore = program.camera.cameraPos;
 
 	// TODO: make arrow keys move selected tiles instead
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) // forwards
@@ -116,6 +127,11 @@ void Input::processInput(GLFWwindow* window)
 		program.camera.moveCamera(program.camera.cameraRight * program.render.deltaTime);
 	}
 
+	if (cameraPosBefore == program.camera.cameraPos)
+	{
+		program.camera.lastMovement = glm::vec3(0.0f);
+	}
+
 	// reset mouse movement as it only updates when the mouse is ACTUALLY moved
 	mouseMovement = glm::vec2(0.0f);
 }
@@ -124,7 +140,7 @@ void Input::key_event(GLFWwindow* window, int key, int scancode, int action, int
 {
 	if (action == GLFW_PRESS)
 	{
-		if (program.file_system.contextOpen) { return; }
+		if (program.file_system.contextOpen || program.gui.guiWantKeyboard) { return; }
 		switch (key)
 		{
 			/// select tools with keys
@@ -138,66 +154,57 @@ void Input::key_event(GLFWwindow* window, int key, int scancode, int action, int
 				}
 			break;
 			case GLFW_KEY_2:
-				if (program.gui.guiWantKeyboard || program.gui.tileTextures.size() == 0) { return; }
+				if (program.gui.tileTextures.size() == 0) { return; }
 				program.editor.setTool(PLACE);
 			break;
 			case GLFW_KEY_3:
-				if (program.gui.guiWantKeyboard || program.gui.tileTextures.size() == 0) { return; }
+				if (program.gui.tileTextures.size() == 0) { return; }
 				program.editor.setTool(BOX);
 				break;
 			// and so on...
 			case GLFW_KEY_BACKSPACE: // delete
-				if (program.gui.guiWantKeyboard) { return; }
 				program.editor.delete_selection();
 			break;
-			case GLFW_KEY_DELETE: // delete
-				if (program.gui.guiWantKeyboard) { return; }
+			case GLFW_KEY_DELETE: // delete also
 				program.editor.delete_selection();
 			break;
 			case GLFW_KEY_B: // push to back (DEPRECATED)
-				if (program.gui.guiWantKeyboard) { return; }
 				if (ctrl_down)
 				{
 					program.editor.push_selection_to_back();
 				}
 			break;
 			case GLFW_KEY_T:
-				if (program.gui.guiWantKeyboard) { return; }
 				if (ctrl_down)
 				{
 					program.editor.select_by_texture(program.editor.nextTile.visuals.textureName);
 				}
 			break;
-			case GLFW_KEY_Z: // undo (NOT IMPLEMENTED)
-				if (program.gui.guiWantKeyboard) { return; }
+			case GLFW_KEY_Z: // undo
 				if (ctrl_down)
 				{
 					program.editor.undo();
 				}
 			break;
-			case GLFW_KEY_Y: // redo (NOT IMPLEMENTED)
-				if (program.gui.guiWantKeyboard) { return; }
+			case GLFW_KEY_Y: // redo
 				if (ctrl_down)
 				{
 					program.editor.redo();
 				}
 			break;
 			case GLFW_KEY_X: // cut
-				if (program.gui.guiWantKeyboard) { return; }
 				if (ctrl_down)
 				{
 					program.editor.cut_selection();
 				}
 			break;
 			case GLFW_KEY_C: // copy
-				if (program.gui.guiWantKeyboard) { return; }
 				if (ctrl_down)
 				{
 					program.editor.copy_selection();
 				}
 			break;
 			case GLFW_KEY_V: // paste
-				if (program.gui.guiWantKeyboard) { return; }
 				if (ctrl_down)
 				{
 					program.editor.paste();
@@ -205,10 +212,9 @@ void Input::key_event(GLFWwindow* window, int key, int scancode, int action, int
 			break;
 			/// program manipulators
 			case GLFW_KEY_ESCAPE: // exit the program
-				if (program.gui.guiFocused) { return; }
 				glfwSetWindowShouldClose(window, true);
 			break;
-			/// shortcut keys that should work even when UI is focused
+			/// shortcut keys
 			case GLFW_KEY_N: 
 				if (ctrl_down) // create a new empty file
 				{
@@ -280,7 +286,6 @@ void Input::key_event(GLFWwindow* window, int key, int scancode, int action, int
 			break;
 		}
 	}
-
 	else if (action == GLFW_RELEASE)
 	{
 		switch (key)
@@ -294,34 +299,26 @@ void Input::key_event(GLFWwindow* window, int key, int scancode, int action, int
 			case (GLFW_KEY_LEFT_ALT):
 			alt_down = false;
 			break;
-			// remove these?
-			case (GLFW_MOUSE_BUTTON_LEFT):
-			lmb_down = false;
-			break;
-			case (GLFW_MOUSE_BUTTON_RIGHT):
-			rmb_down = false;
-			break;
 		}
 	}
 }
 
 void Input::mouse_button_event(GLFWwindow* window, int key, int action, int mods)
 {
-	if (program.file_system.contextOpen || program.gui.guiHovered) { return; }
+	if (program.file_system.contextOpen || program.gui.guiHovered || program.gui.tileTextures.size() == 0) { return; }
 
 	if (action == GLFW_PRESS)
 	{
 		if (key == GLFW_MOUSE_BUTTON_LEFT)
 		{
 			program.windowManager.hasFocus = true;
-			program.render.mouse_button_delay = 0.0f;
+			program.render.mouseButtonDelay = 0.0f;
 			program.editor.tool_use();
-			clickCounter++;
 		}
 		else if (key == GLFW_MOUSE_BUTTON_RIGHT)
 		{
 			program.windowManager.hasFocus = true;
-			program.render.mouse_button_delay = 0.0f;
+			program.render.mouseButtonDelay = 0.0f;
 			program.editor.tool_use_secondary();
 		}
 	}
@@ -348,7 +345,10 @@ void Input::cursor_pos_event(GLFWwindow* window, double xPos, double yPos)
 		mousePos.x = xPos;
 		mousePos.y = yPos;
 		firstMouseMovement = false;
-		program.editor.updateToolPos(mousePos);
+		if (program.gui.tileTextures.size() > 0)
+		{
+			program.editor.updateToolPos(mousePos);
+		}
 	}
 }
 

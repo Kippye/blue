@@ -64,6 +64,7 @@ struct GuiSelections
 		int currentTextureSelection = 0;
 		int currentTextureModeSelection = 0;
 		bool newTileOptionsVisible = true;
+		bool tagsVisible = false;
 		const char* tileTextureModeOptions[2] = { "stretch", "tile" };
 };
 

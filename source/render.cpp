@@ -174,7 +174,7 @@ void Render::updateGizmoInstanceArray(INSTANCE_ARRAY_UPDATE type)
 		instanceDataUpdates++;
 	}
 
-	if (type == INSTANCE_ARRAY_UPDATE_ALL || type & INSTANCE_ARRAY_UPDATE_3)
+	if (type == INSTANCE_ARRAY_UPDATE_ALL || type & INSTANCE_ARRAY_UPDATE_4)
 	{
 		glBindBuffer(GL_ARRAY_BUFFER, instanceColorVBO_G);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4) * GinstanceColorData.size(), GinstanceColorData.data(), GL_STATIC_DRAW);
@@ -186,7 +186,7 @@ void Render::updateGizmoInstanceArray(INSTANCE_ARRAY_UPDATE type)
 		instanceDataUpdates++;
 	}
 
-	if (type == INSTANCE_ARRAY_UPDATE_ALL || type & INSTANCE_ARRAY_UPDATE_4)
+	if (type == INSTANCE_ARRAY_UPDATE_ALL || type & INSTANCE_ARRAY_UPDATE_5)
 	{
 		glBindBuffer(GL_ARRAY_BUFFER, instanceAdditionalVBO_G);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4) * GinstanceAdditionalData.size(), GinstanceAdditionalData.data(), GL_STATIC_DRAW);
@@ -203,26 +203,42 @@ void Render::render()
 {
 	// render loop
 	float currentFrame = glfwGetTime();
+	/// TIME AND TIMERS ///
 	deltaTime = currentFrame - lastFrame;
 	lastFrame = currentFrame;
 	timeCounter += deltaTime;
 	timeSinceStart += deltaTime;
-	mouse_button_delay += deltaTime;
+	mouseButtonDelay += deltaTime;
 
-	if (mouse_button_delay >= 0.05f && mouse_button_delay < 100.0f)
+	if (mouseButtonDelay >= program.input.mouseRepeatDelay && mouseButtonDelay < 100.0f)
 	{
-		mouse_repeat = true;
-		mouse_button_delay = 1000.0f;
+		mouseRepeat = true;
+		mouseButtonDelay = 1000.0f;
 	}
 	else
 	{
-		mouse_repeat = false;
+		mouseRepeat = false;
 	}
 	if (timeCounter >= 0.25f)
 	{
 		FPS = (int)((1.0f / deltaTime) + 0.5f);
 		timeCounter = 0.0f;
 	}
+
+	if (program.editor.placeCursorHighlightCounter > 0.0f)
+	{
+		program.editor.placeCursorHighlightCounter -= deltaTime;
+		set_gizmo_highlighted(program.editor.ID_to_gizmo_index(program.editor.placeCursorID), 
+			program.editor.placeCursorHighlightCounter > program.editor.placeCursorHighlightDuration / 2.0f 
+				? (program.editor.placeCursorHighlightDuration - program.editor.placeCursorHighlightCounter) / program.editor.placeCursorHighlightDuration
+				: program.editor.placeCursorHighlightCounter / program.editor.placeCursorHighlightDuration);
+	}
+	if (program.editor.placeCursorHighlightCounter < 0.0f)
+	{
+		set_gizmo_highlighted(program.editor.ID_to_gizmo_index(program.editor.placeCursorID), 0.0f);
+		program.editor.placeCursorHighlightCounter = 0.0f;
+	}
+	///
 
 	glClearColor(program.editor.backgroundColor.r, program.editor.backgroundColor.g, program.editor.backgroundColor.b, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -268,6 +284,13 @@ void Render::set_tile_selection(std::vector<int> &indices, bool to)
 	}
 
 	updateInstanceArray(INSTANCE_ARRAY_UPDATE_5);
+}
+
+// uses the same value as selection for tiles to highlight a gizmo
+void Render::set_gizmo_highlighted(int index, float to)
+{
+	GinstanceAdditionalData[index].y = to;
+	updateGizmoInstanceArray(INSTANCE_ARRAY_UPDATE_5);
 }
 
 void Render::add_to_instance_data(E_Tile &tile)

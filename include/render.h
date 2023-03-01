@@ -37,8 +37,8 @@ class Render
 		float timeCounter = 0.0f;
 		double timeSinceStart = 0.0;
 	public:
-		bool mouse_repeat = false;
-		float deltaTime = 0.0f, lastFrame = 0.0f, mouse_button_delay = 0.0f, FPS = 0.0f;
+		bool mouseRepeat = false;
+		float deltaTime = 0.0f, lastFrame = 0.0f, mouseButtonDelay = 0.0f, FPS = 0.0f;
 		unsigned int instanceDataUpdates = 0;
 
 		glm::mat4 projection = glm::mat4(1.0f);
@@ -66,7 +66,8 @@ class Render
 		void render();
 
 		void set_tile_selection(int index, bool to);
-		void Render::set_tile_selection(std::vector<int> &indices, bool to);
+		void set_tile_selection(std::vector<int> &indices, bool to);
+		void set_gizmo_highlighted(int index, float to);
 
 		void add_to_instance_data(E_Tile &tile); // add to instance data
 		void add_gizmo_to_instance_data(Gizmo &gizmo); // add to instance data

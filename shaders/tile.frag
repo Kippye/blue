@@ -11,7 +11,9 @@ flat in vec2 texPixelSize;
 flat in vec2 atlasSize;
 flat in vec4 color;
 flat in int shouldTile;
-flat in int selected;
+flat in float selected;
+// free
+flat in int isGizmo;
 
 uniform sampler2D texture1;
 uniform float time;
@@ -48,5 +50,12 @@ void main()
 	// convert from the "local" texture coordinates to atlas coordinates
 	finalCoords = bottomLeftTexCoord + tiledTexCoord * (texPixelSize / atlasSize);
 
-	FragColor = texture(texture1, finalCoords) * color + (selectionColor * (min(sin(time * 2.0f) + 1.5f, 2.0f)));
+	if (isGizmo == 0)
+	{
+		FragColor = texture(texture1, finalCoords) * color + (selectionColor * (min(sin(time * 2.0f) + 1.5f, 2.0f)));
+	}
+	else
+	{
+		FragColor = texture(texture1, finalCoords) * color + (selectionColor);
+	}
 };

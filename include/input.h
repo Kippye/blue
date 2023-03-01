@@ -13,9 +13,7 @@ class Input
 		glm::vec2 mousePos;
 		glm::vec2 mouseMovement;
 		bool ctrl_down = false, shift_down = false, alt_down = false, lmb_down = false, rmb_down = false, lmb_down_last = false, rmb_down_last = false;
-
-		// TEMP
-		int clickCounter = 0;
+		const float mouseRepeatDelay = 0.05f;
 
 		void setup();
 		void mouse_button_repeat(GLFWwindow* window);

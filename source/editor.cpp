@@ -231,16 +231,41 @@ void Editor::select_by_texture(std::string textureName)
 	}
 }
 
+// DEPRECATED
+// man this is one expensive function to run now...
 void Editor::push_selection_to_back()
 {
+	std::vector<unsigned int> selectionIDs = {};
+	selectionIDs.reserve(selection.size());
+
 	for (int i = selection.size() - 1; i >= 0; i--)
 	{
-		int index = 0;
-		ID_to_tile(selection[i]->ID, index);
+		selectionIDs.push_back(selection[i]->ID);
+	}
 
-		std::rotate(tiles.begin(), tiles.begin() + index, tiles.end());
-		std::rotate(program.render.instanceTransformData.begin(), program.render.instanceTransformData.begin() + index, program.render.instanceTransformData.end());
-		std::rotate(program.render.instanceAdditionalData.begin(), program.render.instanceAdditionalData.begin() + index, program.render.instanceAdditionalData.end());
+	// these will all become garbage anyway, once push comes to shove
+	lastSelectionArea = {};
+	deselect_all();
+
+	for (int i = 0; i < selectionIDs.size(); i++)
+	{
+		int index = 0;
+		ID_to_tile(selectionIDs[i], index);
+
+		containers::move<E_Tile>(tiles, index, 0);
+		containers::move<glm::vec4>(program.render.instanceTransformData, index, 0);
+		containers::move<glm::vec4>(program.render.instanceTextureData, index, 0);
+		containers::move<glm::uvec4>(program.render.instanceAtlasData, index, 0);
+		containers::move<glm::vec4>(program.render.instanceColorData, index, 0);
+		containers::move<glm::vec4>(program.render.instanceAdditionalData, index, 0);
+	}
+
+	for (int i = 0; i < selectionIDs.size(); i++)
+	{
+		int index;
+		E_Tile* selectionTile = ID_to_tile(selectionIDs[i], index);
+		update_tile_selection(index, true);
+		selection.push_back(selectionTile);
 	}
 
 	program.render.updateInstanceArray();
@@ -957,6 +982,8 @@ void Editor::tool_use()
 				return;
 			}
 
+			placeCursorHighlightCounter = placeCursorHighlightDuration;
+
 			add_tile(tiles.emplace_back(Location(pos, nextTile.location.Size), nextTile.physics, nextTile.visuals, nextTile.tags));
 
 			break;
@@ -1207,6 +1234,32 @@ void Editor::moveTile(unsigned int ID, glm::vec2 newPos)
 	moveTile(index, newPos);
 }
 
+void Editor::moveSelectedTiles(glm::vec2 offset)
+{
+	for (E_Tile* tile : selection)
+	{
+		glm::vec4 newPos = tile->location.Position + glm::vec4(offset, 0.0f, 0.0f);
+		// snap position to the grid if needed
+		if (autosnap)
+		{
+			newPos = mymath::floor_to_grid(newPos);
+		}
+
+		tile->location.Position.x = newPos.x;
+		tile->location.Position.y = newPos.y;
+
+		// and here's the kicker
+		int index;
+		ID_to_tile(tile->ID, index);
+
+		// update visuals
+		program.render.instanceTransformData[index].x = newPos.x;
+		program.render.instanceTransformData[index].y = newPos.y;
+	}
+	program.render.updateInstanceArray(INSTANCE_ARRAY_UPDATE_1);
+	setDirtiness(true);
+}
+
 void Editor::resizeTile(int index, glm::vec2 newSize)
 {
 	// snap even the size to the grid if needed
@@ -1233,6 +1286,32 @@ void Editor::resizeTile(unsigned int ID, glm::vec2 newSize)
 	resizeTile(index, newSize);
 }
 
+void Editor::resizeSelectedTiles(glm::vec2 newSize)
+{
+	for (E_Tile* tile : selection)
+	{
+		// snap position to the grid if needed
+		if (autosnap)
+		{
+			newSize = mymath::floor_to_grid(newSize);
+		}
+
+		tile->location.Size.x = newSize.x;
+		tile->location.Size.y = newSize.y;
+		tile->location.box.update_size(newSize);
+
+		// and here's the kicker
+		int index;
+		ID_to_tile(tile->ID, index);
+
+		// update visuals
+		program.render.instanceTransformData[index].z = newSize.x;
+		program.render.instanceTransformData[index].w = newSize.y;
+	}
+	program.render.updateInstanceArray(INSTANCE_ARRAY_UPDATE_1);
+	setDirtiness(true);
+}
+
 void Editor::rotateTile(int index, double newRotation)
 {
 	tiles[index].location.Angle = newRotation;
@@ -1249,9 +1328,25 @@ void Editor::rotateTile(unsigned int ID, double newRotation)
 	rotateTile(index, newRotation);
 }
 
+void Editor::rotateSelectedTiles(double newRotation)
+{
+	for (E_Tile* tile : selection)
+	{
+		tile->location.Angle = newRotation;
+
+		// and here's the kicker
+		// int index;
+		// ID_to_tile(tile->ID, index);
+
+		// update visuals
+		// TODO: if i make tiles have visible rotation, i would probably also have to make their bounding boxes have rotation 💀
+	}
+	// TODO: update instance data when rotation affects rendering
+	setDirtiness(true);
+}
+
 void Editor::updateTileVisuals(int index)
 {
-	// TODO: update when TextureSize is made to have a visible effect
 	Visuals* visuals = &tiles[index].visuals;
 	program.render.instanceTextureData[index].x = visuals->TextureSize.x;
 	program.render.instanceTextureData[index].y = visuals->TextureSize.y;
@@ -1275,6 +1370,32 @@ void Editor::updateTileVisuals(unsigned int ID)
 	int index = 0;
 	E_Tile* tile = ID_to_tile(ID, index);
 	updateTileVisuals(index);
+}
+
+void Editor::updateSelectedTilesVisuals()
+{
+	for (E_Tile* tile : selection)
+	{
+		int index;
+		ID_to_tile(tile->ID, index);
+
+		Visuals& visuals = tile->visuals;
+		program.render.instanceTextureData[index].x = visuals.TextureSize.x;
+		program.render.instanceTextureData[index].y = visuals.TextureSize.y;
+		program.render.instanceAtlasData[index].x = visuals.atlasLocation.x;
+		program.render.instanceAtlasData[index].y = visuals.atlasLocation.y;
+		program.render.instanceAtlasData[index].z = visuals.atlasLocation.z;
+		program.render.instanceAtlasData[index].w = visuals.atlasLocation.w;
+		program.render.instanceColorData[index].x = visuals.Color.x;
+		program.render.instanceColorData[index].y = visuals.Color.y;
+		program.render.instanceColorData[index].z = visuals.Color.z;
+		program.render.instanceColorData[index].w = visuals.Opacity;
+		program.render.instanceAdditionalData[index].x = visuals.TextureMode == TEXTUREMODE_TILE;
+	}
+
+	program.render.updateInstanceArray(INSTANCE_ARRAY_UPDATE_ALL);
+
+	setDirtiness(true);
 }
 
 /// GIZMOS

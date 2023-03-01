@@ -3,11 +3,34 @@
 #include <glm.hpp>
 #include <stdio.h>
 #include <iostream>
+#include <vector>
+#include <deque>
 #include <glm/gtx/string_cast.hpp>
 #define GLM_ENABLE_EXPERIMENTAL
 
 // constants
 const int MAX_TAGS = 5;
+
+class containers
+{
+	public:
+		// thank you Sir Elan Hickler from StackOverflow
+		template <typename t> static void move(std::vector<t>& v, size_t oldIndex, size_t newIndex)
+		{
+			if (oldIndex > newIndex)
+				std::rotate(v.rend() - oldIndex - 1, v.rend() - oldIndex, v.rend() - newIndex);
+			else        
+				std::rotate(v.begin() + oldIndex, v.begin() + oldIndex + 1, v.begin() + newIndex + 1);
+		}
+
+		template <typename t> static void move(std::deque<t, std::allocator<t>>& d, size_t oldIndex, size_t newIndex)
+		{
+			if (oldIndex > newIndex)
+				std::rotate(d.rend() - oldIndex - 1, d.rend() - oldIndex, d.rend() - newIndex);
+			else        
+				std::rotate(d.begin() + oldIndex, d.begin() + oldIndex + 1, d.begin() + newIndex + 1);
+		}
+};
 
 class debug
 {
