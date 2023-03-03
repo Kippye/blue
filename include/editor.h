@@ -7,6 +7,7 @@
 #include <glm.hpp>
 #include <vector>
 #include <deque>
+#include <unordered_set>
 #include <map>
 #include <string.h>
 
@@ -47,6 +48,7 @@ class Editor
 		int moveDraggerGizmoIDs[3] = { -1, -1, -1 };
 		const float minBoxDrawSize = 0.2f;
 		const float minScaleSize = 0.1f;
+		std::map<unsigned int, int> tileIndices = {};
     public:
 		// editor data
         std::deque<E_Tile> tiles = {};
@@ -64,7 +66,7 @@ class Editor
 		// tool data
         glm::vec2& toolPos = glm::vec2(0.0f);
 		glm::vec2 dragBegin = glm::vec2(0.0f);
-		std::vector<E_Tile*> lastSelectionArea = {};
+		std::vector<unsigned int> lastSelectionArea = {};
 		bool overlap = true;
 		bool autosnap = false;
 		bool gridVisible = true;
@@ -90,10 +92,11 @@ class Editor
 		bool checkForOverlaps(Bounding_Box &box, glm::vec4 &pos);
 		E_Tile* positionToTile(glm::vec4 &pos, int &index);
 		E_Tile* ID_to_tile(int ID, int &index);
+		int ID_to_tile_index(int ID);
 		Gizmo* positionToGizmo(glm::vec4 &pos, int &index, GizmoType acceptedTypes);
 		Gizmo* ID_to_gizmo(int ID, int &index);
 		int ID_to_gizmo_index(int ID);
-		std::vector<E_Tile*>* getTilesInArea(Bounding_Box area, glm::vec4 &pos, std::vector<int> &indices);
+		std::vector<unsigned int>* getTilesInArea(Bounding_Box area, glm::vec4 &pos, std::vector<int> &indices);
 
 	private:
 		void Editor::update_tile_selection(int index, bool to);
@@ -103,6 +106,7 @@ class Editor
 		void push_selection_to_back();
 		void select_all();
 		void deselect_all();
+		void deselect_all(std::vector<int>& indices);
 		void delete_selection();
 		void delete_all();
 		void copy_selection();
@@ -152,7 +156,8 @@ class Editor
         void add_tile(E_Tile &tile);
         void add_tile(std::vector<E_Tile> &tiles);
         void remove_tile(int index = -1);
-        void remove_tile(std::vector<int> &indices);
+        void remove_tile(std::vector<int> &indices, std::unordered_set<int> &indexSet);
+		void remove_tile_all();
 
 		void add_gizmo(Gizmo &gizmo);
         void remove_gizmo(int index = -1);

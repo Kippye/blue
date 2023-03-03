@@ -278,6 +278,8 @@ void Render::set_tile_selection(int index, bool to)
 
 void Render::set_tile_selection(std::vector<int> &indices, bool to)
 {
+	if (indices.size() == 0) { return; }
+	
 	for (size_t i = 0; i < indices.size(); i++)
 	{
 		instanceAdditionalData[indices[i]].y = float(to);
@@ -333,6 +335,24 @@ void Render::erase_gizmo_from_instance_data(int index)
 	instanceDataUpdates++;
 }
 
+void Render::clear_instance_data()
+{
+	instanceTransformData.clear();
+	instanceTextureData.clear();
+	instanceAtlasData.clear();
+	instanceColorData.clear();
+	instanceAdditionalData.clear();
+}
+
+void Render::clear_gizmo_instance_data()
+{
+	GinstanceTransformData.clear();
+	GinstanceTextureData.clear();
+	GinstanceAtlasData.clear();
+	GinstanceColorData.clear();
+	GinstanceAdditionalData.clear();
+}
+
 void Render::add_to_render_list(E_Tile &tile)
 {
 	add_to_instance_data(tile);
@@ -355,17 +375,20 @@ void Render::add_gizmo_to_render_list(Gizmo &gizmo)
 	updateGizmoInstanceArray();
 }
 
-// TODO: more functions with fucking pointer vectors cus this shit sucky af
-
 void Render::remove_from_render_list(int index)
 {
 	erase_from_instance_data(index);
 	updateInstanceArray();
 }
 
-void Render::remove_from_render_list(std::vector<int> &indices)
+// NOTE: sort indices from greatest to smallest before calling or pass sort = true to do in the function
+void Render::remove_from_render_list(std::vector<int> &indices, bool sort)
 {
-	for (int i = indices.size() - 1; i >= 0; i--)
+	if (sort)
+	{
+		std::sort(indices.begin(), indices.end(), std::greater<int>());
+	}
+	for (size_t i = 0; i < indices.size(); i++)
 	{
 		erase_from_instance_data(indices[i]);
 	}
