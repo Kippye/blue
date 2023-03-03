@@ -73,12 +73,14 @@ class Render
 		void add_gizmo_to_instance_data(Gizmo &gizmo); // add to instance data
 		void erase_from_instance_data(int index); // remove from instance data
 		void erase_gizmo_from_instance_data(int index); // remove from instance data
+		void clear_instance_data();
+		void clear_gizmo_instance_data();
 
 		void add_to_render_list(E_Tile &tile); // add to the list of tiles to be rendered
 		void add_to_render_list(std::vector<E_Tile> &tiles); // add several tiles to be rendered in one update call
 		void add_gizmo_to_render_list(Gizmo &gizmo);
 		void remove_from_render_list(int index); // remove from the list of tiles to be rendered
-		void remove_from_render_list(std::vector<int> &indices); // remove several tiles from being rendered in one update call
+		void remove_from_render_list(std::vector<int> &indices, bool sort = false); // remove several tiles from being rendered in one update call
 		void remove_gizmo_from_render_list(int index);
 
 		void terminate();

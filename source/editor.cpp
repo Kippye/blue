@@ -149,6 +149,13 @@ E_Tile* Editor::ID_to_tile(int ID, int &index)
 	return nullptr;
 }
 
+int Editor::ID_to_tile_index(int ID)
+{
+	assert(tileIndices.find(ID) != tileIndices.end());
+
+	return tileIndices[ID];
+}
+
 Gizmo* Editor::positionToGizmo(glm::vec4 &pos, int &index, GizmoType acceptedTypes)
 {
 	for (index = gizmos.size() - 1; index >= 0; index--)
@@ -187,16 +194,16 @@ int Editor::ID_to_gizmo_index(int ID)
 	return -1;
 }
 
-// for area tools like box selection
-std::vector<E_Tile*>* Editor::getTilesInArea(Bounding_Box area, glm::vec4 &pos, std::vector<int> &indices)
+// returns the IDs of tiles in an area, also fills the given indices array with their indices
+std::vector<unsigned int>* Editor::getTilesInArea(Bounding_Box area, glm::vec4 &pos, std::vector<int> &indices)
 {
-	std::vector<E_Tile*>* tilesInArea = new std::vector<E_Tile*>{};
+	std::vector<unsigned int>* tilesInArea = new std::vector<unsigned int>();
 	for (int i = tiles.size() - 1; i >= 0; i--)
 	{
 		if (area.contains(pos, tiles[i].location.Position, tiles[i].location.box))
 		{
 			indices.push_back(i);
-			tilesInArea->push_back(&tiles[i]);
+			tilesInArea->push_back(tiles[i].ID);
 		}
 	}
 
@@ -211,24 +218,26 @@ void Editor::update_tile_selection(int index, bool to)
 
 void Editor::update_tile_selection(unsigned int ID, bool to)
 {
-	int index = 0;
-	E_Tile* tile = ID_to_tile(ID, index);
-	update_tile_selection(index, to);
+	update_tile_selection(ID_to_tile_index(ID), to);
 }
 
 void Editor::select_by_texture(std::string textureName)
 {
-	// i dont think it's necessary to keep the rest selected when doing this
 	deselect_all();
+
+	std::vector<int> selectedTileIndices = {};
 
 	for (int i = tiles.size() - 1; i >= 0; i--)
 	{
 		if (tiles[i].visuals.textureName == textureName)
 		{
+			tiles[i].selected = true;
+			selectedTileIndices.push_back(i);
 			selection.push_back(&tiles[i]);
-			update_tile_selection(i, true);
 		}
 	}
+
+	program.render.set_tile_selection(selectedTileIndices, true);
 }
 
 // DEPRECATED
@@ -236,34 +245,45 @@ void Editor::select_by_texture(std::string textureName)
 void Editor::push_selection_to_back()
 {
 	std::vector<unsigned int> selectionIDs = {};
+	std::vector<int> selectionIndices = {};
 	selectionIDs.reserve(selection.size());
+	selectionIndices.reserve(selection.size());
 
 	for (int i = selection.size() - 1; i >= 0; i--)
 	{
 		selectionIDs.push_back(selection[i]->ID);
+		selectionIndices.push_back(ID_to_tile_index(selection[i]->ID));
 	}
 
 	// these will all become garbage anyway, once push comes to shove
 	lastSelectionArea = {};
 	deselect_all();
 
-	for (int i = 0; i < selectionIDs.size(); i++)
-	{
-		int index = 0;
-		ID_to_tile(selectionIDs[i], index);
+	std::sort(selectionIndices.begin(), selectionIndices.end(), std::less<int>());
 
-		containers::move<E_Tile>(tiles, index, 0);
-		containers::move<glm::vec4>(program.render.instanceTransformData, index, 0);
-		containers::move<glm::vec4>(program.render.instanceTextureData, index, 0);
-		containers::move<glm::uvec4>(program.render.instanceAtlasData, index, 0);
-		containers::move<glm::vec4>(program.render.instanceColorData, index, 0);
-		containers::move<glm::vec4>(program.render.instanceAdditionalData, index, 0);
+	for (int i = 0; i < selectionIndices.size(); i++)
+	{
+		if (selectionIndices[i] == i) { continue; }
+
+		for(auto & entry : tileIndices){
+			if (entry.second >= i && entry.second < selectionIndices[i])
+			{
+				entry.second++;
+			}
+		} 
+		tileIndices[tiles[selectionIndices[i]].ID] = i;
+		containers::move<E_Tile>(tiles, selectionIndices[i], i);
+		containers::move<glm::vec4>(program.render.instanceTransformData, selectionIndices[i], i);
+		containers::move<glm::vec4>(program.render.instanceTextureData, selectionIndices[i], i);
+		containers::move<glm::uvec4>(program.render.instanceAtlasData, selectionIndices[i], i);
+		containers::move<glm::vec4>(program.render.instanceColorData, selectionIndices[i], i);
+		containers::move<glm::vec4>(program.render.instanceAdditionalData, selectionIndices[i], i);
 	}
 
 	for (int i = 0; i < selectionIDs.size(); i++)
 	{
-		int index;
-		E_Tile* selectionTile = ID_to_tile(selectionIDs[i], index);
+		int index = ID_to_tile_index(selectionIDs[i]);
+		E_Tile* selectionTile = &tiles[index];
 		update_tile_selection(index, true);
 		selection.push_back(selectionTile);
 	}
@@ -295,50 +315,54 @@ void Editor::deselect_all()
 
 	std::vector<int> indices = {};
 
-	for (int i = tiles.size() - 1; i >= 0; i--)
+	for (int i = 0; i < selection.size(); i++)
 	{
-		if (tiles[i].selected)
-		{
-			indices.push_back(i);
-			tiles[i].selected = false;
-		}
+		selection[i]->selected = false;
+		indices.push_back(ID_to_tile_index(selection[i]->ID));
 	}
+
+	selection.clear();
+	program.render.set_tile_selection(indices, false);
+}
+
+// uses a premade vector of the tile indices of all selected tiles NOTE: the tiles deque must NOT be modified before calling the function
+void Editor::deselect_all(std::vector<int>& indices)
+{
+	if (indices.size() == 0) { return; }
+
+	for (int i = 0; i < indices.size(); i++)
+	{
+		tiles[indices[i]].selected = false;
+	}
+
 	selection.clear();
 	program.render.set_tile_selection(indices, false);
 }
 
 void Editor::delete_all()
 {
-	std::vector<int> IDs = {};
-
-	selection.clear();
-
-	for (int i = tiles.size() - 1; i >= 0; i--)
-	{
-		tiles[i];
-		remove_tile(i);
-	}
+	remove_tile_all();
 }
 
 void Editor::delete_selection()
 {
 	if (selection.size() == 0) { return; }
-	// TODO: optimize...
-	std::vector<int> IDs = {};
+	if (selection.size() == tiles.size()) { lastSelectionArea.clear(); remove_tile_all(); return; }
 
-	for (int i = selection.size() - 1; i >= 0; i--)
+	std::vector<int> indices = {};
+	std::unordered_set<int> indexSet = {};
+
+	for (int i = 0; i < selection.size(); i++)
 	{
-		IDs.push_back(selection[i]->ID);
+		int index = ID_to_tile_index(selection[i]->ID);
+		indices.push_back(index);
+		indexSet.insert(index);
 	}
 
-	selection.clear();
+	lastSelectionArea.clear();
+	deselect_all(indices);
 
-	for (int j = IDs.size() - 1; j >= 0; j--)
-	{
-		int index = 0;
-		ID_to_tile(IDs[j], index);
-		remove_tile(index);
-	}
+	remove_tile(indices, indexSet);
 
 	setDirtiness(true);
 }
@@ -487,9 +511,9 @@ void Editor::updateToolPos(glm::vec2 &mousePos)
 
 			if (selection.size() == 1 && activeDraggerID != -1 /* NOTE: might cause issues && lastSelectionArea.size() == 0 */)
 			{
-				int tIndex;
 				bool activeDraggerFound = false;
-				E_Tile* tile = ID_to_tile(selection[0]->ID, tIndex);
+				int tIndex = ID_to_tile_index(selection[0]->ID);
+				E_Tile* tile = &tiles[tIndex];
 
 				// REALLY TEMPY there are like no checks here whatsoever
 				// things to take into account:
@@ -613,16 +637,20 @@ void Editor::updateToolPos(glm::vec2 &mousePos)
 			resizeGizmo(index, areaSize);
 
 			std::vector<int> indices = {};
-			std::vector<E_Tile*>& tilesInArea = *getTilesInArea(Bounding_Box(areaSize), boundingBoxPos, indices);
+			std::vector<unsigned int>* tileIDsInArea = getTilesInArea(Bounding_Box(areaSize), boundingBoxPos, indices);
+
+			// TODO: could do a funny optimization here where if the new area's size is bigger than the last one's (in the same direction) then obviously all previously selected tiles are still in it
+
+			std::vector<int> deselectedTileIndices = {};
 
 			// deselect tiles that were in the last selection area but not in the new one
-			for (E_Tile* oldTile : lastSelectionArea)
+			for (unsigned int oldTileID : lastSelectionArea)
 			{
 				bool isInNewArea = false;
 
-				for (E_Tile* newTile : tilesInArea)
+				for (unsigned int newTileID : *tileIDsInArea)
 				{
-					if (oldTile->ID == newTile->ID)
+					if (oldTileID == newTileID)
 					{
 						isInNewArea = true;
 						break;
@@ -633,36 +661,34 @@ void Editor::updateToolPos(glm::vec2 &mousePos)
 				{
 					for (int i = selection.size() - 1; i >= 0; i--) // loop through every selected tile to find a match
 					{
-						if (selection[i]->ID == oldTile->ID)
+						if (selection[i]->ID == oldTileID) // this previously selected tile is no longer selected
 						{
+							selection[i]->selected = false;
 							selection.erase(selection.begin() + i); // remove deselected tile from selection
+							break;
 						}
 					}
 
-					int oldTileIndex = 0;
-					ID_to_tile(oldTile->ID, oldTileIndex);
-
-					if (oldTileIndex != -1)
-					{
-						update_tile_selection(oldTileIndex, false);
-					}
+					deselectedTileIndices.push_back(ID_to_tile_index(oldTileID));
 				}
 			}
 
-			int i = 0;
+			program.render.set_tile_selection(deselectedTileIndices, false);
 
-			for (E_Tile* tile : tilesInArea)
-			{				
-				if (tile->selected == false)
+			// select tiles in the area that weren't selected before
+			for (int tileIndex : indices)
+			{
+				E_Tile* selectedTile = &tiles[tileIndex];	
+				if (selectedTile->selected == false)
 				{
-					selection.push_back(tile);
-					tile->selected = true;
-					program.render.set_tile_selection(indices[i], true);
+					selectedTile->selected = true;
+					selection.push_back(selectedTile);
 				}
-				i++;
 			}
 
-			lastSelectionArea = tilesInArea;
+			program.render.set_tile_selection(indices, true);
+
+			lastSelectionArea = *tileIDsInArea;
 		}
 		// drag ended
 		else if (program.input.lmb_down == false && program.input.lmb_down_last == true)
@@ -823,6 +849,11 @@ void Editor::updateToolPos(glm::vec2 &mousePos)
 							}
 						}
 					}
+
+					for (int i = 0; i < tilesToPlace.size(); i++)
+					{
+						tileIndices[tilesToPlace[i].ID] = tiles.size() + i;
+					} 
 
 					tiles.insert(tiles.end(), tilesToPlace.begin(), tilesToPlace.end());
 					add_tile(tilesToPlace);
@@ -1229,9 +1260,7 @@ void Editor::moveTile(int index, glm::vec2 newPos)
 
 void Editor::moveTile(unsigned int ID, glm::vec2 newPos)
 {
-	int index = 0;
-	ID_to_tile(ID, index);
-	moveTile(index, newPos);
+	moveTile(ID_to_tile_index(ID), newPos);
 }
 
 void Editor::moveSelectedTiles(glm::vec2 offset)
@@ -1249,8 +1278,7 @@ void Editor::moveSelectedTiles(glm::vec2 offset)
 		tile->location.Position.y = newPos.y;
 
 		// and here's the kicker
-		int index;
-		ID_to_tile(tile->ID, index);
+		int index = ID_to_tile_index(tile->ID);
 
 		// update visuals
 		program.render.instanceTransformData[index].x = newPos.x;
@@ -1281,9 +1309,7 @@ void Editor::resizeTile(int index, glm::vec2 newSize)
 
 void Editor::resizeTile(unsigned int ID, glm::vec2 newSize)
 {
-	int index = 0;
-	ID_to_tile(ID, index);
-	resizeTile(index, newSize);
+	resizeTile(ID_to_tile_index(ID), newSize);
 }
 
 void Editor::resizeSelectedTiles(glm::vec2 newSize)
@@ -1301,8 +1327,7 @@ void Editor::resizeSelectedTiles(glm::vec2 newSize)
 		tile->location.box.update_size(newSize);
 
 		// and here's the kicker
-		int index;
-		ID_to_tile(tile->ID, index);
+		int index = ID_to_tile_index(tile->ID);
 
 		// update visuals
 		program.render.instanceTransformData[index].z = newSize.x;
@@ -1322,10 +1347,7 @@ void Editor::rotateTile(int index, double newRotation)
 
 void Editor::rotateTile(unsigned int ID, double newRotation)
 {
-	int index = 0;
-	E_Tile* tile = ID_to_tile(ID, index);
-
-	rotateTile(index, newRotation);
+	rotateTile(ID_to_tile_index(ID), newRotation);
 }
 
 void Editor::rotateSelectedTiles(double newRotation)
@@ -1367,17 +1389,14 @@ void Editor::updateTileVisuals(int index)
 
 void Editor::updateTileVisuals(unsigned int ID)
 {
-	int index = 0;
-	E_Tile* tile = ID_to_tile(ID, index);
-	updateTileVisuals(index);
+	updateTileVisuals(ID_to_tile_index(ID));
 }
 
 void Editor::updateSelectedTilesVisuals()
 {
 	for (E_Tile* tile : selection)
 	{
-		int index;
-		ID_to_tile(tile->ID, index);
+		int index = ID_to_tile_index(tile->ID);
 
 		Visuals& visuals = tile->visuals;
 		program.render.instanceTextureData[index].x = visuals.TextureSize.x;
@@ -1553,10 +1572,12 @@ void Editor::update_gizmos()
 
 void Editor::add_tile(E_Tile &tile)
 {
+	tileIndices[tile.ID] = tiles.size() - 1;
 	program.render.add_to_render_list(tile);
 	setDirtiness(true);
 }
 
+// NOTE: indices must be added to tileIndices before calling this function
 void Editor::add_tile(std::vector<E_Tile> &tiles)
 {
 	if (tiles.size() > 0)
@@ -1571,25 +1592,79 @@ void Editor::remove_tile(int index)
 	// remove from the tiles vector as well
 	if (index != -1)
 	{
+		tileIndices.erase(tiles[index].ID);
+
+		for(auto & entry : tileIndices){
+			entry.second = entry.second > index ? entry.second - 1 : entry.second;
+		}
+
 		program.render.remove_from_render_list(index);
 		tiles.erase(std::begin(tiles) + index);
 		setDirtiness(true);
 	}
 }
 
-void Editor::remove_tile(std::vector<int> &indices)
+void Editor::remove_tile(std::vector<int> &indices, std::unordered_set<int> &indexSet)
 {
-	if (indices.size() == 0) { return; } // don't dirty if we do nothing lol
+	if (indices.size() == 0) { return; } // don't do nothing lol
+
+	// sort the given indices from largest to smallest so they can be erased without affecting the indices after them
+	std::sort(indices.begin(), indices.end(), std::greater<int>());
 
 	program.render.remove_from_render_list(indices);
 
-	for (int index : indices)
+	// if it takes less time to recreate the entire tileIndices map, do that instead
+	bool replaceAllIndices = indices.size() * (tiles.size() / 2.0f) > tileIndices.size();
+
+	for (int index: indices)
 	{
-		// remove from the tiles vector as well
-		if (index != -1)
-			tiles.erase(std::begin(tiles) + index);
+		if (replaceAllIndices == false)
+		{
+			for (auto & entry : tileIndices){
+				entry.second = entry.second > index ? entry.second - 1 : entry.second;
+			}
+		}
 	}
 
+	// holy crap this is fast! thanks Benjamin Lindley from StackOverflow
+	int removedCount = 0;
+	int last = 0;
+	for (int i = 0; i < tiles.size(); ++i, ++last)
+	{
+		while(indexSet.find(i) != indexSet.end())
+		{
+			++i;
+			++removedCount;
+			if (removedCount % 1000 == 0)
+			{
+				std::cout << "Removed " << removedCount << " tiles" << std::endl;
+			}
+		}
+		if (i >= tiles.size()) break;
+
+		tiles[last] = tiles[i];   
+	}
+
+	tiles.resize(last);
+
+	if (replaceAllIndices)
+	{
+		tileIndices.clear();
+		for (int i = 0; i < tiles.size(); i++)
+		{
+			tileIndices[tiles[i].ID] = i;
+		}
+	}
+
+	setDirtiness(true);
+}
+
+void Editor::remove_tile_all()
+{
+	selection.clear();
+	tileIndices.clear();
+	tiles.clear();
+	program.render.clear_instance_data();
 	setDirtiness(true);
 }
 
