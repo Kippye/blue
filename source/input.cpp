@@ -269,6 +269,19 @@ void Input::key_event(GLFWwindow* window, int key, int scancode, int action, int
 					}
 				}
 			break;
+			case GLFW_KEY_R:
+				if (ctrl_down) // reload textures
+				{
+					if (program.render.textureAtlas == nullptr)
+					{
+						program.gui.popupToggles[CONTENT_LACK_WARNING] = true;
+					}
+					else
+					{
+						program.gui.popupToggles[CONTENT_LACK_WARNING] = false;
+						program.file_system.updateTextures();
+					}
+				}
 			case GLFW_KEY_G:
 				program.editor.set_grid_visible(!program.editor.gridVisible);
 			break;
