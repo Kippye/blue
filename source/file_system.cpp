@@ -108,12 +108,13 @@ void FileSystem::ignore_buffer_to_vector()
 		i++;
 	}
 
-	std::cout << "Updated ignore list:" << std::endl;
-	for (std::string s : ignoreList)
-	{
-		std::cout << s << ", ";
-	}
-	std::cout << std::endl;
+	// for (std::string s : ignoreList)
+	// {
+	// 	std::cout << s << ", ";
+	// }
+	// std::cout << std::endl;
+	trySaveConfigs();
+	std::cout << "Ignore list updated" << std::endl;
 }
 
 void FileSystem::vectorToIgnoreBuffer()
@@ -168,6 +169,7 @@ void FileSystem::update_editor_config()
 		editor["backgroundColor"].add(Setting::TypeFloat) = program.editor.backgroundColor[i];
 	}
 
+	trySaveConfigs();
 	std::cout << "Editor configuration updated" << std::endl;
 }
 
@@ -312,6 +314,7 @@ void FileSystem::updateTextures()
 		std::cout << "Creating texture atlas..." << std::endl;
 		std::vector<std::string>& filesInContent = getInDirRecursive(contentDir.c_str(), true, true, true, true, imageExtensions, &fs::path(contentDir.substr(0, contentDir.length() - 1)));
 		program.gui.tileTextures = program.textureLoader.loadTextures(filesInContent, false);
+		program.gui.gd.displayedTextureButtons = 0;
 		// NOTE: sometimes this randomly causes a crash at "Loading textures from content..."
 		program.render.textureAtlas = loadContentAsAtlas();
 		for (E_Texture* tt: program.gui.tileTextures)

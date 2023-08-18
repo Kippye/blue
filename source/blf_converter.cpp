@@ -39,7 +39,7 @@ void BLF_Converter::load_file(const char* path)
 	for (BLF_Tile* tile : tiles)
 	{
 		std::string texturePath = tile->texture;
-		std::cout << "load_file: loaded tile's texture: " << texturePath << std::endl;
+		//std::cout << "load_file: loaded tile's texture: " << texturePath << std::endl;
 		if (program.textureLoader.getAtlasTextureCoords(program.render.textureAtlas, texturePath) == glm::uvec4(0))
 		{
 			// TODO: handle this shit
@@ -56,7 +56,7 @@ void BLF_Converter::load_file(const char* path)
 		program.editor.add_tile(program.editor.tiles.emplace_back(
 			Location(glm::vec4(tile->x, tile->y, tile->z, 0.0), glm::vec3(tile->sizeX, tile->sizeY, 1.0f), tile->angle), 
 			Physics(tile->collisionsEnabled, tile->_static, tile->bounce, tile->density, tile->friction), 
-			Visuals(program.textureLoader.getAtlasTextureCoords(program.render.textureAtlas, texturePath), texturePath, (TEXTUREMODE)tile->textureMode, glm::vec2(tile->textureSizeX, tile->textureSizeY), glm::vec4(tile->r / 255, tile->g / 255, tile->b / 255, tile->opacity), tile->opacity),
+			Visuals(program.textureLoader.getAtlasTextureCoords(program.render.textureAtlas, texturePath), texturePath, (TEXTUREMODE)tile->textureMode, glm::vec2(tile->textureSizeX, tile->textureSizeY), glm::vec4(tile->r / 255.0f, tile->g / 255.0f, tile->b / 255.0f, tile->opacity), tile->opacity),
 			tags
 		));
 	}
@@ -109,9 +109,9 @@ void BLF_Converter::write_file(const char* path)
 			editor_tiles[i].visuals.TextureSize.x,
 			editor_tiles[i].visuals.TextureSize.y,
 			// round colors because blur expects them to be integers (less work for user)
-			(int)editor_tiles[i].visuals.Color.x * 255,
-			(int)editor_tiles[i].visuals.Color.y * 255,
-			(int)editor_tiles[i].visuals.Color.z * 255,
+			(int)(editor_tiles[i].visuals.Color.x * 255.0f),
+			(int)(editor_tiles[i].visuals.Color.y * 255.0f),
+			(int)(editor_tiles[i].visuals.Color.z * 255.0f),
 			editor_tiles[i].visuals.Opacity,
 			editor_tiles[i].tags[0] == true ? program.editor.tags[0] : "NA",
 			editor_tiles[i].tags[1] == true ? program.editor.tags[1] : "NA",
