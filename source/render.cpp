@@ -16,7 +16,7 @@ void Render::setup()
 	// [debug] glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 	//~ // general settings
-	//glEnable(GL_DEPTH_TEST);
+	glEnable(GL_DEPTH_TEST);
 	// add blending for transparency
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -263,6 +263,7 @@ void Render::render()
 	}
 
 	glBindVertexArray(VAO_G);
+	glClear(GL_DEPTH_BUFFER_BIT);
 	glDrawElementsInstanced(GL_POINTS, 1, GL_UNSIGNED_INT, 0, program.editor.gizmos.size());
 
 	program.gui.drawGui();
@@ -301,7 +302,7 @@ void Render::add_to_instance_data(E_Tile &tile)
 	instanceTextureData.emplace_back(tile.visuals.TextureSize.x, tile.visuals.TextureSize.y, 0.0f, 0.0f);
 	instanceAtlasData.emplace_back(tile.visuals.atlasLocation.x, tile.visuals.atlasLocation.y, tile.visuals.atlasLocation.z, tile.visuals.atlasLocation.w);
 	instanceColorData.emplace_back(tile.visuals.Color.x, tile.visuals.Color.y, tile.visuals.Color.z, tile.visuals.Opacity);
-	instanceAdditionalData.emplace_back(tile.visuals.TextureMode == TEXTUREMODE_TILE, tile.selected, 0.0f, 0.0f);
+	instanceAdditionalData.emplace_back(tile.visuals.TextureMode == TEXTUREMODE_TILE, tile.selected, tile.location.Position.z, 0.0f);
 	instanceDataUpdates++;
 }
 

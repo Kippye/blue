@@ -19,6 +19,8 @@ class Ray
 class Camera
 {
 	public:
+		float cameraNearPos = 2.0f, cameraFarPos = 100.0f;
+		float nearZ = 0.1f, farZ = 100.1f;
 		static const inline float CAMERA_SPEED = 14.0f;
 		float blurZoomLevel = 15.0f;
 		glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);

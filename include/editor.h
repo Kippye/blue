@@ -69,6 +69,7 @@ class Editor
 		std::vector<unsigned int> lastSelectionArea = {};
 		bool overlap = true;
 		bool autosnap = false;
+		bool perspectiveEnabled = true;
 		bool gridVisible = true;
 		// editor settings
 		glm::vec3 backgroundColor = glm::vec3(0.2f, 0.2f, 0.8f);
@@ -86,6 +87,7 @@ class Editor
 		bool getDirtiness();
 		void setDirtiness(bool);
 		void set_grid_visible(bool to);
+		void set_perspective_enabled(bool to);
 		void update_grid_size(float newSize);
 
 		// utility functions
@@ -103,7 +105,6 @@ class Editor
 		void Editor::update_tile_selection(unsigned int ID, bool to);
 	public:
 		void select_by_texture(std::string textureName);
-		void push_selection_to_back();
 		void select_all();
 		void deselect_all();
 		void deselect_all(std::vector<int>& indices);
@@ -127,9 +128,9 @@ class Editor
 		// tile manipulation functions
 		void update_atlas_coords(TextureAtlas* atlas);
 
-        void moveTile(int index, glm::vec2 newPos);
-        void moveTile(unsigned int ID, glm::vec2 newPos);
-		void moveSelectedTiles(glm::vec2 offset);
+        void moveTile(int index, glm::vec3 newPos);
+        void moveTile(unsigned int ID, glm::vec3 newPos);
+		void moveSelectedTiles(glm::vec3 offset);
         void resizeTile(int index, glm::vec2 newSize);
 		void resizeTile(unsigned int ID, glm::vec2 newSize);
 		void resizeSelectedTiles(glm::vec2 newSize);

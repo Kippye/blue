@@ -100,6 +100,11 @@ void Editor::set_grid_visible(bool to)
 	}
 }
 
+void Editor::set_perspective_enabled(bool to)
+{
+	perspectiveEnabled = to;
+}
+
 void Editor::update_grid_size(float newSize)
 {
 	mymath::gridSize = newSize;
@@ -125,20 +130,30 @@ bool Editor::checkForOverlaps(Bounding_Box &box, glm::vec4 &pos)
 
 E_Tile* Editor::positionToTile(glm::vec4 &pos, int &index)
 {
-	// reverse loop so we get the top-most tile and also speed up removing recently placed tiles
+	E_Tile* closestTile = nullptr;
+	int closestTileIndex = 0;
+	float closestTileZ = 0.0f;
+
+	// reverse loop so we get the top-most tile
 	for (index = tiles.size() - 1; index >= 0; index--)
 	{
 		if (tiles[index].location.box.contains_position(tiles[index].location.Position, pos))
 		{
-			return &tiles[index];
+			if (closestTile == nullptr || tiles[index].location.Position.z > closestTileZ)
+			{
+				closestTile = &tiles.at(index);
+				closestTileIndex = index;
+				closestTileZ = tiles[index].location.Position.z;
+			}
 		}
 	}
-	return nullptr;
+	index = closestTileIndex;
+	return closestTile;
 }
 
 E_Tile* Editor::ID_to_tile(int ID, int &index)
 {
-	// reverse loop so we get the top-most tile and also speed up removing recently placed tiles
+	// reverse loop so we get the top-most tile
 	for (index = tiles.size() - 1; index >= 0; index--)
 	{
 		if (tiles[index].ID == ID)
@@ -238,57 +253,6 @@ void Editor::select_by_texture(std::string textureName)
 	}
 
 	program.render.set_tile_selection(selectedTileIndices, true);
-}
-
-// DEPRECATED
-// man this is one expensive function to run now...
-void Editor::push_selection_to_back()
-{
-	std::vector<unsigned int> selectionIDs = {};
-	std::vector<int> selectionIndices = {};
-	selectionIDs.reserve(selection.size());
-	selectionIndices.reserve(selection.size());
-
-	for (int i = selection.size() - 1; i >= 0; i--)
-	{
-		selectionIDs.push_back(selection[i]->ID);
-		selectionIndices.push_back(ID_to_tile_index(selection[i]->ID));
-	}
-
-	// these will all become garbage anyway, once push comes to shove
-	lastSelectionArea = {};
-	deselect_all();
-
-	std::sort(selectionIndices.begin(), selectionIndices.end(), std::less<int>());
-
-	for (int i = 0; i < selectionIndices.size(); i++)
-	{
-		if (selectionIndices[i] == i) { continue; }
-
-		for(auto & entry : tileIndices){
-			if (entry.second >= i && entry.second < selectionIndices[i])
-			{
-				entry.second++;
-			}
-		} 
-		tileIndices[tiles[selectionIndices[i]].ID] = i;
-		containers::move<E_Tile>(tiles, selectionIndices[i], i);
-		containers::move<glm::vec4>(program.render.instanceTransformData, selectionIndices[i], i);
-		containers::move<glm::vec4>(program.render.instanceTextureData, selectionIndices[i], i);
-		containers::move<glm::uvec4>(program.render.instanceAtlasData, selectionIndices[i], i);
-		containers::move<glm::vec4>(program.render.instanceColorData, selectionIndices[i], i);
-		containers::move<glm::vec4>(program.render.instanceAdditionalData, selectionIndices[i], i);
-	}
-
-	for (int i = 0; i < selectionIDs.size(); i++)
-	{
-		int index = ID_to_tile_index(selectionIDs[i]);
-		E_Tile* selectionTile = &tiles[index];
-		update_tile_selection(index, true);
-		selection.push_back(selectionTile);
-	}
-
-	program.render.updateInstanceArray();
 }
 
 void Editor::select_all()
@@ -423,7 +387,7 @@ void Editor::paste()
 	{
 		// positions in the copy buffer tiles are stored as offsets from 0; 0 (bottom left corner of the copy buffer tiles)
 		add_tile(tiles.emplace_back(
-			Location(mouseWorldPos + copyBuffer[i].location.Position, copyBuffer[i].location.Size), 
+			Location(mouseWorldPos + copyBuffer[i].location.Position, copyBuffer[i].location.Size, copyBuffer[i].location.Angle), 
 			copyBuffer[i].physics, 
 			copyBuffer[i].visuals, 
 			copyBuffer[i].tags
@@ -451,6 +415,8 @@ void Editor::clear_tags()
 
 void Editor::reset_next_tile()
 {
+	nextTile.location.Position.z = 0.0f;
+	
 	nextTile.location.Size.x = DEFAULT_TILE.location.Size.x;
 	nextTile.location.Size.y = DEFAULT_TILE.location.Size.y;
 	nextTile.location.Angle = DEFAULT_TILE.location.Angle;
@@ -602,7 +568,7 @@ void Editor::updateToolPos(glm::vec2 &mousePos)
 							case 0:
 							{
 								float newX = program.input.ctrl_down || autosnap ? mymath::round_to_grid(worldMousePos.x - tile->location.Size.x) : worldMousePos.x - tile->location.Size.x;
-								moveTile(tIndex, glm::vec2(newX, tile->location.Position.y));
+								moveTile(tIndex, glm::vec3(newX, tile->location.Position.y, tile->location.Position.z));
 								activeDraggerFound = true;
 								break;
 							}
@@ -610,7 +576,7 @@ void Editor::updateToolPos(glm::vec2 &mousePos)
 							case 1:
 							{
 								float newY = program.input.ctrl_down || autosnap ? mymath::round_to_grid(worldMousePos.y - tile->location.Size.y) : worldMousePos.y - tile->location.Size.y;
-								moveTile(tIndex, glm::vec2(tile->location.Position.x, newY));
+								moveTile(tIndex, glm::vec3(tile->location.Position.x, newY,  tile->location.Position.z));
 								activeDraggerFound = true;
 								break;
 							}
@@ -619,7 +585,7 @@ void Editor::updateToolPos(glm::vec2 &mousePos)
 							{
 								glm::vec2 newPosition = glm::vec3(worldMousePos) - tile->location.Size / 2.0f;
 								newPosition = program.input.ctrl_down || autosnap ? mymath::round_to_grid(newPosition) : newPosition;
-								moveTile(tIndex, newPosition);
+								moveTile(tIndex, glm::vec3(newPosition.x, newPosition.y, tile->location.Position.z));
 								activeDraggerFound == true;
 								break;
 							}
@@ -755,6 +721,7 @@ void Editor::updateToolPos(glm::vec2 &mousePos)
 					if (overlap == true || checkForOverlaps(Bounding_Box(areaSize), startPos))
 					{
 						// place the tile
+						startPos.z = nextTile.location.Position.z;
 						add_tile(tiles.emplace_back(Location(startPos, glm::max(glm::vec3(areaSize, 1.0f), glm::vec3(minSize, minSize, 1.0f))), nextTile.physics, nextTile.visuals, nextTile.tags));
 					}
 				}
@@ -838,13 +805,13 @@ void Editor::updateToolPos(glm::vec2 &mousePos)
 								// not overlapping
 								if (!checkForOverlaps(Bounding_Box(nextTile.location.Size), startPos + glm::vec4(x, y, 0.0f, 0.0f)))
 								{
-									E_Tile tile = E_Tile(Location(startPos + glm::vec4(x, y, 0.0f, 0.0f), nextTile.location.Size), nextTile.physics, nextTile.visuals, nextTile.tags);
+									E_Tile tile = E_Tile(Location(startPos + glm::vec4(x, y, nextTile.location.Position.z, 0.0f), nextTile.location.Size), nextTile.physics, nextTile.visuals, nextTile.tags);
 									tilesToPlace.push_back(tile);
 								}
 							}
 							else
 							{
-								E_Tile tile = E_Tile(Location(startPos + glm::vec4(x, y, 0.0f, 0.0f), nextTile.location.Size), nextTile.physics, nextTile.visuals, nextTile.tags);
+								E_Tile tile = E_Tile(Location(startPos + glm::vec4(x, y, nextTile.location.Position.z, 0.0f), nextTile.location.Size), nextTile.physics, nextTile.visuals, nextTile.tags);
 								tilesToPlace.push_back(tile);
 							}
 						}
@@ -1014,6 +981,7 @@ void Editor::tool_use()
 			}
 
 			placeCursorHighlightCounter = placeCursorHighlightDuration;
+			pos.z = nextTile.location.Position.z;
 
 			add_tile(tiles.emplace_back(Location(pos, nextTile.location.Size), nextTile.physics, nextTile.visuals, nextTile.tags));
 
@@ -1157,22 +1125,6 @@ void Editor::update_atlas_coords(TextureAtlas* atlas)
 	program.render.updateInstanceArray(INSTANCE_ARRAY_UPDATE_3);
 	program.render.updateGizmoInstanceArray(INSTANCE_ARRAY_UPDATE_3);
 
-	if (gridGizmoID == -1)
-	{
-		// only show grid if a grid texture was provided
-		if (std::find(program.render.textureAtlas->textureFiles.begin(), program.render.textureAtlas->textureFiles.end(), "grid_blue.png") != program.render.textureAtlas->textureFiles.end())
-		{
-			Gizmo &gridGizmo = gizmos.emplace_back(
-				Location(glm::vec4(-1000.0f, -1000.0f, 0.0f, 0.0f), glm::vec3(2000.0f, 2000.0f, 0.0f)),
-				Visuals(program.textureLoader.getAtlasTextureCoords(program.render.textureAtlas, "grid_blue.png"), "grid_blue.png", TEXTUREMODE_TILE, glm::vec2(1.0f, 1.0f), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f), 0.75f),
-				GizmoType_Indicator,
-				/*_permanent*/ true
-			);
-
-			gridGizmoID = gridGizmo.ID;
-			add_gizmo(gridGizmo); 
-		}
-	}
 	if (placeCursorID == -1)
 	{
 		Gizmo& placeCursor = gizmos.emplace_back(
@@ -1238,9 +1190,26 @@ void Editor::update_atlas_coords(TextureAtlas* atlas)
 			add_gizmo(moveDraggerGizmo); 
 		}
 	}
+
+	if (gridGizmoID == -1)
+	{
+		// only show grid if a grid texture was provided
+		if (std::find(program.render.textureAtlas->textureFiles.begin(), program.render.textureAtlas->textureFiles.end(), "grid_blue.png") != program.render.textureAtlas->textureFiles.end())
+		{
+			Gizmo &gridGizmo = gizmos.emplace_back(
+				Location(glm::vec4(-1000.0f, -1000.0f, 0.0f, 0.0f), glm::vec3(2000.0f, 2000.0f, 0.0f)),
+				Visuals(program.textureLoader.getAtlasTextureCoords(program.render.textureAtlas, "grid_blue.png"), "grid_blue.png", TEXTUREMODE_TILE, glm::vec2(1.0f, 1.0f), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f), 0.75f),
+				GizmoType_Indicator,
+				/*_permanent*/ true
+			);
+
+			gridGizmoID = gridGizmo.ID;
+			add_gizmo(gridGizmo); 
+		}
+	}
 }
 
-void Editor::moveTile(int index, glm::vec2 newPos)
+void Editor::moveTile(int index, glm::vec3 newPos)
 {
 	// snap position to the grid if needed
 	if (autosnap)
@@ -1250,24 +1219,27 @@ void Editor::moveTile(int index, glm::vec2 newPos)
 
 	tiles[index].location.Position.x = newPos.x;
 	tiles[index].location.Position.y = newPos.y;
+	tiles[index].location.Position.z = newPos.z;
 	// update visuals
 	program.render.instanceTransformData[index].x = newPos.x;
 	program.render.instanceTransformData[index].y = newPos.y;
+	program.render.instanceAdditionalData[index].z = newPos.z;
 	program.render.updateInstanceArray(INSTANCE_ARRAY_UPDATE_1);
+	program.render.updateInstanceArray(INSTANCE_ARRAY_UPDATE_5);
 
 	setDirtiness(true);
 }
 
-void Editor::moveTile(unsigned int ID, glm::vec2 newPos)
+void Editor::moveTile(unsigned int ID, glm::vec3 newPos)
 {
 	moveTile(ID_to_tile_index(ID), newPos);
 }
 
-void Editor::moveSelectedTiles(glm::vec2 offset)
+void Editor::moveSelectedTiles(glm::vec3 offset)
 {
 	for (E_Tile* tile : selection)
 	{
-		glm::vec4 newPos = tile->location.Position + glm::vec4(offset, 0.0f, 0.0f);
+		glm::vec4 newPos = tile->location.Position + glm::vec4(offset, 0.0f);
 		// snap position to the grid if needed
 		if (autosnap)
 		{
@@ -1276,6 +1248,7 @@ void Editor::moveSelectedTiles(glm::vec2 offset)
 
 		tile->location.Position.x = newPos.x;
 		tile->location.Position.y = newPos.y;
+		tile->location.Position.z = newPos.z;
 
 		// and here's the kicker
 		int index = ID_to_tile_index(tile->ID);
@@ -1283,8 +1256,10 @@ void Editor::moveSelectedTiles(glm::vec2 offset)
 		// update visuals
 		program.render.instanceTransformData[index].x = newPos.x;
 		program.render.instanceTransformData[index].y = newPos.y;
+		program.render.instanceAdditionalData[index].z = newPos.z;
 	}
 	program.render.updateInstanceArray(INSTANCE_ARRAY_UPDATE_1);
+	program.render.updateInstanceArray(INSTANCE_ARRAY_UPDATE_5);
 	setDirtiness(true);
 }
 
@@ -1362,6 +1337,7 @@ void Editor::rotateSelectedTiles(double newRotation)
 
 		// update visuals
 		// TODO: if i make tiles have visible rotation, i would probably also have to make their bounding boxes have rotation 💀
+		// also idrk how i would make moving or resizing with gizmos work in that case. probably doable tho!
 	}
 	// TODO: update instance data when rotation affects rendering
 	setDirtiness(true);

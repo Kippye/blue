@@ -64,6 +64,12 @@ class mymath
 			pos.y = floor_to_grid(pos.y, _gridSize);
 			return pos;
 		}
+		static glm::vec3 floor_to_grid(glm::vec3 pos, float _gridSize = gridSize)
+		{
+			pos.x = floor_to_grid(pos.x, _gridSize);
+			pos.y = floor_to_grid(pos.y, _gridSize);
+			return pos;
+		}
 		static glm::vec4 floor_to_grid(glm::vec4 pos, float _gridSize = gridSize)
 		{
 			pos.x = floor_to_grid(pos.x, _gridSize);
@@ -80,6 +86,12 @@ class mymath
 			pos.y = ceil_to_grid(pos.y, _gridSize);
 			return pos;
 		}
+		static glm::vec3 ceil_to_grid(glm::vec3 pos, float _gridSize = gridSize)
+		{
+			pos.x = ceil_to_grid(pos.x, _gridSize);
+			pos.y = ceil_to_grid(pos.y, _gridSize);
+			return pos;
+		}
 		static glm::vec4 ceil_to_grid(glm::vec4 pos, float _gridSize = gridSize)
 		{
 			pos.x = ceil_to_grid(pos.x, _gridSize);
@@ -91,6 +103,12 @@ class mymath
 			return round(f / _gridSize) * _gridSize;
 		}
 		static glm::vec2 round_to_grid(glm::vec2 pos, float _gridSize = gridSize)
+		{
+			pos.x = round_to_grid(pos.x, _gridSize);
+			pos.y = round_to_grid(pos.y, _gridSize);
+			return pos;
+		}
+		static glm::vec3 round_to_grid(glm::vec3 pos, float _gridSize = gridSize)
 		{
 			pos.x = round_to_grid(pos.x, _gridSize);
 			pos.y = round_to_grid(pos.y, _gridSize);

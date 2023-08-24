@@ -41,7 +41,9 @@
  * [X] drag placement doesn't work with the camera anymore
  * [X] push to back is VERY broken, either add functionality to Z position or fix it - it's messing with textures and crap
  * [X] ignore inputs if ignore popup is focused
- * [ ] Angle is not copied
+ * [X] Angle is not copied
+ * [X] fix transparency invisibility bug
+ * [ ] proper alpha blending - have to sort render order
  * [ ] box draw start position doesn't properly snap to grid
  * [ ] fix weird bug where box-selecting a single tile while hovering kind of over a gizmo makes the tile get moved using a gizmo (caused by broken mouse??)
  * [ ] place cursor (and probably the actual place position too) is too far behind mouse cursor
@@ -64,8 +66,9 @@
  * [X] grid mode toggle (if tiles have already been placed, they will be snapped to the grid)
  * [X] set default file dialog sort mode to name ascending
  * [X] grid settings under editor tab? - opacity, toggle ALSO make it toggle by pressing G
+ * [X] pressing ctrl + R toggles grid for some reason
+ * [X] hide "i" display from properties, keep ID
  * [ ] texture selector scrollbar disappears when active
- * [ ] hide "i" display from properties, keep ID
  * [ ] make a new gui style
  * [ ] beautify file dialog
  * [ ] look for a font to use?
@@ -110,7 +113,11 @@
  * [X] animate selected tile color with time sine, makes it more clear what is selected
  * [X] i think it would be a nice touch if i added a little animation / flash to the place cursor when a tile is placed (currently the kind of just has to trust that one was placed since one can't see the tile behind the cursor)
  * [X] display tile texture visually in properties for both singular selected tiles and the next tile options
- * [ ] Z positioning
+ * [X] Z positioning
+ * [X] fix raycasting in orthographic view
+ * [X] account for Z position when clicking to select / remove tiles
+ * [ ] if doable, make selection highlights render above tiles
+ * [ ] render gizmos above grid
  * [ ] button to disable the effect of opacity in-editor
  * [ ] zoom into the cursor position
  * [ ] undo, redo, if at all doable
@@ -136,11 +143,13 @@
  * [X] add editor function implementations for groups of objects - it would speed up things like moving 14000 tiles by only performing 1 instance update
  * [ ] the camera class hasn't been updated in ages, i think it should be made so that the camera is "moved" every frame to update lastMovement, but the view is only updated if there is actual movement - also update input.cpp after this
  * [ ] it would be cleaner to create a specific bool for whether a content folder has been properly loaded than checking a random vector's size in the gui class
- * [ ] Z position functionality
  * [ ] support duplicate texture names by using paths internally (still, displaying only filenames)
  * [ ] separate actual rendering in render.cpp from other tasks it performs so rendering can be disabled for testing
  * [ ] a way to manage projects, kind of. the user could have like a list of BLF files that would be associated with one project and some others associated with another
  * 		they could then switch between projects and easily access all the needed BLF files and also get the correct content file. there could also be separate configuration files for projects (mostly for ignore lists & folders)
+ * [ ] similar to the above: BLF file tabs. the user could have multiple "tabs" of BLF files open. switching between them would just replace the currently loaded file and content folder, also probably set the camera's position to what it last was.
+ * 		the user can also just close tabs NOTE: don't forget to automatically close tabs if the file no longer exists (when it's clicked?)
+ * 		NOTE: wouldn't this make it impossible to switch files without saving before? maybe i could create like a temporary buffer BLF file for each one that is then saved when the user chooses to?
  * [?] more options when loading textures (format or smth)
  * [C] create an event system ✌
  * [C] some kind of timer system in render?

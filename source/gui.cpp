@@ -346,26 +346,31 @@ void Gui::addEditorGui()
 
 		currentToolButtonX += s.editorComboWidth + s.editorButtonOffset;
 
-		ImGui::SetCursorPos(ImVec2(currentToolButtonX, 0.0f));
+		ImGui::SetCursorPos(ImVec2(currentToolButtonX + 4.0f, 0.0f));
 		ImGui::SetNextItemWidth(s.editorComboWidth);
-		// TODO : <DEPRECATE>
-		// push to back button
-		if (ImGui::Button("Push to back", ImVec2(s.editorComboWidth, s.editorButtonSize.y / 2)))
+		ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0.5f, 0.5f));
+		bool _perspectiveEnabled = program.editor.perspectiveEnabled;
+		if (ImGui::Selectable("Perspective", &_perspectiveEnabled, 0, ImVec2(s.editorComboWidth - 8.0f, s.editorButtonSize.y / 2 - 4.0f)))
 		{
-			program.editor.push_selection_to_back();
+			program.editor.set_perspective_enabled(_perspectiveEnabled);
 		}
-
 		if (ImGui::IsItemHovered())
 		{
 			ImGui::BeginTooltip();
 			ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
-			ImGui::Text("push back ");
-			ImGui::BulletText("pushes every selected tile to the background ");
-			ImGui::BulletText("shortcut: left CTRL + B ");
+			ImGui::Text("perspective ");
+			ImGui::BulletText("if enabled, a perspective camera projection is used ");
+			ImGui::BulletText("if disabled, an orthographic camera projection is used ");
+			ImGui::BulletText("shortcut: left CTRL + P ");
 			ImGui::PopTextWrapPos();
 			ImGui::EndTooltip();
 		}
-		// TODO : </DEPRECATE>
+		ImGui::PopStyleVar();
+		ImGui::SameLine();
+		if (ImGui::Checkbox("##pe", &_perspectiveEnabled))
+		{
+			program.editor.set_perspective_enabled(_perspectiveEnabled);
+		}
 
 		ImGui::SetCursorPos(ImVec2(currentToolButtonX + 4.0f, s.editorButtonSize.y / 2 + 5.5f));
 		ImGui::SetNextItemWidth(s.editorComboWidth);
@@ -456,11 +461,11 @@ void Gui::addPropertiesGui()
 						if (showDebugInfo) { ImGui::Text(("ID: " + std::to_string(selection[0]->ID)).c_str()); }
 						/// location
 						ImGui::Text("Transform");
-						float pos[2] = { selection[0]->location.Position.x, selection[0]->location.Position.y };
+						float pos[3] = { selection[0]->location.Position.x, selection[0]->location.Position.y, selection[0]->location.Position.z };
 						// position
-						if (ImGui::DragFloat2("Position", pos))
+						if (ImGui::DragFloat3("Position", pos))
 						{
-							program.editor.moveTile(selection[0]->ID, glm::vec2(pos[0], pos[1]));
+							program.editor.moveTile(selection[0]->ID, glm::vec3(pos[0], pos[1], pos[2]));
 						}
 						float size[2] = { selection[0]->location.Size.x, selection[0]->location.Size.y };
 						// size
@@ -568,14 +573,14 @@ void Gui::addPropertiesGui()
 						ImGui::Text(("selected tile count: " + std::to_string(program.editor.selection.size())).c_str());
 						/// location
 						ImGui::Text("Transform");
-						float pos[2] = { 0.0f, 0.0f };
+						float pos[3] = { 0.0f, 0.0f, 0.0f };
 						// position
-						if (ImGui::InputFloat2("Offset", pos, "", ImGuiInputTextFlags_EnterReturnsTrue))
+						if (ImGui::InputFloat3("Offset", pos, "", ImGuiInputTextFlags_EnterReturnsTrue))
 						{
 							// add this offset to every selected tile's position
-							program.editor.moveSelectedTiles(glm::vec2(pos[0], pos[1]));
+							program.editor.moveSelectedTiles(glm::vec3(pos[0], pos[1], pos[2]));
 
-							pos[0] = 0.0f, pos[1] = 0.0f;
+							pos[0] = 0.0f, pos[1] = 0.0f, pos[2] = 0.0f;
 						}
 						float size[2] = { selection[0]->location.Size.x, selection[0]->location.Size.y };
 						// size
@@ -759,6 +764,13 @@ void Gui::addPropertiesGui()
 							program.editor.reset_next_tile();
 						}
 
+						/// location
+						float posZ = program.editor.nextTile.location.Position.z;
+						// z position
+						if (ImGui::DragFloat("Z Position##m", &posZ))
+						{
+							program.editor.nextTile.location.Position.z = posZ;
+						}
 						/// location
 						float size[2] = { program.editor.nextTile.location.Size.x, program.editor.nextTile.location.Size.y };
 						// size
