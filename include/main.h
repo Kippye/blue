@@ -11,7 +11,7 @@
 #include <gui.h>
 
 #define BLUE_VERSION "1.3.0-pre"
-#define BLUE_EXPERIMENTAL false
+#define BLUE_EXPERIMENTAL true
 
 class Window;
 class FileSystem;

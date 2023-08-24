@@ -18,10 +18,8 @@ class Location
 	public:
 		glm::vec4 Position = glm::vec4(0.0f);
 		glm::vec3 Size = glm::vec3(1.0f);
-		double Angle = 0.0f;
+		float Angle = 0.0f;
 		Bounding_Box box;
-
-		// not supported by blur yet glm::vec3 rotation;
 
 		Location();
 		Location(glm::vec4 _Position, glm::vec3 _Size = glm::vec3(1.0f), float _Angle = 0.0f);

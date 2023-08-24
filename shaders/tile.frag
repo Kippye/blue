@@ -12,6 +12,7 @@ flat in vec2 atlasSize;
 flat in vec4 color;
 flat in int shouldTile;
 flat in float selected;
+flat in float posZ;
 // free
 flat in int isGizmo;
 
@@ -52,10 +53,20 @@ void main()
 
 	if (isGizmo == 0)
 	{
-		FragColor = texture(texture1, finalCoords) * color + (selectionColor * (min(sin(time * 2.0f) + 1.5f, 2.0f)));
+		vec4 modifiedColor = texture(texture1, finalCoords) * color + (selectionColor * (min(sin(time * 2.0f) + 1.5f, 2.0f)));
+		if (modifiedColor.w <= 0.1f)
+		{
+			discard;
+		}
+		FragColor = modifiedColor;
 	}
 	else
 	{
-		FragColor = texture(texture1, finalCoords) * color + (selectionColor);
+		vec4 modifiedColor = texture(texture1, finalCoords) * color;
+ 		if (modifiedColor.w <= 0.1f)
+		{
+			discard;
+		}
+		FragColor = modifiedColor + (selectionColor);
 	}
 };

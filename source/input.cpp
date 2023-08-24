@@ -168,12 +168,6 @@ void Input::key_event(GLFWwindow* window, int key, int scancode, int action, int
 			case GLFW_KEY_DELETE: // delete also
 				program.editor.delete_selection();
 			break;
-			case GLFW_KEY_B: // push to back (DEPRECATED)
-				if (ctrl_down)
-				{
-					program.editor.push_selection_to_back();
-				}
-			break;
 			case GLFW_KEY_T:
 				if (ctrl_down)
 				{
@@ -282,6 +276,13 @@ void Input::key_event(GLFWwindow* window, int key, int scancode, int action, int
 						program.file_system.updateTextures();
 					}
 				}
+			break;
+			case GLFW_KEY_P:
+				if (ctrl_down)
+				{
+					program.editor.set_perspective_enabled(!program.editor.perspectiveEnabled);
+				}
+			break;
 			case GLFW_KEY_G:
 				program.editor.set_grid_visible(!program.editor.gridVisible);
 			break;
