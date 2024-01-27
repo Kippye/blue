@@ -9,6 +9,14 @@
 
 using namespace libconfig;
 
+#if defined(_WIN32) || defined(WIN32)
+	inline std::filesystem::path rootPath("C:\\");
+	inline const char* pathSeparator = "\\";
+#elif defined(__unix__)
+	inline std::filesystem::path rootPath("/");
+	inline const char *pathSeparator = "/";
+#endif
+
 class FileSystem
 {
 	private:

@@ -33,7 +33,7 @@ bool FileSystem::check_path_ignored(fs::path path, fs::path* highestParentPath)
 
 	if (highestParentPath == nullptr)
 	{
-		highestParentPath = &fs::path("C:\\");
+		highestParentPath = &rootPath;
 	}
 	// check initial filename
 	if (debug) std::cout  << pc.string() << std::endl;
@@ -312,7 +312,8 @@ void FileSystem::updateTextures()
 	if (contentDir != "")
 	{
 		std::cout << "Creating texture atlas..." << std::endl;
-		std::vector<std::string>& filesInContent = getInDirRecursive(contentDir.c_str(), true, true, true, true, imageExtensions, &fs::path(contentDir.substr(0, contentDir.length() - 1)));
+		fs::path highestParentPath = fs::path(contentDir.substr(0, contentDir.length() - 1));
+		std::vector<std::string>& filesInContent = getInDirRecursive(contentDir.c_str(), true, true, true, true, imageExtensions, &highestParentPath);
 		program.gui.tileTextures = program.textureLoader.loadTextures(filesInContent, false);
 		program.gui.gd.displayedTextureButtons = 0;
 		// NOTE: sometimes this randomly causes a crash at "Loading textures from content..."
@@ -360,7 +361,8 @@ TextureAtlas* FileSystem::loadContentAsAtlas()
 {
 	std::cout << "Loading textures from content..." << std::endl;
 	if (contentDir == "") { std::cout << "Tried to load content without the folder being set" << std::endl; return nullptr; }
-	std::vector<std::string>& filesInContent = getInDirRecursive(contentDir.c_str(), true, true, true, true, imageExtensions, &fs::path(contentDir.substr(0, contentDir.length() - 1)));
+	fs::path highestParentPath = fs::path(contentDir.substr(0, contentDir.length() - 1));
+	std::vector<std::string>& filesInContent = getInDirRecursive(contentDir.c_str(), true, true, true, true, imageExtensions, &highestParentPath);
 	TextureAtlas* atlas = program.textureLoader.loadTextureAtlas(filesInContent, false);
 	std::cout << "Textures loaded from content" << std::endl;
 	return atlas;

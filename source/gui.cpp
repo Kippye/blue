@@ -1,3 +1,4 @@
+#include "file_system.h"
 #include <gui.h>
 #include <main.h>
 
@@ -28,7 +29,7 @@ void Gui::guiInit(Window* windowManager)
 	// set up platform / renderer bindings
 	ImGui_ImplGlfw_InitForOpenGL(windowManager->window, true);
 	ImGui_ImplOpenGL3_Init("#version 430");
-	guiIO->Fonts->AddFontFromFileTTF("fonts\\Noto_Sans_Mono\\NotoSansMono-VariableFont.ttf", 16.0f);
+	guiIO->Fonts->AddFontFromFileTTF("./fonts/Noto_Sans_Mono/NotoSansMono-VariableFont.ttf", 16.0f);
 
 	// apply premade style
 	// ImVec4* colors = ImGui::GetStyle().Colors;
@@ -508,7 +509,8 @@ void Gui::addPropertiesGui()
 						// texture name
 						ImGui::Text(("Texture: " + selection[0]->visuals.textureName + " (" + std::to_string(selection[0]->visuals.atlasLocation.z) + "x" + std::to_string(selection[0]->visuals.atlasLocation.w) + ")").c_str());
 						// texturemode
-						if (ImGui::Combo("TextureMode", &(int)selection[0]->visuals.TextureMode, se.tileTextureModeOptions, 2))
+						int textureMode = (int)selection[0]->visuals.TextureMode;
+						if (ImGui::Combo("TextureMode", &textureMode, se.tileTextureModeOptions, 2))
 						{
 							program.editor.updateTileVisuals(selection[0]->ID);
 						}
@@ -640,8 +642,10 @@ void Gui::addPropertiesGui()
 						ImGui::Dummy(ImVec2(0.0f, s.propertySectionSeparator));
 						ImGui::Text("Visual");
 
+						int textureMode = (int)selection[0]->visuals.TextureMode;
+
 						// texturemode
-						if (ImGui::Combo("TextureMode", &(int)selection[0]->visuals.TextureMode, se.tileTextureModeOptions, 2))
+						if (ImGui::Combo("TextureMode", &textureMode, se.tileTextureModeOptions, 2))
 						{
 							for (size_t i = 0; i < selection.size(); i++)
 							{
@@ -1409,7 +1413,7 @@ void Gui::openFileDialog(GUI_PROMPT type)
 		{
 			promptType = DIR;
 			program.file_system.contextOpen = true;
-			ImGuiFileDialog::Instance()->OpenDialog("ChooseContentFolder", "Select the content folder", nullptr, program.file_system.contentDir == "" ? "C:\\" : program.file_system.contentDir, 1);
+			ImGuiFileDialog::Instance()->OpenDialog("ChooseContentFolder", "Select the content folder", nullptr, program.file_system.contentDir == "" ? rootPath.string() : program.file_system.contentDir, 1);
 			// visual settings
 			ImGuiFileDialog::Instance()->SetExtentionInfos(".", ImVec4(1, 1, 0.5f, 0.9f));
 			break;
@@ -1418,7 +1422,7 @@ void Gui::openFileDialog(GUI_PROMPT type)
 		case OPEN:
 		{
 			promptType = OPEN;
-			std::string startDir = "C:\\";
+			std::string startDir = rootPath.string();
 			if (program.file_system.blfFile != "")
 			{
 				startDir = program.file_system.blfFile;
@@ -1452,7 +1456,7 @@ void Gui::openFileDialog(GUI_PROMPT type)
 		case SAVE_AS:
 		{
 			promptType = SAVE_AS;
-			std::string startDir = "C:\\";
+			std::string startDir = rootPath.string();
 			if (program.file_system.blfDir != "")
 			{
 				startDir = program.file_system.blfDir;
@@ -1485,7 +1489,7 @@ void Gui::checkFileDialog()
 				if (ImGuiFileDialog::Instance()->IsOk())
 				{
 					// change content dir
-					program.file_system.contentDir = ImGuiFileDialog::Instance()->GetCurrentPath() + "\\";
+					program.file_system.contentDir = ImGuiFileDialog::Instance()->GetCurrentPath() + pathSeparator;
 					program.file_system.changeSetting<std::string>("dirs.content", program.file_system.contentDir, libconfig::Setting::TypeString);
 					program.file_system.trySaveConfigs();
 					// load textures from freshly selected directory
@@ -1510,7 +1514,7 @@ void Gui::checkFileDialog()
 					{
 						// change currently selected blf
 						program.file_system.blfFile = ImGuiFileDialog::Instance()->GetFilePathName();
-						program.file_system.blfDir = std::filesystem::path(ImGuiFileDialog::Instance()->GetFilePathName()).parent_path().string() + "\\";
+						program.file_system.blfDir = std::filesystem::path(ImGuiFileDialog::Instance()->GetFilePathName()).parent_path().string() + pathSeparator;
 
 						program.file_system.changeSetting<std::string>("dirs.blf", program.file_system.blfFile, libconfig::Setting::TypeString);
 						program.file_system.changeSetting<std::string>("dirs.blfDir", program.file_system.blfDir, libconfig::Setting::TypeString);
@@ -1544,7 +1548,7 @@ void Gui::checkFileDialog()
 					{
 						// change currently selected blf
 						program.file_system.blfFile = ImGuiFileDialog::Instance()->GetFilePathName();
-						program.file_system.blfDir = std::filesystem::path(ImGuiFileDialog::Instance()->GetFilePathName()).parent_path().string() + "\\";
+						program.file_system.blfDir = std::filesystem::path(ImGuiFileDialog::Instance()->GetFilePathName()).parent_path().string() + pathSeparator;
 
 						program.file_system.changeSetting<std::string>("dirs.blf", program.file_system.blfFile, libconfig::Setting::TypeString);
 						program.file_system.changeSetting<std::string>("dirs.blfDir", program.file_system.blfDir, libconfig::Setting::TypeString);

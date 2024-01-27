@@ -9,7 +9,7 @@ extern "C" {
 #include <sstream>
 #include <cmath>
 #include <stdio.h>
-#include <windows.h>
+//include <windows.h>
 #include <vector>
 
 #include <main.h>
