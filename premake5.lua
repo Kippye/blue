@@ -59,6 +59,14 @@ project "blue"
 	filter "system:windows"
 		links {"libconfig++"}
 
+	filter "system:linux"
+		targetextension "_bin"
+		links
+		{
+			"X11",
+			"config++"
+		}
+
 group "Dependencies"
 
 project "glad"
