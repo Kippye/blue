@@ -38,7 +38,7 @@ void BLF_Converter::load_file(const char* path)
 
 	for (BLF_Tile* tile : tiles)
 	{
-		std::string texturePath = (std::string)tile->texture;
+		std::string texturePath = std::string((const char*)tile->texture);
 		//std::cout << "load_file: loaded tile's texture: " << texturePath << std::endl;
 		if (program.textureLoader.getAtlasTextureCoords(program.render.textureAtlas, texturePath) == glm::uvec4(0))
 		{
