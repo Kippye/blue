@@ -28,7 +28,7 @@ void Gui::guiInit(Window* windowManager)
 	// set up platform / renderer bindings
 	ImGui_ImplGlfw_InitForOpenGL(windowManager->window, true);
 	ImGui_ImplOpenGL3_Init("#version 430");
-	guiIO->Fonts->AddFontFromFileTTF("fonts\\Noto_Sans_Mono\\NotoSansMono-VariableFont.ttf", 16.0f);
+	guiIO->Fonts->AddFontFromFileTTF("./fonts/Noto_Sans_Mono/NotoSansMono-VariableFont.ttf", 16.0f);
 
 	// apply premade style
 	// ImVec4* colors = ImGui::GetStyle().Colors;
