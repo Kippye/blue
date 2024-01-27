@@ -36,6 +36,13 @@ include/blf/Makefile
 include/glad/Makefile
 include/glfw/Makefile
 
+# clangd
+compile_commands.json
+.cache/
+
+# Linux executable
+blue_bin
+
 # Precompiled Headers
 *.gch
 *.pch
