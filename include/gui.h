@@ -163,7 +163,7 @@ class Gui
 			{ CONTENT_LACK_WARNING, false }
 		};
 
-		std::vector<E_Texture*>& tileTextures = std::vector<E_Texture*>{};
+		std::vector<E_Texture*> tileTextures = std::vector<E_Texture*>{};
 		ImGuiIO* guiIO;
 		ImGuiContext* gui;
 		Window* window;

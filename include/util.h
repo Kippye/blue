@@ -1,10 +1,12 @@
 #pragma once
 
-#include <glm.hpp>
 #include <stdio.h>
+#include <algorithm>
 #include <iostream>
 #include <vector>
 #include <deque>
+
+#include <glm.hpp>
 #include <glm/gtx/string_cast.hpp>
 #define GLM_ENABLE_EXPERIMENTAL
 
@@ -163,31 +165,41 @@ class Bounding_Box
 			maximum.y = size.y > 0 ? size.y : 0.0f;
 		}
 
-		bool contains_position(glm::vec4 &boxPos, glm::vec4 &sourcePos)
+		bool contains_position(const glm::vec4 &boxPos, const glm::vec4 &sourcePos)
 		{
 			return sourcePos.x >= (boxPos.x) && sourcePos.y >= (boxPos.y)
 			&& sourcePos.x <= (maximum.x + boxPos.x) && sourcePos.y <= (maximum.y + boxPos.y);
 		}
 
-		bool overlaps(glm::vec4 &boxPos, glm::vec4 &sourcePos, Bounding_Box &sourceBox)
+		bool overlaps(glm::vec4 &boxPos, const glm::vec4 &sourcePos, const Bounding_Box &sourceBox)
 		{
+			glm::vec4 bl = sourcePos + glm::vec4(sourceBox.minimum + glm::vec2(0.01f), 0.0f, 1.0f);
+			glm::vec4 br = sourcePos + glm::vec4(sourceBox.minimum.x + sourceBox.size.x - 0.01f, sourceBox.minimum.y + 0.01f, 0.0f, 1.0f);
+			glm::vec4 tl = sourcePos + glm::vec4(sourceBox.minimum.x + 0.01f, sourceBox.minimum.y + sourceBox.size.y - 0.01f, 0.0f, 1.0f);
+			glm::vec4 tr = sourcePos + glm::vec4(sourceBox.maximum - glm::vec2(0.01f), 0.0f, 1.0f);
+
 			return
 			(
-				contains_position(boxPos, sourcePos + glm::vec4(sourceBox.minimum + glm::vec2(0.01f), 0.0f, 1.0f)) || // contains BL
-				contains_position(boxPos, sourcePos + glm::vec4(sourceBox.minimum.x + sourceBox.size.x - 0.01f, sourceBox.minimum.y + 0.01f, 0.0f, 1.0f)) || // BR
-				contains_position(boxPos, sourcePos + glm::vec4(sourceBox.minimum.x + 0.01f, sourceBox.minimum.y + sourceBox.size.y - 0.01f, 0.0f, 1.0f)) || // TL
-				contains_position(boxPos, sourcePos + glm::vec4(sourceBox.maximum - glm::vec2(0.01f), 0.0f, 1.0f)) // TR
+				contains_position(boxPos, bl) || // contains BL
+				contains_position(boxPos, br) || // BR
+				contains_position(boxPos, tl) || // TL
+				contains_position(boxPos, tr) // TR
 			);
 		}
 
 		bool contains(glm::vec4 &boxPos, glm::vec4 &sourcePos, Bounding_Box &sourceBox)
 		{
+			glm::vec4 bl = sourcePos + glm::vec4(sourceBox.minimum + glm::vec2(0.01f), 0.0f, 1.0f);
+			glm::vec4 br = sourcePos + glm::vec4(sourceBox.minimum.x + sourceBox.size.x - 0.01f, sourceBox.minimum.y + 0.01f, 0.0f, 1.0f);
+			glm::vec4 tl = sourcePos + glm::vec4(sourceBox.minimum.x + 0.01f, sourceBox.minimum.y + sourceBox.size.y - 0.01f, 0.0f, 1.0f);
+			glm::vec4 tr = sourcePos + glm::vec4(sourceBox.maximum - glm::vec2(0.01f), 0.0f, 1.0f);
+
 			return
 			(
-				contains_position(boxPos, sourcePos + glm::vec4(sourceBox.minimum + glm::vec2(0.01f), 0.0f, 1.0f)) && // contains BL
-				contains_position(boxPos, sourcePos + glm::vec4(sourceBox.minimum.x + sourceBox.size.x - 0.01f, sourceBox.minimum.y + 0.01f, 0.0f, 1.0f)) && // contains BR
-				contains_position(boxPos, sourcePos + glm::vec4(sourceBox.minimum.x + 0.01f, sourceBox.minimum.y + sourceBox.size.y - 0.01f, 0.0f, 1.0f)) && // contains TL
-				contains_position(boxPos, sourcePos + glm::vec4(sourceBox.maximum - glm::vec2(0.01f), 0.0f, 1.0f)) // containts TR
+				contains_position(boxPos, bl) && // contains BL
+				contains_position(boxPos, br) && // contains BR
+				contains_position(boxPos, tl) && // contains TL
+				contains_position(boxPos, tr) // containts TR
 			);
 		}
 };

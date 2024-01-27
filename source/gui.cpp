@@ -508,7 +508,8 @@ void Gui::addPropertiesGui()
 						// texture name
 						ImGui::Text(("Texture: " + selection[0]->visuals.textureName + " (" + std::to_string(selection[0]->visuals.atlasLocation.z) + "x" + std::to_string(selection[0]->visuals.atlasLocation.w) + ")").c_str());
 						// texturemode
-						if (ImGui::Combo("TextureMode", &(int)selection[0]->visuals.TextureMode, se.tileTextureModeOptions, 2))
+						int textureMode = (int)selection[0]->visuals.TextureMode;
+						if (ImGui::Combo("TextureMode", &textureMode, se.tileTextureModeOptions, 2))
 						{
 							program.editor.updateTileVisuals(selection[0]->ID);
 						}
@@ -640,8 +641,10 @@ void Gui::addPropertiesGui()
 						ImGui::Dummy(ImVec2(0.0f, s.propertySectionSeparator));
 						ImGui::Text("Visual");
 
+						int textureMode = (int)selection[0]->visuals.TextureMode;
+
 						// texturemode
-						if (ImGui::Combo("TextureMode", &(int)selection[0]->visuals.TextureMode, se.tileTextureModeOptions, 2))
+						if (ImGui::Combo("TextureMode", &textureMode, se.tileTextureModeOptions, 2))
 						{
 							for (size_t i = 0; i < selection.size(); i++)
 							{

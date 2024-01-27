@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <cstring>
 #include <type_traits>
 
 #include "templatearrayconstiterator.hpp"

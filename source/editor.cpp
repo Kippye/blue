@@ -115,7 +115,7 @@ void Editor::update_grid_size(float newSize)
 	program.editor.updateGizmoVisuals(index);
 }
 
-bool Editor::checkForOverlaps(Bounding_Box &box, glm::vec4 &pos)
+bool Editor::checkForOverlaps(const Bounding_Box &box, const glm::vec4 &pos)
 {
 	for (int index = tiles.size() - 1; index >= 0; index--)
 	{
@@ -128,7 +128,7 @@ bool Editor::checkForOverlaps(Bounding_Box &box, glm::vec4 &pos)
 	return false;
 }
 
-E_Tile* Editor::positionToTile(glm::vec4 &pos, int &index)
+E_Tile* Editor::positionToTile(const glm::vec4 &pos, int &index)
 {
 	E_Tile* closestTile = nullptr;
 	int closestTileIndex = 0;
@@ -171,7 +171,7 @@ int Editor::ID_to_tile_index(int ID)
 	return tileIndices[ID];
 }
 
-Gizmo* Editor::positionToGizmo(glm::vec4 &pos, int &index, GizmoType acceptedTypes)
+Gizmo* Editor::positionToGizmo(const glm::vec4 &pos, int &index, GizmoType acceptedTypes)
 {
 	for (index = gizmos.size() - 1; index >= 0; index--)
 	{
@@ -717,6 +717,7 @@ void Editor::updateToolPos(glm::vec2 &mousePos)
 			{
 				if (abs(dragBegin.x - worldMousePos.x) > minBoxDrawSize / 2.0f && abs(dragBegin.y - worldMousePos.y) > minBoxDrawSize / 2.0f)
 				{
+					
 					// not overlapping when not supposed to, place a tile
 					if (overlap == true || checkForOverlaps(Bounding_Box(areaSize), startPos))
 					{

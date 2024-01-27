@@ -48,7 +48,7 @@ class Editor
 		int moveDraggerGizmoIDs[3] = { -1, -1, -1 };
 		const float minBoxDrawSize = 0.2f;
 		const float minScaleSize = 0.1f;
-		std::map<unsigned int, int> tileIndices = {};
+		std::map<unsigned int, int> tileIndices;
     public:
 		// editor data
         std::deque<E_Tile> tiles = {};
@@ -64,7 +64,7 @@ class Editor
 
 		std::vector<std::string> tags = std::vector(MAX_TAGS, std::string("NA"));
 		// tool data
-        glm::vec2& toolPos = glm::vec2(0.0f);
+        glm::vec2 toolPos = glm::vec2(0.0f);
 		glm::vec2 dragBegin = glm::vec2(0.0f);
 		std::vector<unsigned int> lastSelectionArea = {};
 		bool overlap = true;
@@ -91,18 +91,18 @@ class Editor
 		void update_grid_size(float newSize);
 
 		// utility functions
-		bool checkForOverlaps(Bounding_Box &box, glm::vec4 &pos);
-		E_Tile* positionToTile(glm::vec4 &pos, int &index);
+		bool checkForOverlaps(const Bounding_Box &box, const glm::vec4 &pos);
+		E_Tile* positionToTile(const glm::vec4 &pos, int &index);
 		E_Tile* ID_to_tile(int ID, int &index);
 		int ID_to_tile_index(int ID);
-		Gizmo* positionToGizmo(glm::vec4 &pos, int &index, GizmoType acceptedTypes);
+		Gizmo* positionToGizmo(const glm::vec4 &pos, int &index, GizmoType acceptedTypes);
 		Gizmo* ID_to_gizmo(int ID, int &index);
 		int ID_to_gizmo_index(int ID);
 		std::vector<unsigned int>* getTilesInArea(Bounding_Box area, glm::vec4 &pos, std::vector<int> &indices);
 
 	private:
-		void Editor::update_tile_selection(int index, bool to);
-		void Editor::update_tile_selection(unsigned int ID, bool to);
+		void update_tile_selection(int index, bool to);
+		void update_tile_selection(unsigned int ID, bool to);
 	public:
 		void select_by_texture(std::string textureName);
 		void select_all();
