@@ -25,12 +25,6 @@ bool FileSystem::check_ignored(std::string name)
 	return false;
 }
 
-#if defined(_WIN32) || defined(WIN32)
-	fs::path rootPath = fs::path("C:\\");
-#elif defined(__unix__)
-	fs::path rootPath = fs::path("/");
-#endif
-
 bool FileSystem::check_path_ignored(fs::path path, fs::path* highestParentPath)
 {
 	fs::path pc = path;

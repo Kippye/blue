@@ -521,10 +521,10 @@ TextureAtlas* TextureLoader::loadTextureAtlas(std::vector<std::string> fullPaths
 	textureAtlas->ID = createEmptyTexture(&textureAtlas->width, &textureAtlas->height);
 	textureAtlas->data = textureAtlasData;
 
-	fullPaths.insert(fullPaths.begin(), std::string("textures\\missing_blue.png"));
-	fullPaths.insert(fullPaths.begin() + 1, std::string("textures\\grid_blue.png"));
-	fullPaths.insert(fullPaths.begin() + 2, std::string("textures\\drag_blue.png"));
-	fullPaths.insert(fullPaths.begin() + 3, std::string("textures\\dragger_blue.png"));
+	fullPaths.insert(fullPaths.begin(), std::string("textures/missing_blue.png"));
+	fullPaths.insert(fullPaths.begin() + 1, std::string("textures/grid_blue.png"));
+	fullPaths.insert(fullPaths.begin() + 2, std::string("textures/drag_blue.png"));
+	fullPaths.insert(fullPaths.begin() + 3, std::string("textures/dragger_blue.png"));
 	// fullPaths.insert(fullPaths.begin() + 4, std::string("textures\\dragger_move_horizontal_blue.png"));
 	// fullPaths.insert(fullPaths.begin() + 5, std::string("textures\\dragger_move_vertical_blue.png"));
 	// fullPaths.insert(fullPaths.begin() + 6, std::string("textures\\dragger_move_biaxial_blue.png"));
