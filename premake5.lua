@@ -30,6 +30,7 @@ project "blue"
 		"include/glew",
 		"include/blf/include",
 		"include/blf/include/blf",
+		"include/zlib",
 		"include/ImGuiFileDialog-Lib_Only",
 		"include/libconfig/lib",
 		"include/rectpack2D/include"
@@ -45,7 +46,8 @@ project "blue"
 		"glad",
 		"glfw",
 		"imgui",
-		"blf"
+		"blf",
+		"zlib"
 	}
 
 	filter "configurations:Debug"
@@ -108,6 +110,42 @@ project "glad"
 	
 	targetdir "bin/%{cfg.buildcfg}"
 	objdir "obj/%{cfg.buildcfg}"]]
+
+project "zlib"
+	location "include/zlib"
+	kind "StaticLib"
+	language "C"
+	staticruntime "on"
+
+	targetdir "bin/%{cfg.buildcfg}"
+	objdir "obj/%{cfg.buildcfg}"
+
+	files
+	{
+		"%{prj.location}/adler32.c",
+		"%{prj.location}/compress.c",
+		"%{prj.location}/crc32.c",
+		"%{prj.location}/deflate.c",
+		"%{prj.location}/gzclose.c",
+		"%{prj.location}/gzlib.c",
+		"%{prj.location}/gzread.c",
+		"%{prj.location}/gzwrite.c",
+		"%{prj.location}/inflate.c",
+		"%{prj.location}/infback.c",
+		"%{prj.location}/inftrees.c",
+		"%{prj.location}/inffast.c",
+		"%{prj.location}/trees.c",
+		"%{prj.location}/uncompr.c",
+		"%{prj.location}/zutil.c"
+	}
+
+	filter "configurations:Debug"
+		defines { "DEBUG" }
+		symbols "On"
+
+	filter "configurations:Release"
+		defines { "NDEBUG" }
+		optimize "On"
 
 project "glfw"
 	location "include/glfw"
