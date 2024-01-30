@@ -111,7 +111,7 @@ class BLF_Tile : public TemplateObject
 		void storeForeignAttributes(ForeignAttributeTable table) override
 		{
 			// Nowhere to store these, instead we're gonna print them
-			for (ObjectAttribute attr : table.attributes)
+			for (ObjectAttribute attr : table)
 			{
 				std::cout << "Attribute of type " << attr.attribType << " which has the name of: " << attr.name << std::endl;
 			}
