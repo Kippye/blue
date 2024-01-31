@@ -1,7 +1,7 @@
 workspace "blue"
 	configurations { "Debug", "Release" }
 	startproject "blue"
-	
+
 project "blue"
 	location "blue"
 	kind "ConsoleApp"
@@ -9,22 +9,22 @@ project "blue"
 	cppdialect "C++17"
 	staticruntime "on"
 	--architecture "x86_64"
-	
+
 	targetdir "."
 	objdir "obj/%{cfg.buildcfg}"
-	
-	files 
-	{ 
+
+	files
+	{
 		"source/**.cpp",
 		"include/*.h"
 	}
-	
-	includedirs 
-	{ 
-		"include/", 
-		"include/glad/include", 
+
+	includedirs
+	{
+		"include/",
+		"include/glad/include",
 		"include/glad/include/glad",
-		"include/glfw/include", 
+		"include/glfw/include",
 		"include/glm",
 		"include/imgui",
 		"include/glew",
@@ -35,12 +35,12 @@ project "blue"
 		"include/libconfig/lib",
 		"include/rectpack2D/include"
 	}
-	
+
 	defines
 	{
 		"GLFW_INCLUDE_NONE"
 	}
-	
+
 	links
 	{
 		"glad",
@@ -76,18 +76,18 @@ project "glad"
 	kind "StaticLib"
 	language "C"
 	staticruntime "on"
-	
+
 	targetdir "bin/%{cfg.buildcfg}"
 	objdir "obj/%{cfg.buildcfg}"
-	
-	files 
-	{ 
+
+	files
+	{
 		"%{prj.location}/src/glad.c",
 		"%{prj.location}/include/KHR/khrplatform.h"
 	}
-	
-	includedirs 
-	{ 
+
+	includedirs
+	{
 		"%{prj.location}/include",
 		"%{prj.location}/include/KHR"
 	}
@@ -99,7 +99,7 @@ project "glad"
 	filter "configurations:Release"
 		defines { "NDEBUG" }
 		optimize "On"
-		
+
 
 --[[externalproject("glfw")
 	location "include/glfw"
@@ -107,7 +107,7 @@ project "glad"
 	language "C++"
 	cppdialect "C++17"
 	staticruntime "on"
-	
+
 	targetdir "bin/%{cfg.buildcfg}"
 	objdir "obj/%{cfg.buildcfg}"]]
 
@@ -152,10 +152,10 @@ project "glfw"
 	kind "StaticLib"
 	language "C"
 	staticruntime "on"
-	
+
 	targetdir "bin/%{cfg.buildcfg}"
 	objdir "obj/%{cfg.buildcfg}"
-	
+
 	files
 	{
 		"%{prj.location}/src/context.c",
@@ -178,7 +178,7 @@ project "glfw"
 	filter "configurations:Release"
 		defines { "NDEBUG" }
 		optimize "On"
-		
+
 	filter "system:windows"
 		files
 		{
@@ -194,12 +194,12 @@ project "glfw"
 			"%{prj.location}/src/win32_window.c"
 		}
 
-		defines 
-		{ 
+		defines
+		{
 			"_GLFW_WIN32",
 			"_CRT_SECURE_NO_WARNINGS"
 		}
-	
+
 	filter "system:linux"
 		files
 		{
@@ -219,11 +219,11 @@ project "glfw"
 			"%{prj.location}/src/xkb_unicode.h"
 		}
 
-		defines 
-		{ 
+		defines
+		{
 			"_GLFW_X11"
 		}
-		
+
 	filter "system:macosx"
 		files
 		{
@@ -241,31 +241,31 @@ project "glfw"
 		}
 
 		defines
-		{ 
+		{
 			"_GLFW_COCOA"
 		}
-		
+
 project "imgui"
 	location "libs/imgui"
 	kind "StaticLib"
 	language "C++"
 	cppdialect "C++17"
 	staticruntime "on"
-	
+
 	targetdir "bin/%{cfg.buildcfg}"
 	objdir "obj/%{cfg.buildcfg}"
-	
-	files 
-	{ 
+
+	files
+	{
 		"%{prj.location}/*.cpp"
 	}
-	
+
 	includedirs
-	{ 
+	{
 		"../../include/imgui/",
 		"include/imgui",
 		"include/glad/include",
-		"include/glfw/include/" 
+		"include/glfw/include/"
 	}
 
 	filter "configurations:Debug"
@@ -275,28 +275,35 @@ project "imgui"
 	filter "configurations:Release"
 		defines { "NDEBUG" }
 		optimize "On"
-		
+
 project("blf")
 	location "include/blf"
 	kind "StaticLib"
 	language "C++"
 	cppdialect "C++17"
 	staticruntime "on"
-	
+
 	files
 	{
 		"%{prj.location}/src/blf/**.cpp"
 	}
-	
+
 	includedirs
 	{
 		"%{prj.location}/include",
-		"%{prj.location}/include/blf"
+		"%{prj.location}/include/blf",
+		"%{prj.location}/../zlib"
 	}
-	
+
+	links
+	{
+		"zlib"
+	}
+
+
 	targetdir "bin/%{cfg.buildcfg}"
 	objdir "obj/%{cfg.buildcfg}"
-	
+
 	filter "configurations:Debug"
 		defines { "DEBUG" }
 		symbols "On"
@@ -304,7 +311,7 @@ project("blf")
 	filter "configurations:Release"
 		defines { "NDEBUG" }
 		optimize "On"
-		
+
 if _TARGET_OS == "windows" then
 	externalproject("libconfig++")
 		location "include/libconfig/lib"
@@ -312,7 +319,7 @@ if _TARGET_OS == "windows" then
 		language "C++"
 		cppdialect "C++17"
 		staticruntime "on"
-		
+
 		targetdir "bin/%{cfg.buildcfg}"
 		objdir "obj/%{cfg.buildcfg}"
 end
