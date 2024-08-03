@@ -31,61 +31,6 @@ void Gui::guiInit(Window* windowManager)
 	ImGui_ImplOpenGL3_Init("#version 430");
 	guiIO->Fonts->AddFontFromFileTTF("./fonts/Noto_Sans_Mono/NotoSansMono-VariableFont.ttf", 16.0f);
 
-	// apply premade style
-	// ImVec4* colors = ImGui::GetStyle().Colors;
-	// colors[ImGuiCol_Text]                   = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
-	// colors[ImGuiCol_TextDisabled]           = ImVec4(0.50f, 0.50f, 0.50f, 1.00f);
-	// colors[ImGuiCol_WindowBg]               = ImVec4(0.03f, 0.03f, 0.06f, 0.94f);
-	// colors[ImGuiCol_ChildBg]                = ImVec4(0.03f, 0.03f, 0.07f, 0.94f);
-	// colors[ImGuiCol_PopupBg]                = ImVec4(0.03f, 0.03f, 0.07f, 0.94f);
-	// colors[ImGuiCol_Border]                 = ImVec4(0.02f, 0.02f, 0.16f, 0.49f);
-	// colors[ImGuiCol_BorderShadow]           = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
-	// colors[ImGuiCol_FrameBg]                = ImVec4(0.13f, 0.29f, 0.53f, 0.54f);
-	// colors[ImGuiCol_FrameBgHovered]         = ImVec4(0.09f, 0.32f, 0.66f, 0.54f);
-	// colors[ImGuiCol_FrameBgActive]          = ImVec4(0.26f, 0.59f, 0.98f, 0.67f);
-	// colors[ImGuiCol_TitleBg]                = ImVec4(0.07f, 0.07f, 0.29f, 1.00f);
-	// colors[ImGuiCol_TitleBgActive]          = ImVec4(0.22f, 0.25f, 0.78f, 1.00f);
-	// colors[ImGuiCol_TitleBgCollapsed]       = ImVec4(0.00f, 0.00f, 0.00f, 0.51f);
-	// colors[ImGuiCol_MenuBarBg]              = ImVec4(0.07f, 0.05f, 0.22f, 1.00f);
-	// colors[ImGuiCol_ScrollbarBg]            = ImVec4(0.02f, 0.02f, 0.02f, 0.53f);
-	// colors[ImGuiCol_ScrollbarGrab]          = ImVec4(0.14f, 0.13f, 0.31f, 1.00f);
-	// colors[ImGuiCol_ScrollbarGrabHovered]   = ImVec4(0.16f, 0.14f, 0.41f, 1.00f);
-	// colors[ImGuiCol_ScrollbarGrabActive]    = ImVec4(0.14f, 0.12f, 0.49f, 1.00f);
-	// colors[ImGuiCol_CheckMark]              = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
-	// colors[ImGuiCol_SliderGrab]             = ImVec4(0.24f, 0.52f, 0.88f, 1.00f);
-	// colors[ImGuiCol_SliderGrabActive]       = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
-	// colors[ImGuiCol_Button]                 = ImVec4(0.20f, 0.47f, 0.78f, 0.40f);
-	// colors[ImGuiCol_ButtonHovered]          = ImVec4(0.25f, 0.55f, 0.91f, 1.00f);
-	// colors[ImGuiCol_ButtonActive]           = ImVec4(0.00f, 0.51f, 1.00f, 1.00f);
-	// colors[ImGuiCol_Header]                 = ImVec4(0.26f, 0.59f, 0.98f, 0.31f);
-	// colors[ImGuiCol_HeaderHovered]          = ImVec4(0.26f, 0.59f, 0.98f, 0.80f);
-	// colors[ImGuiCol_HeaderActive]           = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
-	// colors[ImGuiCol_Separator]              = ImVec4(0.04f, 0.04f, 0.17f, 0.50f);
-	// colors[ImGuiCol_SeparatorHovered]       = ImVec4(0.10f, 0.40f, 0.75f, 0.78f);
-	// colors[ImGuiCol_SeparatorActive]        = ImVec4(0.10f, 0.40f, 0.75f, 1.00f);
-	// colors[ImGuiCol_ResizeGrip]             = ImVec4(0.26f, 0.59f, 0.98f, 0.20f);
-	// colors[ImGuiCol_ResizeGripHovered]      = ImVec4(0.26f, 0.59f, 0.98f, 0.67f);
-	// colors[ImGuiCol_ResizeGripActive]       = ImVec4(0.26f, 0.59f, 0.98f, 0.95f);
-	// colors[ImGuiCol_Tab]                    = ImVec4(0.18f, 0.35f, 0.58f, 0.86f);
-	// colors[ImGuiCol_TabHovered]             = ImVec4(0.26f, 0.59f, 0.98f, 0.80f);
-	// colors[ImGuiCol_TabActive]              = ImVec4(0.20f, 0.41f, 0.68f, 1.00f);
-	// colors[ImGuiCol_TabUnfocused]           = ImVec4(0.07f, 0.10f, 0.15f, 0.97f);
-	// colors[ImGuiCol_TabUnfocusedActive]     = ImVec4(0.14f, 0.26f, 0.42f, 1.00f);
-	// colors[ImGuiCol_PlotLines]              = ImVec4(0.61f, 0.61f, 0.61f, 1.00f);
-	// colors[ImGuiCol_PlotLinesHovered]       = ImVec4(1.00f, 0.43f, 0.35f, 1.00f);
-	// colors[ImGuiCol_PlotHistogram]          = ImVec4(0.90f, 0.70f, 0.00f, 1.00f);
-	// colors[ImGuiCol_PlotHistogramHovered]   = ImVec4(1.00f, 0.60f, 0.00f, 1.00f);
-	// colors[ImGuiCol_TableHeaderBg]          = ImVec4(0.19f, 0.19f, 0.20f, 1.00f);
-	// colors[ImGuiCol_TableBorderStrong]      = ImVec4(0.31f, 0.31f, 0.35f, 1.00f);
-	// colors[ImGuiCol_TableBorderLight]       = ImVec4(0.23f, 0.23f, 0.25f, 1.00f);
-	// colors[ImGuiCol_TableRowBg]             = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
-	// colors[ImGuiCol_TableRowBgAlt]          = ImVec4(1.00f, 1.00f, 1.00f, 0.06f);
-	// colors[ImGuiCol_TextSelectedBg]         = ImVec4(0.26f, 0.59f, 0.98f, 0.35f);
-	// colors[ImGuiCol_DragDropTarget]         = ImVec4(1.00f, 1.00f, 0.00f, 0.90f);
-	// colors[ImGuiCol_NavHighlight]           = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
-	// colors[ImGuiCol_NavWindowingHighlight]  = ImVec4(1.00f, 1.00f, 1.00f, 0.70f);
-	// colors[ImGuiCol_NavWindowingDimBg]      = ImVec4(0.80f, 0.80f, 0.80f, 0.20f);
-	// colors[ImGuiCol_ModalWindowDimBg]       = ImVec4(0.80f, 0.80f, 0.80f, 0.35f);
 	ImVec4* colors = ImGui::GetStyle().Colors;
 	colors[ImGuiCol_Text]                   = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
 	colors[ImGuiCol_TextDisabled]           = ImVec4(0.50f, 0.50f, 0.50f, 1.00f);
@@ -103,14 +48,14 @@ void Gui::guiInit(Window* windowManager)
 	colors[ImGuiCol_MenuBarBg]              = ImVec4(0.10f, 0.12f, 0.27f, 1.00f);
 	colors[ImGuiCol_ScrollbarBg]            = ImVec4(0.02f, 0.02f, 0.02f, 0.53f);
 	colors[ImGuiCol_ScrollbarGrab]          = ImVec4(0.13f, 0.15f, 0.49f, 1.00f);
-	colors[ImGuiCol_ScrollbarGrabHovered]   = ImVec4(0.20f, 0.22f, 0.56f, 0.00f);
-	colors[ImGuiCol_ScrollbarGrabActive]    = ImVec4(0.23f, 0.25f, 0.58f, 0.00f);
+	colors[ImGuiCol_ScrollbarGrabHovered]   = ImVec4(0.20f, 0.22f, 0.56f, 1.00f);
+	colors[ImGuiCol_ScrollbarGrabActive]    = ImVec4(0.23f, 0.25f, 0.58f, 1.00f);
 	colors[ImGuiCol_CheckMark]              = ImVec4(0.92f, 0.96f, 1.00f, 1.00f);
 	colors[ImGuiCol_SliderGrab]             = ImVec4(0.24f, 0.52f, 0.88f, 1.00f);
 	colors[ImGuiCol_SliderGrabActive]       = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
 	colors[ImGuiCol_Button]                 = ImVec4(0.04f, 0.32f, 0.73f, 0.54f);
-	colors[ImGuiCol_ButtonHovered]          = ImVec4(0.12f, 0.40f, 0.81f, 0.31f);
-	colors[ImGuiCol_ButtonActive]           = ImVec4(0.24f, 0.50f, 0.88f, 0.12f);
+    colors[ImGuiCol_ButtonHovered]          = ImVec4(0.24f, 0.50f, 0.88f, 0.85f);
+	colors[ImGuiCol_ButtonActive]           = ImVec4(0.28f, 0.55f, 0.92f, 0.90f);
 	colors[ImGuiCol_Header]                 = ImVec4(0.01f, 0.03f, 1.00f, 0.57f);
 	colors[ImGuiCol_HeaderHovered]          = ImVec4(0.15f, 0.17f, 1.00f, 0.27f);
 	colors[ImGuiCol_HeaderActive]           = ImVec4(0.31f, 0.33f, 0.99f, 0.16f);
@@ -142,6 +87,7 @@ void Gui::guiInit(Window* windowManager)
 	colors[ImGuiCol_ModalWindowDimBg]       = ImVec4(0.80f, 0.80f, 0.80f, 0.35f);
 
 	gd.normalButtonColor = colors[ImGuiCol_Button];
+    gd.selectedButtonColor = colors[ImGuiCol_ButtonHovered];
 
 	std::cout << "Program GUI initialized" << std::endl;
 }
@@ -505,7 +451,23 @@ void Gui::addPropertiesGui()
 								break;
 							}
 						}
-						ImGui::Image((void*)(intptr_t)tileTextures[tileTextureIndex]->ID, ImVec2(64, 64));
+
+                        glm::uvec4 missingTextureCoords = program.textureLoader.getAtlasTextureCoords(program.render.textureAtlas, std::string("missing_blue.png"));
+                        // The selected tile has the missing_blue texture, which is contained in the texture atlas, NOT in tileTextures, i do not know how to fix that mess
+                        if (selection[0]->visuals.atlasLocation == missingTextureCoords)
+                        {
+                            TextureAtlas* textureAtlas = program.render.textureAtlas;
+                            ImVec2 atlasSize = ImVec2(textureAtlas->width, textureAtlas->height);
+                            ImVec2 missingBL = ImVec2(missingTextureCoords.x, missingTextureCoords.y);
+                            ImVec2 missingTR = missingBL + ImVec2(missingTextureCoords.z, missingTextureCoords.w);
+                            ImGui::Image((void*)(intptr_t)textureAtlas->ID, ImVec2(64, 64), missingBL / atlasSize, missingTR / atlasSize);
+                        }
+                        // The selected tile has a normal texture, draw it here
+                        else
+                        {
+						    ImGui::Image((void*)(intptr_t)tileTextures[tileTextureIndex]->ID, ImVec2(64, 64));
+                        }
+
 						// texture name
 						ImGui::Text(("Texture: " + selection[0]->visuals.textureName + " (" + std::to_string(selection[0]->visuals.atlasLocation.z) + "x" + std::to_string(selection[0]->visuals.atlasLocation.w) + ")").c_str());
 						// texturemode
@@ -551,10 +513,29 @@ void Gui::addPropertiesGui()
 								// string to char array
 								strcpy(buf, program.editor.tags[i].c_str());
 
-								if (ImGui::InputText(std::string("##").append(std::to_string(i)).c_str(), buf, 32))
+                                bool highlighted = false;
+                                std::string tagInputLabel = std::string("##SelectedTileTag").append(std::to_string(i));
+                                if (se.hoveredTagInputID == ImGui::GetID(tagInputLabel.c_str()))
+                                {
+                                    ImGui::PushStyleColor(ImGuiCol_FrameBg, ImGui::GetStyleColorVec4(ImGuiCol_FrameBgHovered));
+                                    highlighted = true;
+                                }
+								if (ImGui::InputText(tagInputLabel.c_str(), buf, 32))
 								{
 									program.editor.tags[i].assign(buf);
 								}
+                                if (highlighted == true)
+                                {
+                                    ImGui::PopStyleColor();
+                                }
+                                if (ImGui::IsItemHovered())
+                                {
+                                    se.hoveredTagInputID = ImGui::GetID(tagInputLabel.c_str());
+                                }
+                                else if (highlighted == true)
+                                {
+                                    se.hoveredTagInputID = 0;
+                                }
 
 								ImGui::SameLine();
 
@@ -572,7 +553,7 @@ void Gui::addPropertiesGui()
 					}
 					else if (selection.size() > 0) // multiselect
 					{
-						ImGui::Text(("selected tile count: " + std::to_string(program.editor.selection.size())).c_str());
+						ImGui::Text((std::to_string(program.editor.selection.size()) + " tiles selected").c_str());
 						/// location
 						ImGui::Text("Transform");
 						float pos[3] = { 0.0f, 0.0f, 0.0f };
@@ -702,10 +683,29 @@ void Gui::addPropertiesGui()
 								// string to char array
 								strcpy(buf, program.editor.tags[i].c_str());
 
-								if (ImGui::InputText(std::string("##").append(std::to_string(i)).c_str(), buf, 32))
+                                bool highlighted = false;
+                                std::string tagInputLabel = std::string("##MultiSelectTileTag").append(std::to_string(i));
+                                if (se.hoveredTagInputID == ImGui::GetID(tagInputLabel.c_str()))
+                                {
+                                    ImGui::PushStyleColor(ImGuiCol_FrameBg, ImGui::GetStyleColorVec4(ImGuiCol_FrameBgHovered));
+                                    highlighted = true;
+                                }
+								if (ImGui::InputText(tagInputLabel.c_str(), buf, 32))
 								{
 									program.editor.tags[i].assign(buf);
 								}
+                                if (highlighted == true)
+                                {
+                                    ImGui::PopStyleColor();
+                                }
+                                if (ImGui::IsItemHovered())
+                                {
+                                    se.hoveredTagInputID = ImGui::GetID(tagInputLabel.c_str());
+                                }
+                                else if (highlighted == true)
+                                {
+                                    se.hoveredTagInputID = 0;
+                                }
 
 								ImGui::SameLine();
 
@@ -888,15 +888,34 @@ void Gui::addPropertiesGui()
 								// copying the contents of the
 								// string to char array
 								strcpy(buf, program.editor.tags[i].c_str());
-
-								if (ImGui::InputText(std::string("##m").append(std::to_string(i)).c_str(), buf, 32))
+ 
+                                bool highlighted = false;
+                                std::string tagInputLabel = std::string("##GutenTag").append(std::to_string(i));
+                                if (se.hoveredTagInputID == ImGui::GetID(tagInputLabel.c_str()))
+                                {
+                                    ImGui::PushStyleColor(ImGuiCol_FrameBg, ImGui::GetStyleColorVec4(ImGuiCol_FrameBgHovered));
+                                    highlighted = true;
+                                }
+								if (ImGui::InputText(tagInputLabel.c_str(), buf, 32))
 								{
 									program.editor.tags[i].assign(buf);
 								}
+                                if (highlighted == true)
+                                {
+                                    ImGui::PopStyleColor();
+                                }
+                                if (ImGui::IsItemHovered())
+                                {
+                                    se.hoveredTagInputID = ImGui::GetID(tagInputLabel.c_str());
+                                }
+                                else if (highlighted == true)
+                                {
+                                    se.hoveredTagInputID = 0;
+                                }
 
 								ImGui::SameLine();
 
-								if (ImGui::Checkbox(std::string("##cm").append(std::to_string(i)).c_str(), &program.editor.nextTile.tags[i]))
+								if (ImGui::Checkbox(std::string("##NextTileTagChecked").append(std::to_string(i)).c_str(), &program.editor.nextTile.tags[i]))
 								{
 
 								}
@@ -1608,7 +1627,7 @@ void Gui::drawGui()
 	checkFileDialog();
 
 	// TEMP
-	//ImGui::ShowDemoWindow();
+	// ImGui::ShowDemoWindow();
 	ImGui::Render();
 	// check for right / middle click defocus
 	if (gui->HoveredWindow == NULL && gui->NavWindow != NULL && (guiIO->MouseClicked[1] || guiIO->MouseClicked[2]) /* could cause issues, who cares? && GetFrontMostPopupModal() == NULL*/)

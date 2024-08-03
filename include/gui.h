@@ -115,6 +115,7 @@ struct GuiSelections
 	public:
 		int currentTextureSelection = 0;
 		int currentTextureModeSelection = 0;
+        ImGuiID hoveredTagInputID = 0;
 		bool newTileOptionsVisible = true;
 		bool tagsVisible = false;
 		const char* tileTextureModeOptions[2] = { "stretch", "tile" };
@@ -131,8 +132,8 @@ struct GuiData
 		ImVec4 contentFolderColor = ImVec4(0.25f, 0.68f, 0.01f, 1.0f);
 		ImVec4 blfFileColor = ImVec4(0.68f, 0.45f, 0.01f, 1.0f);
 		ImVec4 buttonDisabled = ImVec4(0.50f, 0.02f, 0.02f, 1.0f);
-		ImVec4 buttonDisabledHovered = ImVec4(0.63f, 0.06f, 0.06f, 1.0f);
-		ImVec4 buttonDisabledActive = ImVec4(0.72f, 0.06f, 0.06f, 1.0f);
+		ImVec4 buttonDisabledActive = ImVec4(0.63f, 0.06f, 0.06f, 1.0f);
+		ImVec4 buttonDisabledHovered = ImVec4(0.72f, 0.06f, 0.06f, 1.0f);
 };
 
 class Gui

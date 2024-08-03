@@ -10,8 +10,8 @@
 #include <editor.h>
 #include <gui.h>
 
-#define BLUE_VERSION "1.3.0-pre"
-#define BLUE_EXPERIMENTAL true
+#define BLUE_VERSION "1.3.0"
+#define BLUE_EXPERIMENTAL false
 
 class Window;
 class FileSystem;

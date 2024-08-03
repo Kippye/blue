@@ -33,7 +33,7 @@ class Camera
 		glm::mat4 view, projection;
 		float yaw = -90.0f, pitch = 0.0f;
 		float FOV = 45.0f;
-		float zoomSpeed = 1.5f;
+		float zoomSpeed = 3.5f;
 		float currentCameraSpeed = CAMERA_SPEED;
 		const float cameraSensitivity = 0.1f;
 		float yVelocity = 0.0f;
