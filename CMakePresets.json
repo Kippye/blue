@@ -1,0 +1,82 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 25,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "base",
+      "displayName": "Base",
+      "binaryDir": "${sourceDir}/build",
+      "hidden": true
+    },
+    {
+      "name": "make",
+      "displayName": "Unix Makefiles Debug",
+      "description": "Debug configuration using Make and vcpkg",
+      "generator": "Unix Makefiles",
+      "inherits": [
+        "base"
+      ],
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      }
+    },
+    {
+      "name": "make-release",
+      "displayName": "Unix Makefiles Release",
+      "description": "Release configuration using Make and vcpkg",
+      "generator": "Unix Makefiles",
+      "inherits": [
+        "base"
+      ],
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "windows-msvc2022",
+      "displayName": "MSVC 2022",
+      "description": "Configuration using Visual Studio / MSVC and vcpkg",
+      "generator": "Visual Studio 17 2022",
+      "inherits": [
+        "base"
+      ],
+      "cacheVariables": {
+        "PRESET_ADD_COMPILE_OPTIONS": "/nologo /verbosity:minimal /maxcpucount"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "msvc2022-debug",
+      "displayName": "MSVC 2022 Debug",
+      "configurePreset": "windows-msvc2022",
+      "configuration": "Debug",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    },
+    {
+      "name": "msvc2022-release",
+      "displayName": "MSVC 2022 Release",
+      "configurePreset": "windows-msvc2022",
+      "configuration": "Release",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    }
+  ]
+}
