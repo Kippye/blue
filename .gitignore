@@ -1,12 +1,22 @@
-# folders
-.vs/
-.vscode
+# Build-generated folders
 blue/
+build/
+build_*/
+include/generated/
 bin/
 obj/ 
 Debug/
 Release/
 resources/
+*.ini
+
+# CMake
+CMakeUserPresets.json
+
+# IDE
+.vs/
+.vscode
+.idea/
 
 # luarocks build files
 *.src.rock
@@ -27,21 +37,12 @@ resources/
 *.filters
 *.ilk
 *.pdb
-#*.sln easier to build when it's included
-#*.vcxproj
-
-# premake5 generated files when using the gmake2 configuration
-Makefile
-include/blf/Makefile
-include/glad/Makefile
-include/glfw/Makefile
+*.sln
+*.vcxproj
 
 # clangd
 compile_commands.json
 .cache/
-
-# Linux executable
-blue_bin
 
 # Precompiled Headers
 *.gch
