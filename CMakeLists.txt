@@ -187,15 +187,14 @@ target_link_libraries(${PROGRAM_NAME} PUBLIC compiler_flags
     glm
     glad 
     glfw
-    config++
     rectpack2D
 )
 
 ### PLATFORM-SPECIFIC ###
 IF (WINDOWS_MSVC)
-
+    target_link_libraries(${PROGRAM_NAME} PUBLIC libconfig++)
 ENDIF(WINDOWS_MSVC)
 
 IF (LINUX)
-
-ENDIF()
+    target_link_libraries(${PROGRAM_NAME} PUBLIC config++)
+ENDIF(LINUX)
