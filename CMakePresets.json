@@ -38,10 +38,9 @@
       }
     },
     {
-      "name": "windows-msvc2022",
-      "displayName": "MSVC 2022",
-      "description": "Configuration using Visual Studio / MSVC and vcpkg",
-      "generator": "Visual Studio 17 2022",
+      "name": "windows-vs",
+      "displayName": "Visual Studio",
+      "description": "Configuration using default available Visual Studio / MSVC",
       "inherits": [
         "base"
       ],
@@ -57,9 +56,9 @@
   ],
   "buildPresets": [
     {
-      "name": "msvc2022-debug",
-      "displayName": "MSVC 2022 Debug",
-      "configurePreset": "windows-msvc2022",
+      "name": "vs-debug",
+      "displayName": "Visual Studio / MSVC Debug",
+      "configurePreset": "windows-vs",
       "configuration": "Debug",
       "condition": {
         "type": "equals",
@@ -68,9 +67,9 @@
       }
     },
     {
-      "name": "msvc2022-release",
-      "displayName": "MSVC 2022 Release",
-      "configurePreset": "windows-msvc2022",
+      "name": "vs-release",
+      "displayName": "Visual Studio / MSVC Release",
+      "configurePreset": "windows-vs",
       "configuration": "Release",
       "condition": {
         "type": "equals",

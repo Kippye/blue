@@ -1,5 +1,3 @@
-# This starter workflow is for a CMake project running on multiple platforms. There is a different starter workflow if you just want a single platform.
-# See: https://github.com/actions/starter-workflows/blob/main/ci/cmake-single-platform.yml
 name: CMake on multiple platforms
 
 on:
@@ -30,8 +28,8 @@ jobs:
           - os: windows-latest
             c_compiler: cl
             cpp_compiler: cl
-            config_preset: windows-msvc2022
-            build_preset: msvc2022-release
+            config_preset: windows-vs
+            build_preset: vs-release
             has_build_preset: true
           - os: ubuntu-latest
             c_compiler: gcc
@@ -74,8 +72,6 @@ jobs:
         run: git submodule update --init --recursive
 
       - name: Configure CMake
-        # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
-        # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
         run: >
           cmake -B ${{ steps.strings.outputs.build-output-dir }}
           -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
