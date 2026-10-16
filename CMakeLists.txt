@@ -54,6 +54,11 @@ ENDIF()
 # FetchContent_MakeAvailable(GLFW)
 ######### SUBDIRS / LOCAL LIBRARIES #########
 add_subdirectory("${LIBRARY_DIR}/blf" EXCLUDE_FROM_ALL)
+set_target_properties(blf PROPERTIES
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+    CXX_EXTENSIONS OFF
+)
 add_subdirectory("${LIBRARY_DIR}/glad")
 add_subdirectory("${LIBRARY_DIR}/glm")
 set(BUILD_TESTS OFF CACHE BOOL "Enable tests" FORCE)
