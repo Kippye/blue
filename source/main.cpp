@@ -1,7 +1,5 @@
 #include <main.h>
-#include <editor_tile.h>
-#include <GLFW/glfw3.h>
-#include <glm/glm.hpp>
+#include "glad_glfw.h"
 
 class E_Tile;
 class Location;
@@ -16,7 +14,7 @@ Program::Program()
 	file_system.tryOpenLastFile();
 
 	windowManager.initialize();
-	input.setup();
+	input.setup(windowManager);
 	render.setup();
 
 	// load textures

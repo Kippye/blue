@@ -1,18 +1,13 @@
 #include <textures.h>
-extern "C" {
-#include <glad.h>
-}
+#include "glad_glfw.h"
 #include <util.h>
-#include <GLFW/glfw3.h>
 #include <iostream>
 #include <filesystem>
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb_image_write.h>
-#include <cmath>
-#include <rectpack2D/include/finders_interface.h>
-#include <glm/gtx/io.hpp>
+#include "rectpack2D/finders_interface.h"
 #include <chrono>
 
 using namespace rectpack2D;
@@ -656,6 +651,7 @@ std::string TextureLoader::getAtlasTexturePath(TextureAtlas* atlas, glm::uvec2 c
 			return texture;
 		}
 	}
+	return std::string("missing_blue.png");
 }
 
 glm::uvec4 TextureLoader::getAtlasTextureCoords(TextureAtlas* atlas, std::string texturePath)

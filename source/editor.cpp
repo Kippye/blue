@@ -1,11 +1,9 @@
 #include <main.h>
+#include "textures.h"
 #include <editor.h>
 #include <iostream>
 #include <algorithm>
 #include <iterator>
-
-// unneeded yet still here
-#include <glm/gtx/string_cast.hpp>
 
 class Program;
 extern Program program;
@@ -83,7 +81,7 @@ void Editor::setDirtiness(bool to)
 {
 	dirty = to;
 
-	program.windowManager.setTitle(program.windowManager.title.c_str());
+	program.windowManager.setTitle(program.windowManager.title.c_str(), dirty);
 }
 
 void Editor::set_grid_visible(bool to)
@@ -417,24 +415,24 @@ void Editor::reset_next_tile()
 {
 	nextTile.location.Position.z = 0.0f;
 	
-	nextTile.location.Size.x = DEFAULT_TILE.location.Size.x;
-	nextTile.location.Size.y = DEFAULT_TILE.location.Size.y;
-	nextTile.location.Angle = DEFAULT_TILE.location.Angle;
+	nextTile.location.Size.x = E_Tile::getDefaultOptions().location.Size.x;
+	nextTile.location.Size.y = E_Tile::getDefaultOptions().location.Size.y;
+	nextTile.location.Angle = E_Tile::getDefaultOptions().location.Angle;
 
-	nextTile.physics.CollisionsEnabled = DEFAULT_TILE.physics.CollisionsEnabled;
-	nextTile.physics.Static = DEFAULT_TILE.physics.Static;
-	nextTile.physics.Bounce = DEFAULT_TILE.physics.Bounce;
-	nextTile.physics.Density = DEFAULT_TILE.physics.Density;
-	nextTile.physics.Friction = DEFAULT_TILE.physics.Friction;
+	nextTile.physics.CollisionsEnabled = E_Tile::getDefaultOptions().physics.CollisionsEnabled;
+	nextTile.physics.Static = E_Tile::getDefaultOptions().physics.Static;
+	nextTile.physics.Bounce = E_Tile::getDefaultOptions().physics.Bounce;
+	nextTile.physics.Density = E_Tile::getDefaultOptions().physics.Density;
+	nextTile.physics.Friction = E_Tile::getDefaultOptions().physics.Friction;
 
-	program.gui.se.currentTextureModeSelection = DEFAULT_TILE.visuals.TextureMode;
-	nextTile.visuals.TextureMode = DEFAULT_TILE.visuals.TextureMode;
-	nextTile.visuals.TextureSize.x = DEFAULT_TILE.visuals.TextureSize.x;
-	nextTile.visuals.TextureSize.y = DEFAULT_TILE.visuals.TextureSize.y;
-	nextTile.visuals.Color.x = DEFAULT_TILE.visuals.Color.x;
-	nextTile.visuals.Color.y = DEFAULT_TILE.visuals.Color.y;
-	nextTile.visuals.Color.z = DEFAULT_TILE.visuals.Color.z;
-	nextTile.visuals.Opacity = DEFAULT_TILE.visuals.Opacity;
+	program.gui.se.currentTextureModeSelection = E_Tile::getDefaultOptions().visuals.TextureMode;
+	nextTile.visuals.TextureMode = E_Tile::getDefaultOptions().visuals.TextureMode;
+	nextTile.visuals.TextureSize.x = E_Tile::getDefaultOptions().visuals.TextureSize.x;
+	nextTile.visuals.TextureSize.y = E_Tile::getDefaultOptions().visuals.TextureSize.y;
+	nextTile.visuals.Color.x = E_Tile::getDefaultOptions().visuals.Color.x;
+	nextTile.visuals.Color.y = E_Tile::getDefaultOptions().visuals.Color.y;
+	nextTile.visuals.Color.z = E_Tile::getDefaultOptions().visuals.Color.z;
+	nextTile.visuals.Opacity = E_Tile::getDefaultOptions().visuals.Opacity;
 
 	for (int i = 0; i < sizeof(nextTile.tags) / sizeof(bool); i++)
 	{
@@ -586,7 +584,7 @@ void Editor::updateToolPos(glm::vec2 &mousePos)
 								glm::vec2 newPosition = glm::vec3(worldMousePos) - tile->location.Size / 2.0f;
 								newPosition = program.input.ctrl_down || autosnap ? mymath::round_to_grid(newPosition) : newPosition;
 								moveTile(tIndex, glm::vec3(newPosition.x, newPosition.y, tile->location.Position.z));
-								activeDraggerFound == true;
+								activeDraggerFound = true;
 								break;
 							}
 						}
@@ -1076,7 +1074,7 @@ void Editor::update_atlas_coords(TextureAtlas* atlas)
 		glm::uvec4 atLocation;
 		if (updatedAtlasLocations.find(tiles[i].visuals.textureName) == updatedAtlasLocations.end())
 		{
-			atLocation = program.textureLoader.getAtlasTextureCoords(atlas, tiles[i].visuals.textureName);
+			atLocation = TextureLoader::getAtlasTextureCoords(atlas, tiles[i].visuals.textureName);
 			updatedAtlasLocations[tiles[i].visuals.textureName] = atLocation;
 		}
 		else
@@ -1096,7 +1094,7 @@ void Editor::update_atlas_coords(TextureAtlas* atlas)
 		glm::uvec4 atLocation;
 		if (updatedAtlasLocations.find(gizmos[i].visuals.textureName) == updatedAtlasLocations.end())
 		{
-			atLocation = program.textureLoader.getAtlasTextureCoords(atlas, gizmos[i].visuals.textureName);
+			atLocation = TextureLoader::getAtlasTextureCoords(atlas, gizmos[i].visuals.textureName);
 			updatedAtlasLocations[gizmos[i].visuals.textureName] = atLocation;
 		}
 		else
@@ -1116,11 +1114,11 @@ void Editor::update_atlas_coords(TextureAtlas* atlas)
 	// std::cout << nextTile.visuals.textureName << std::endl;
 	if (program.gui.tileTextures.size() > 0)
 	{
-		glm::uvec4 atLocation = program.textureLoader.getAtlasTextureCoords(atlas, nextTile.visuals.textureName);
+		glm::uvec4 atLocation = TextureLoader::getAtlasTextureCoords(atlas, nextTile.visuals.textureName);
 		// when the nextTile has no texture, use the first one in the texture selector gui
 		nextTile.visuals.textureName = program.gui.tileTextures[0]->path;
-		nextTile.visuals.atlasLocation = atLocation == glm::uvec4(0) ? program.textureLoader.getAtlasTextureCoords(program.render.textureAtlas, nextTile.visuals.textureName) : atLocation;
-		nextTile.visuals.atlasLocation = program.textureLoader.getAtlasTextureCoords(atlas, nextTile.visuals.textureName);
+		nextTile.visuals.atlasLocation = atLocation == glm::uvec4(0) ? TextureLoader::getAtlasTextureCoords(program.render.textureAtlas, nextTile.visuals.textureName) : atLocation;
+		nextTile.visuals.atlasLocation = TextureLoader::getAtlasTextureCoords(atlas, nextTile.visuals.textureName);
 	}
 
 	program.render.updateInstanceArray(INSTANCE_ARRAY_UPDATE_3);
@@ -1143,7 +1141,7 @@ void Editor::update_atlas_coords(TextureAtlas* atlas)
 	{
 		Gizmo &dragGizmo = gizmos.emplace_back(
 			Location(glm::vec4(0.0f), glm::vec3(0.0f)),
-			Visuals(program.textureLoader.getAtlasTextureCoords(program.render.textureAtlas, "drag_blue.png"), "drag_blue.png", TEXTUREMODE_TILE, glm::vec2(1.0f, 1.0f), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f), 0.75f),
+			Visuals(TextureLoader::getAtlasTextureCoords(program.render.textureAtlas, "drag_blue.png"), "drag_blue.png", TEXTUREMODE_TILE, glm::vec2(1.0f, 1.0f), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f), 0.75f),
 			GizmoType_Indicator,
 			/*_permanent*/ true
 		);
@@ -1157,7 +1155,7 @@ void Editor::update_atlas_coords(TextureAtlas* atlas)
 		{
 			Gizmo &scaleDraggerGizmo = gizmos.emplace_back(
 				Location(glm::vec4(0.0f), glm::vec3(0.2f)),
-				Visuals(program.textureLoader.getAtlasTextureCoords(program.render.textureAtlas, "dragger_blue.png"), "dragger_blue.png", TEXTUREMODE_STRETCH, glm::vec2(1.0f, 1.0f), scaleDraggerColor, 0.75f),
+				Visuals(TextureLoader::getAtlasTextureCoords(program.render.textureAtlas, "dragger_blue.png"), "dragger_blue.png", TEXTUREMODE_STRETCH, glm::vec2(1.0f, 1.0f), scaleDraggerColor, 0.75f),
 				GizmoType_ResizeDragger,
 				/*_permanent*/ true
 			);
@@ -1182,7 +1180,7 @@ void Editor::update_atlas_coords(TextureAtlas* atlas)
 		{
 			Gizmo &moveDraggerGizmo = gizmos.emplace_back(
 				Location(glm::vec4(0.0f), glm::vec3(0.2f)),
-				Visuals(program.textureLoader.getAtlasTextureCoords(program.render.textureAtlas, moveDraggerTextures[i]), moveDraggerTextures[i], TEXTUREMODE_STRETCH, glm::vec2(1.0f, 1.0f), moveDraggerColors[i], 0.75f),
+				Visuals(TextureLoader::getAtlasTextureCoords(program.render.textureAtlas, moveDraggerTextures[i]), moveDraggerTextures[i], TEXTUREMODE_STRETCH, glm::vec2(1.0f, 1.0f), moveDraggerColors[i], 0.75f),
 				GizmoType_MoveDragger,
 				/*_permanent*/ true
 			);
@@ -1199,7 +1197,7 @@ void Editor::update_atlas_coords(TextureAtlas* atlas)
 		{
 			Gizmo &gridGizmo = gizmos.emplace_back(
 				Location(glm::vec4(-1000.0f, -1000.0f, 0.0f, 0.0f), glm::vec3(2000.0f, 2000.0f, 0.0f)),
-				Visuals(program.textureLoader.getAtlasTextureCoords(program.render.textureAtlas, "grid_blue.png"), "grid_blue.png", TEXTUREMODE_TILE, glm::vec2(1.0f, 1.0f), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f), 0.75f),
+				Visuals(TextureLoader::getAtlasTextureCoords(program.render.textureAtlas, "grid_blue.png"), "grid_blue.png", TEXTUREMODE_TILE, glm::vec2(1.0f, 1.0f), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f), 0.75f),
 				GizmoType_Indicator,
 				/*_permanent*/ true
 			);
@@ -1545,6 +1543,14 @@ void Editor::update_gizmos()
 			}
 		}
 	}
+}
+
+void Editor::add_new_tile(E_Tile &tile)
+{
+	tiles.push_back(tile);
+	tileIndices[tile.ID] = tiles.size() - 1;
+	program.render.add_to_render_list(tile);
+	setDirtiness(true);
 }
 
 void Editor::add_tile(E_Tile &tile)

@@ -1,8 +1,6 @@
 #pragma once
 
-extern "C" {
-#include <glad.h>
-}
+#include "glad_glfw.h"
 
 #include <string>
 #include <vector>
@@ -45,21 +43,21 @@ class TextureLoader
 	public:
 		static inline const std::string textureFolder = "textures/";
 
-		GLuint createEmptyTexture(int* width, int* height);
-		unsigned int loadTexture_ID(const char* fileName, std::string directory = textureFolder, bool flip = true);
-		unsigned char* loadTextureData(const char* fileName, int* width, int* height, std::string directory = textureFolder, bool flip = true, unsigned int* ID = nullptr, bool bind = false);
-		unsigned char* loadTextureData(std::string fullPath, int* width, int* height, bool flip = true, unsigned int* ID = nullptr, bool bind = false);
+		static GLuint createEmptyTexture(int* width, int* height);
+		static unsigned int loadTexture_ID(const char* fileName, std::string directory = textureFolder, bool flip = true);
+		static unsigned char* loadTextureData(const char* fileName, int* width, int* height, std::string directory = textureFolder, bool flip = true, unsigned int* ID = nullptr, bool bind = false);
+		static unsigned char* loadTextureData(std::string fullPath, int* width, int* height, bool flip = true, unsigned int* ID = nullptr, bool bind = false);
 
-		E_Texture* loadTexture(const char* fileName, std::string directory = textureFolder, bool flip = false);
-		E_Texture* loadTexture(std::string fullPath, bool flip = false);
-		std::vector<E_Texture*>& loadTextures(std::vector<std::string> fileNames, std::string directory = textureFolder, bool flip = false);
-		std::vector<E_Texture*>& loadTextures(std::vector<std::string> fullPaths, bool flip = false);
+		static E_Texture* loadTexture(const char* fileName, std::string directory = textureFolder, bool flip = false);
+		static E_Texture* loadTexture(std::string fullPath, bool flip = false);
+		static std::vector<E_Texture*>& loadTextures(std::vector<std::string> fileNames, std::string directory = textureFolder, bool flip = false);
+		static std::vector<E_Texture*>& loadTextures(std::vector<std::string> fullPaths, bool flip = false);
 
-		TextureAtlas* loadTextureAtlas(std::vector<std::string> fullPaths, bool flip = false);
+		static TextureAtlas* loadTextureAtlas(std::vector<std::string> fullPaths, bool flip = false);
 
-		unsigned int getAtlasTextureIndex(TextureAtlas* atlas, glm::uvec2 coords);
-		unsigned int getAtlasTextureIndex(TextureAtlas* atlas, const char* textureName);
-		glm::uvec4 getAtlasCoords(TextureAtlas* atlas, int index);
-		std::string getAtlasTexturePath(TextureAtlas* atlas, glm::uvec2 coords);
-		glm::uvec4 getAtlasTextureCoords(TextureAtlas* atlas, std::string texturePath);
+		static unsigned int getAtlasTextureIndex(TextureAtlas* atlas, glm::uvec2 coords);
+		static unsigned int getAtlasTextureIndex(TextureAtlas* atlas, const char* textureName);
+		static glm::uvec4 getAtlasCoords(TextureAtlas* atlas, int index);
+		static std::string getAtlasTexturePath(TextureAtlas* atlas, glm::uvec2 coords);
+		static glm::uvec4 getAtlasTextureCoords(TextureAtlas* atlas, std::string texturePath);
 };

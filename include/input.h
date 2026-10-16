@@ -1,7 +1,9 @@
 #pragma once
 
+#include "glad_glfw.h"
 #include <glm/glm.hpp>
 #include <editor.h>
+#include "window.h"
 
 class Input
 {
@@ -15,12 +17,17 @@ class Input
 		bool ctrl_down = false, shift_down = false, alt_down = false, lmb_down = false, rmb_down = false, lmb_down_last = false, rmb_down_last = false;
 		const float mouseRepeatDelay = 0.05f;
 
-		void setup();
+		void setup(Window& window);
 		void mouse_button_repeat(GLFWwindow* window);
 		void processInput(GLFWwindow* window);
 
-		void key_event(GLFWwindow* window, int key, int scancode, int action, int mods);
-		void mouse_button_event(GLFWwindow* window, int button, int action, int mods);
-		void cursor_pos_event(GLFWwindow* window, double xPos, double yPos);
-		void scroll_event(GLFWwindow* window, double xOffset, double yOffset);
+        std::function<void(int, int, int, int)> keyCallback;
+        std::function<void(int, int, int)> mouseButtonCallback;
+        std::function<void(double, double)> scrollCallback;
+        std::function<void(double, double)> cursorPosCallback;
+
+		void key_event(int key, int scancode, int action, int mods);
+		void mouse_button_event(int button, int action, int mods);
+		void cursor_pos_event(double xPos, double yPos);
+		void scroll_event(double xOffset, double yOffset);
 };

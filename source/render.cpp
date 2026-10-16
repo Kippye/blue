@@ -1,8 +1,7 @@
-#include <GLFW/glfw3.h>
+#include "glad_glfw.h"
 
 #include <gtc/matrix_transform.hpp>
 #include <gtc/type_ptr.hpp>
-#include <glm/gtx/string_cast.hpp>
 
 #include <main.h>
 #include <render.h>

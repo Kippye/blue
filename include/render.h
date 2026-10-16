@@ -3,6 +3,7 @@
 #include <shader.h>
 #include <glm.hpp>
 #include <vector>
+#include "gizmo.h"
 #include <editor_tile.h>
 
 enum INSTANCE_ARRAY_UPDATE

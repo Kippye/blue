@@ -1,20 +1,9 @@
-extern "C" {
-#include <glad.h>
-}
-#include <GLFW/glfw3.h>
+#include "glad_glfw.h"
 #include <window.h>
 
+#include "textures.h"
 #include <iostream>
-#include <fstream>
-#include <sstream>
-#include <cmath>
 #include <stdio.h>
-//include <windows.h>
-#include <vector>
-
-#include <main.h>
-class Program;
-extern Program program;
 
 void Window::initialize()
 {
@@ -34,7 +23,7 @@ void Window::initialize()
 		glfwTerminate();
 		return;
 	}
-	Window* thisWindow = &(program.windowManager);
+	Window* thisWindow = this;
 
 	// make the window current and maximize 8)
 	glfwMakeContextCurrent(window);
@@ -50,13 +39,13 @@ void Window::initialize()
 
 	// load and set the window's icon
 	GLFWimage images[1] = { GLFWimage() } ;
-	images[0].pixels = program.textureLoader.loadTextureData("icon.png", &images[0].width, &images[0].height, program.textureLoader.textureFolder, false);
+	images[0].pixels = TextureLoader::loadTextureData("icon.png", &images[0].width, &images[0].height, TextureLoader::textureFolder, false);
 	glfwSetWindowIcon(window, 1, images);
 
 	// load and create cursors
 	cursors[NORMAL] = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
 	GLFWimage drawCursor = GLFWimage();
-	drawCursor.pixels = program.textureLoader.loadTextureData("cursor_draw.png", &drawCursor.width, &drawCursor.height, program.textureLoader.textureFolder, false);
+	drawCursor.pixels = TextureLoader::loadTextureData("cursor_draw.png", &drawCursor.width, &drawCursor.height, TextureLoader::textureFolder, false);
 	cursors[DRAW] = glfwCreateCursor(&drawCursor, 8, 8);
 
 	// set up the viewport (xpos, ypos, w, h)
@@ -115,22 +104,22 @@ void Window::initialize()
 
 	thisWindow->key_callback = [](auto self, int key, int scancode, int action, int mods)
 	{
-		program.input.key_event(self->window, key, scancode, action, mods);
+		self->keyEvent.invoke(key, scancode, action, mods);
 	};
 
 	thisWindow->mouse_button_callback = [](auto self, int button, int action, int mods)
 	{
-		program.input.mouse_button_event(self->window, button, action, mods);
+		self->mouseButtonEvent.invoke(button, action, mods);
 	};
 
 	thisWindow->cursor_pos_callback = [](auto self, double xPos, double yPos)
 	{
-		program.input.cursor_pos_event(self->window, xPos, yPos);
+		self->cursorPosEvent.invoke(xPos, yPos);
 	};
 
 	thisWindow->scroll_callback = [](auto self, double xOffset, double yOffset)
 	{
-		program.input.scroll_event(self->window, xOffset, yOffset);
+		self->scrollEvent.invoke(xOffset, yOffset);
 	};
 }
 
@@ -139,26 +128,26 @@ void Window::setCursor(CURSOR_TYPE cursor)
 	glfwSetCursor(window, cursors[cursor]);
 }
 
-void Window::setTitle(const char* _title)
+void Window::setTitle(const char* titleFile, bool dirty)
 {
-	title = _title;
+	title = titleFile;
 
 	// no file is opened, just show "blue"
 	if (title == "")
 	{
-		glfwSetWindowTitle(window, titleBase);
+		glfwSetWindowTitle(window, titleBase.data());
 	}
 	else
 	{
-		if (program.editor.getDirtiness())
-			glfwSetWindowTitle(window, (title + "*" + " - " + titleBase).c_str());
+		if (dirty)
+			glfwSetWindowTitle(window, (title + "*" + " - " + std::string(titleBase)).c_str());
 		else
-			glfwSetWindowTitle(window, (title + " - " + titleBase).c_str());
+			glfwSetWindowTitle(window, (title + " - " + std::string(titleBase)).c_str());
 	}
 }
 
 void Window::terminate()
 {
-	glfwDestroyWindow(program.windowManager.window);
+	glfwDestroyWindow(this->window);
 	glfwTerminate();
 }

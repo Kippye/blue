@@ -1,7 +1,7 @@
 // singleton
 #pragma once
 
-#include <glad/glad.h>
+#include "glad_glfw.h"
 #include <glm.hpp>
 
 #include <string>

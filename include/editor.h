@@ -9,7 +9,6 @@
 #include <deque>
 #include <unordered_set>
 #include <map>
-#include <string.h>
 
 class E_Tile;
 class Gizmo;
@@ -20,17 +19,6 @@ enum Tool
     PLACE, // place copies of current nextTile or remove single tiles
 	BOX // box draw tiles or a single tile
 };
-
-struct TileOptions
-{
-	public:
-		Location location = Location(glm::vec4(0.0f), glm::vec3(1.0f));
-		Physics physics = Physics();
-		Visuals visuals = Visuals();
-		bool tags[MAX_TAGS] = { false, false, false, false, false };
-};
-
-const TileOptions DEFAULT_TILE = TileOptions();
 
 class Editor
 {
@@ -154,6 +142,7 @@ class Editor
 
 		void update_gizmos();
 
+        void add_new_tile(E_Tile &tile);
         void add_tile(E_Tile &tile);
         void add_tile(std::vector<E_Tile> &tiles);
         void remove_tile(int index = -1);

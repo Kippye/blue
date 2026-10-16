@@ -55,23 +55,27 @@ class FileSystem
 		void startNewFile();
 		void tryOpenLastFile();
 
-		template <typename T> Setting* changeSetting(const char* setting_name, T new_value, Setting::Type type, bool add_if_NA = true)
+		template <typename T> Setting* changeSetting(const std::string& setting_name, T new_value, Setting::Type type, bool add_if_NA = true)
 		{
 			Setting& root = config.getRoot();
-			if (!root.exists(setting_name))
+
+			try {
+				Setting& setting = root.lookup(setting_name);
+
+				setting = new_value;
+				return &setting;
+			} catch (SettingNotFoundException)
 			{
 				if (add_if_NA)
 				{
-					return &root.add(setting_name, type);
-				}
-				else
-				{
+					// TEMP HACK
+					std::string settingDir = setting_name.substr(0, setting_name.find(".") - 1);
+					std::string settingName = setting_name.substr(setting_name.find("."));
+					return &root.add(setting_name, Setting::TypeGroup).add(settingName, type);
+				} else {
 					std::cerr << "tried to change non-existant setting: " << setting_name << std::endl;
 					return nullptr;
 				}
 			}
-
-			root.lookup(setting_name) = new_value;
-			return &root.lookup(setting_name);
 		}
 };

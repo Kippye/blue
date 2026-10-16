@@ -1,10 +1,13 @@
 #include "file_system.h"
+#include "blf_converter.h"
 #include <gui.h>
 #include <main.h>
+#include "program_info.h"
 
 #include <ImGuiFileDialog.h>
-#include <glm/gtx/string_cast.hpp>
 #include <libconfig.h++>
+#define GLM_ENABLE_EXPERIMENTAL
+#include "glm/gtx/string_cast.hpp"
 
 #include <iostream>
 #include <iterator>
@@ -110,7 +113,7 @@ void Gui::addEditorGui()
 
 		if (tileTextures.size() == 0) 
 		{
-			ImGui::PopStyleVar(ImGuiStyleVar_WindowPadding); 
+			ImGui::PopStyleVar(); 
 			ImGui::End(); 
 			return;
 		}
@@ -124,7 +127,7 @@ void Gui::addEditorGui()
 		{
 			ImGui::PushStyleColor(ImGuiCol_Button, gd.normalButtonColor);
 		}
-		if (ImGui::ImageButton((void*)(intptr_t)guiTextures["select"], s.editorButtonSize))
+		if (ImGui::ImageButton("ToolButtonSelect", guiTextures["select"], s.editorButtonSize))
 		{
 			// update (to) select tool
 			program.editor.setTool(SELECT);
@@ -157,7 +160,7 @@ void Gui::addEditorGui()
 		{
 			ImGui::PushStyleColor(ImGuiCol_Button, gd.normalButtonColor);
 		}
-		if (ImGui::ImageButton((void*)(intptr_t)guiTextures["place"], s.editorButtonSize))
+		if (ImGui::ImageButton("ToolButtonPlace", guiTextures["place"], s.editorButtonSize))
 		{
 			// update (to) place tool
 			program.editor.setTool(PLACE);
@@ -189,7 +192,7 @@ void Gui::addEditorGui()
 		{
 			ImGui::PushStyleColor(ImGuiCol_Button, gd.normalButtonColor);
 		}
-		if (ImGui::ImageButton((void*)(intptr_t)guiTextures["box"], s.editorButtonSize))
+		if (ImGui::ImageButton("ToolButtonBox", guiTextures["box"], s.editorButtonSize))
 		{
 			// update (to) box tool
 			program.editor.setTool(BOX);
@@ -269,7 +272,7 @@ void Gui::addEditorGui()
 				gt->Start(1.0f, 0.0f, 0.0f);
 			}
 		}
-		ImGui::PopStyleVar(1);
+		ImGui::PopStyleVar();
 
 		currentToolButtonX += s.editorComboWidth + s.editorButtonOffset;
 
@@ -381,7 +384,7 @@ void Gui::addEditorGui()
 		ImGui::SameLine();
 		if (ImGui::Checkbox("##as", &program.editor.autosnap)){}
 		
-		ImGui::PopStyleVar(ImGuiStyleVar_WindowPadding);
+		ImGui::PopStyleVar();
 	ImGui::End();
 }
 
@@ -420,7 +423,8 @@ void Gui::addPropertiesGui()
 						{
 							program.editor.resizeTile(selection[0]->ID, glm::vec2(size[0], size[1]));
 						}
-						float angle[1] = { mymath::deg(selection[0]->location.Angle) };
+						float angleValue = mymath::deg(selection[0]->location.Angle);
+						float angle [1] = { angleValue }; 
 						// angle
 						if (ImGui::DragFloat("Angle", angle, 1.0F, 0.0f, 360.0f))
 						{
@@ -452,7 +456,7 @@ void Gui::addPropertiesGui()
 							}
 						}
 
-                        glm::uvec4 missingTextureCoords = program.textureLoader.getAtlasTextureCoords(program.render.textureAtlas, std::string("missing_blue.png"));
+                        glm::uvec4 missingTextureCoords = TextureLoader::getAtlasTextureCoords(program.render.textureAtlas, std::string("missing_blue.png"));
                         // The selected tile has the missing_blue texture, which is contained in the texture atlas, NOT in tileTextures, i do not know how to fix that mess
                         if (selection[0]->visuals.atlasLocation == missingTextureCoords)
                         {
@@ -460,12 +464,12 @@ void Gui::addPropertiesGui()
                             ImVec2 atlasSize = ImVec2(textureAtlas->width, textureAtlas->height);
                             ImVec2 missingBL = ImVec2(missingTextureCoords.x, missingTextureCoords.y);
                             ImVec2 missingTR = missingBL + ImVec2(missingTextureCoords.z, missingTextureCoords.w);
-                            ImGui::Image((void*)(intptr_t)textureAtlas->ID, ImVec2(64, 64), missingBL / atlasSize, missingTR / atlasSize);
+                            ImGui::Image((ImTextureID)(intptr_t)textureAtlas->ID, ImVec2(64, 64), missingBL / atlasSize, missingTR / atlasSize);
                         }
                         // The selected tile has a normal texture, draw it here
                         else
                         {
-						    ImGui::Image((void*)(intptr_t)tileTextures[tileTextureIndex]->ID, ImVec2(64, 64));
+						    ImGui::Image((ImTextureID)(intptr_t)tileTextures[tileTextureIndex]->ID, ImVec2(64, 64));
                         }
 
 						// texture name
@@ -571,7 +575,8 @@ void Gui::addPropertiesGui()
 						{
 							program.editor.resizeSelectedTiles(glm::vec2(size[0], size[1]));
 						}
-						float angle[1] = { mymath::deg(selection[0]->location.Angle) };
+						float angleValue = mymath::deg(selection[0]->location.Angle);
+						float angle[1] = { angleValue };
 						// angle
 						if (ImGui::DragFloat("Angle", angle, 1.0F, 0.0f, 360.0f))
 						{
@@ -791,7 +796,8 @@ void Gui::addPropertiesGui()
 								}
 							}
 						}
-						float angle[1] = { mymath::deg(program.editor.nextTile.location.Angle) };
+						float angleValue = mymath::deg(program.editor.nextTile.location.Angle);
+						float angle[1] = { angleValue };
 						// angle
 						if (ImGui::DragFloat("Angle##", angle, 1.0F, 0.0f, 360.0f))
 						{
@@ -822,9 +828,9 @@ void Gui::addPropertiesGui()
 								break;
 							}
 						}
-						ImGui::Image((void*)(intptr_t)tileTextures[tileTextureIndex]->ID, ImVec2(64, 64));
+						ImGui::Image((ImTextureID)(intptr_t)tileTextures[tileTextureIndex]->ID, ImVec2(64, 64));
 						// texture name
-						ImGui::Text(("Texture: " + program.textureLoader.getAtlasTexturePath(program.render.textureAtlas, program.editor.nextTile.visuals.atlasLocation) + " (" + std::to_string(program.editor.nextTile.visuals.atlasLocation.z) + "x" + std::to_string(program.editor.nextTile.visuals.atlasLocation.w) + ")").c_str());
+						ImGui::Text(("Texture: " + TextureLoader::getAtlasTexturePath(program.render.textureAtlas, program.editor.nextTile.visuals.atlasLocation) + " (" + std::to_string(program.editor.nextTile.visuals.atlasLocation.z) + "x" + std::to_string(program.editor.nextTile.visuals.atlasLocation.w) + ")").c_str());
 						// texturemode
 						ImGui::Combo("TextureMode##m", &se.currentTextureModeSelection, se.tileTextureModeOptions, 2);
 						program.editor.nextTile.visuals.TextureMode = (TEXTUREMODE)se.currentTextureModeSelection;
@@ -1021,7 +1027,7 @@ void Gui::addTextureSelectorGui()
 					}
 
 					// check if this texture was selected
-					if (ImGui::ImageButton((void*)(intptr_t)tileTextures[total]->ID, ImVec2(64, 64)))
+					if (ImGui::ImageButton(std::string("TextureButton##").append(std::to_string(total)).c_str(), (ImTextureID)(intptr_t)tileTextures[total]->ID, ImVec2(64, 64)))
 					{
 						// change texture of selection (pretty crappy but works ig)
 						for (size_t i = 0; i < selection.size(); i++)
@@ -1037,7 +1043,7 @@ void Gui::addTextureSelectorGui()
 						program.editor.nextTile.visuals.atlasLocation = glm::uvec4(tileTextures[total]->atlasLocation);
 						program.editor.nextTile.visuals.textureName = tileTextures[total]->path;
 						// add highlight to see which is selected
-						se.currentTextureSelection = total; //program.textureLoader.getAtlasTextureIndex(program.render.textureAtlas, program.editor.nextTile.visuals.atlasLocation);
+						se.currentTextureSelection = total; //TextureLoader::getAtlasTextureIndex(program.render.textureAtlas, program.editor.nextTile.visuals.atlasLocation);
 						// update place cursor
 						if (program.editor.placeCursorID != -1)
 						{
@@ -1274,7 +1280,7 @@ void Gui::addPopupGui()
 			ImGui::Text(("position: " + (glm::to_string(program.camera.cameraPos))).c_str());
 			ImGui::Text(("mouse pos: " + (glm::to_string(program.input.mousePos))).c_str());
 			ImGui::Text(("instance updates / frame: " + std::to_string(program.render.instanceDataUpdates)).c_str());
-			ImGui::Text(("blue version: " + std::string(BLUE_VERSION) + (BLUE_EXPERIMENTAL ? " (exp)" : "")).c_str());
+			ImGui::Text("%s version: %s%s", program_info::PROGRAM_NAME.data(), program_info::ProgramVersion::getCurrent().getString().c_str(), program_info::BLUE_EXPERIMENTAL > 0 ? " (exp)" : "");
 			ImGui::End();
 		}
 		else
@@ -1311,6 +1317,7 @@ void Gui::addPopupGui()
 			ImGui::End();
 		}
 	}
+	// TODO: Open this popup when a new file is being loaded but there are changes
 	if (popupToggles[SAVE_CONTEXT])
 	{
 		ImGui::SetNextWindowPos(centeredPos);
@@ -1380,7 +1387,7 @@ void Gui::addPopupGui()
 				{
 					popupToggles[CONTENT_LACK_WARNING] = false;
 					popupToggles[REOPEN_CONTEXT] = false;
-					program.blf_converter.load_file(program.file_system.blfFile.c_str());
+					BLF_Converter::load_file(program.file_system.blfFile.c_str());
 				}
 			}
 			if (program.render.textureAtlas == nullptr)
@@ -1432,9 +1439,17 @@ void Gui::openFileDialog(GUI_PROMPT type)
 		{
 			promptType = DIR;
 			program.file_system.contextOpen = true;
-			ImGuiFileDialog::Instance()->OpenDialog("ChooseContentFolder", "Select the content folder", nullptr, program.file_system.contentDir == "" ? rootPath.string() : program.file_system.contentDir, 1);
+			auto dialogConfig = IGFD::FileDialogConfig();
+			dialogConfig.path = program.file_system.contentDir == "" ? rootPath.string() : program.file_system.contentDir;
+			dialogConfig.countSelectionMax = 1;
+			ImGuiFileDialog::Instance()->OpenDialog(
+				"ChooseContentFolder", 
+				"Select the content folder", 
+				nullptr, 
+				dialogConfig
+			);
 			// visual settings
-			ImGuiFileDialog::Instance()->SetExtentionInfos(".", ImVec4(1, 1, 0.5f, 0.9f));
+			ImGuiFileDialog::Instance()->SetFileStyle(IGFD_FileStyleByTypeDir, ".", ImVec4(1, 1, 0.5f, 0.9f));
 			break;
 		}
 
@@ -1442,9 +1457,10 @@ void Gui::openFileDialog(GUI_PROMPT type)
 		{
 			promptType = OPEN;
 			std::string startDir = rootPath.string();
+			// NOTE: Seems like a file can't be directly used as the start dir anymore!
 			if (program.file_system.blfFile != "")
 			{
-				startDir = program.file_system.blfFile;
+				startDir = std::filesystem::path(program.file_system.blfFile).remove_filename().string();
 			}
 			else if (program.file_system.blfDir != "")
 			{
@@ -1454,8 +1470,12 @@ void Gui::openFileDialog(GUI_PROMPT type)
 			{
 				startDir = program.file_system.contentDir == "" ? startDir : program.file_system.contentDir;
 			}
-			ImGuiFileDialog::Instance()->SetExtentionInfos(".blf", gd.blfFileColor, "");
-			ImGuiFileDialog::Instance()->OpenDialog("OpenFile", "Load a BLF file", ".blf", startDir.c_str(), 1);
+
+			auto dialogConfig = IGFD::FileDialogConfig();
+			dialogConfig.path = startDir.c_str();
+			dialogConfig.countSelectionMax = 1;
+			ImGuiFileDialog::Instance()->SetFileStyle(IGFD_FileStyleByTypeFile, ".blf", gd.blfFileColor, "");
+			ImGuiFileDialog::Instance()->OpenDialog("OpenFile", "Load a BLF file", ".blf", dialogConfig);
 			break;
 		}
 
@@ -1463,7 +1483,7 @@ void Gui::openFileDialog(GUI_PROMPT type)
 		{
 			if (program.file_system.blfFile != "") // we have a file open, save changes to it
 			{
-				program.blf_converter.write_file(program.file_system.blfFile.c_str());
+				BLF_Converter::write_file(program.file_system.blfFile.c_str());
 			}
 			else // we need to create a new file, open Save as dialog
 			{
@@ -1485,8 +1505,12 @@ void Gui::openFileDialog(GUI_PROMPT type)
 				startDir = program.file_system.contentDir == "" ? startDir : program.file_system.contentDir;
 			}
 
-			ImGuiFileDialog::Instance()->SetExtentionInfos(".blf", gd.blfFileColor, "");
-			ImGuiFileDialog::Instance()->OpenDialog("SaveFileAs", "Save current BLF file as...", ".blf", startDir.c_str(), 1, nullptr, ImGuiFileDialogFlags_ConfirmOverwrite);
+			auto dialogConfig = IGFD::FileDialogConfig();
+			dialogConfig.path = startDir.c_str();
+			dialogConfig.countSelectionMax = 1;
+			dialogConfig.flags = ImGuiFileDialogFlags_ConfirmOverwrite;
+			ImGuiFileDialog::Instance()->SetFileStyle(IGFD_FileStyleByTypeFile, ".blf", gd.blfFileColor, "");
+			ImGuiFileDialog::Instance()->OpenDialog("SaveFileAs", "Save current BLF file as...", ".blf", dialogConfig);
 			break;
 		}
 	};
@@ -1539,7 +1563,7 @@ void Gui::checkFileDialog()
 						program.file_system.changeSetting<std::string>("dirs.blfDir", program.file_system.blfDir, libconfig::Setting::TypeString);
 						program.file_system.trySaveConfigs();
 						// try to load the file
-						program.blf_converter.load_file(ImGuiFileDialog::Instance()->GetFilePathName().c_str());
+						BLF_Converter::load_file(ImGuiFileDialog::Instance()->GetFilePathName().c_str());
 
 						// close
 						program.file_system.contextOpen = false;
@@ -1573,11 +1597,11 @@ void Gui::checkFileDialog()
 						program.file_system.changeSetting<std::string>("dirs.blfDir", program.file_system.blfDir, libconfig::Setting::TypeString);
 						program.file_system.trySaveConfigs();
 						// try to save the file
-						program.blf_converter.write_file(ImGuiFileDialog::Instance()->GetFilePathName().c_str());
+						BLF_Converter::write_file(ImGuiFileDialog::Instance()->GetFilePathName().c_str());
 
 						// update title
 						std::filesystem::path blfPath = std::filesystem::path(ImGuiFileDialog::Instance()->GetFilePathName());
-						program.windowManager.setTitle(blfPath.filename().string().c_str());
+						program.windowManager.setTitle(blfPath.filename().string().c_str(), program.editor.getDirtiness());
 
 						// close
 						program.file_system.contextOpen = false;

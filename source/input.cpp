@@ -1,13 +1,30 @@
-#include <GLFW/glfw3.h>
+#include "glad_glfw.h"
 #include <input.h>
 #include <main.h>
-#include <iostream>
-#include <glm/gtx/norm.hpp>
+#include <glm/vec2.hpp>
 
 class Program;
 extern Program program;
 
-void Input::setup(){ /* nothing to see here */ }
+void Input::setup(Window& window){ 
+	keyCallback = [&](int key, int scancode, int action, int mods){
+		this->key_event(key, scancode, action, mods);
+	};
+	mouseButtonCallback = [&](int button, int action, int mods){
+		this->mouse_button_event(button, action, mods);
+	};
+	scrollCallback = [&](double xOffset, double yOffset){
+		this->scroll_event(xOffset, yOffset);
+	};
+	cursorPosCallback = [&](double xPos, double yPos){
+		this->cursor_pos_event(xPos, yPos);
+	};
+
+	window.keyEvent.addListener(keyCallback);
+	window.mouseButtonEvent.addListener(mouseButtonCallback);
+	window.scrollEvent.addListener(scrollCallback);
+	window.cursorPosEvent.addListener(cursorPosCallback);
+ }
 
 void Input::processInput(GLFWwindow* window)
 {
@@ -42,7 +59,7 @@ void Input::processInput(GLFWwindow* window)
 		if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
 		{
 			// did the cursor or the camera move?
-			if (glm::length2(mouseMovement) > 1.0f || glm::length2(program.camera.lastMovement) > 0.0f)
+			if (glm::length(mouseMovement) > 1.0f || glm::length(program.camera.lastMovement) > 0.0f)
 			{
 				// has the repetition delay passed?
 				if (program.render.mouseRepeat)
@@ -75,7 +92,7 @@ void Input::processInput(GLFWwindow* window)
 		else if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
 		{
 			// did the cursor or the camera move?
-			if (glm::length2(mouseMovement) > 1.0f || glm::length2(program.camera.lastMovement) > 0.0f)
+			if (glm::length(mouseMovement) > 1.0f || glm::length(program.camera.lastMovement) > 0.0f)
 			{
 				// has the repetition delay passed?
 				if (program.render.mouseRepeat)
@@ -91,7 +108,7 @@ void Input::processInput(GLFWwindow* window)
 					}
 
 					if (!isToolIgnored)
-					program.editor.tool_use_secondary();
+						program.editor.tool_use_secondary();
 
 					program.render.mouseButtonDelay = 0.0f;
 				}
@@ -136,7 +153,7 @@ void Input::processInput(GLFWwindow* window)
 	mouseMovement = glm::vec2(0.0f);
 }
 
-void Input::key_event(GLFWwindow* window, int key, int scancode, int action, int mods)
+void Input::key_event(int key, int scancode, int action, int mods)
 {
 	if (action == GLFW_PRESS)
 	{
@@ -203,10 +220,6 @@ void Input::key_event(GLFWwindow* window, int key, int scancode, int action, int
 				{
 					program.editor.paste();
 				}
-			break;
-			/// program manipulators
-			case GLFW_KEY_ESCAPE: // exit the program
-				glfwSetWindowShouldClose(window, true);
 			break;
 			/// shortcut keys
 			case GLFW_KEY_N: 
@@ -317,7 +330,7 @@ void Input::key_event(GLFWwindow* window, int key, int scancode, int action, int
 	}
 }
 
-void Input::mouse_button_event(GLFWwindow* window, int key, int action, int mods)
+void Input::mouse_button_event(int key, int action, int mods)
 {
 	if (program.file_system.contextOpen || program.gui.guiHovered || program.gui.tileTextures.size() == 0) { return; }
 
@@ -350,7 +363,7 @@ void Input::mouse_button_event(GLFWwindow* window, int key, int action, int mods
 	}
 }
 
-void Input::cursor_pos_event(GLFWwindow* window, double xPos, double yPos)
+void Input::cursor_pos_event(double xPos, double yPos)
 {
 	if (program.windowManager.hasFocus)
 	{
@@ -366,7 +379,7 @@ void Input::cursor_pos_event(GLFWwindow* window, double xPos, double yPos)
 	}
 }
 
-void Input::scroll_event(GLFWwindow* window, double xOffset, double yOffset)
+void Input::scroll_event(double xOffset, double yOffset)
 {
 	if (program.file_system.contextOpen || program.gui.guiHovered) { return; }
 

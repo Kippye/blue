@@ -6,9 +6,8 @@
 #include <vector>
 #include <deque>
 
-#include <glm.hpp>
-#include <glm/gtx/string_cast.hpp>
-#define GLM_ENABLE_EXPERIMENTAL
+#include "ext/scalar_constants.hpp"
+#include "glm.hpp"
 
 // constants
 const int MAX_TAGS = 5;
