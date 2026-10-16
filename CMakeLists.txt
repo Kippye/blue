@@ -5,7 +5,8 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 ############ PROJECT DEFINITION ############
 project(blue VERSION 1.3.0)
-set(CPP_VERSION "c++17")
+set(CPP_VERSION "c++20")
+set(CMAKE_CXX_STANDARD 20)
 
 # Force even Release builds to show and output to a console
 option(FORCE_CONSOLE "Should the console be visible even in Release builds?" OFF)
