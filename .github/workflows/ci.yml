@@ -31,19 +31,16 @@ jobs:
             config_preset: windows-vs
             build_preset: vs-release
             has_build_preset: true
-            artifact_path: '${{ steps.strings.outputs.build-output-dir }}/${{ matrix.build_type }}/*.exe'
           - os: ubuntu-latest
             c_compiler: gcc
             cpp_compiler: g++
             config_preset: make-release
             has_build_preset: false
-            artifact_path: '${{ steps.strings.outputs.build-output-dir }}/blue'
           - os: ubuntu-latest
             c_compiler: clang
             cpp_compiler: clang++
             config_preset: make-release
             has_build_preset: false
-            artifact_path: '${{ steps.strings.outputs.build-output-dir }}/blue'
         exclude:
           - os: windows-latest
             c_compiler: gcc
@@ -95,4 +92,6 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: blue_${{ matrix.os }}_${{ matrix.cpp_compiler }}
-          path: ${{ matrix.artifact_path }}
+          # Windows: All .exe files from Release / Debug build subdirectory 
+          # Linux: File named 'blue' from build directory
+          path: ${{ steps.strings.outputs.build-output-dir }}/${{ runner.os == 'Windows' && format('{0}/', matrix.build_type) || '' }}${{ runner.os == 'Windows' && '*.exe' || 'blue' }}
