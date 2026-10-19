@@ -87,3 +87,9 @@ jobs:
       - name: Build without preset
         if: ${{ !matrix.has_build_preset }}
         run: cmake --build ${{ steps.strings.outputs.build-output-dir }}
+
+      - name: Archive build artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: blue
+          path: ${{ steps.strings.outputs.build-output-dir }}/blue*
