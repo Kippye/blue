@@ -33,12 +33,6 @@ enum GUI_PROMPT
 	SAVE_AS
 };
 
-enum GUI_STYLE
-{
-	DARK,
-	LIGHT
-};
-
 // NOTE: for now, gui tweens just work for opacity
 struct GuiTween
 {
@@ -101,7 +95,7 @@ struct GuiSizes
 		bottomBarHeight = 32.0f,
 		editorPaneHeight = 64.0f,
 		editorButtonDistance = 66.0f,
-		editorButtonOffset = 33.0f,
+		editorButtonOffset = 16.0f,
 		editorComboWidth = 128.0f,
 		propertySectionSeparator = 0.0f; //20.0f;
 		ImVec2 editorButtonSize = ImVec2(58, 58);
@@ -139,15 +133,11 @@ struct GuiData
 class Gui
 {
 	private:
-		// TEMP
-		float lastPos[2] = { 0.0f, 0.0f };
-
 		std::string statusMessage = "";
 		GuiSizes s;
 	public:
 		GuiData gd;
 		GuiSelections se;
-		GUI_STYLE guiStyle = DARK;
 		GUI_PROMPT promptType = DIR;
 		bool guiFocused = false, guiHovered = false, guiWantKeyboard = false;
 		bool showDebugInfo = true;

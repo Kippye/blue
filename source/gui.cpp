@@ -37,7 +37,7 @@ void Gui::guiInit(Window* windowManager)
 	ImVec4* colors = ImGui::GetStyle().Colors;
 	colors[ImGuiCol_Text]                   = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
 	colors[ImGuiCol_TextDisabled]           = ImVec4(0.50f, 0.50f, 0.50f, 1.00f);
-	colors[ImGuiCol_WindowBg]               = ImVec4(0.00f, 0.05f, 0.39f, 0.92f);
+	colors[ImGuiCol_WindowBg]               = ImVec4(0.00f, 0.02f, 0.16f, 0.92f);
 	colors[ImGuiCol_ChildBg]                = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
 	colors[ImGuiCol_PopupBg]                = ImVec4(0.10f, 0.16f, 0.48f, 1.00f);
 	colors[ImGuiCol_Border]                 = ImVec4(0.00f, 0.00f, 0.39f, 0.50f);
@@ -46,7 +46,7 @@ void Gui::guiInit(Window* windowManager)
 	colors[ImGuiCol_FrameBgHovered]         = ImVec4(0.12f, 0.40f, 0.81f, 0.71f);
 	colors[ImGuiCol_FrameBgActive]          = ImVec4(0.24f, 0.50f, 0.88f, 0.47f);
 	colors[ImGuiCol_TitleBg]                = ImVec4(0.01f, 0.00f, 0.18f, 1.00f);
-	colors[ImGuiCol_TitleBgActive]          = ImVec4(0.03f, 0.00f, 0.61f, 1.00f);
+	colors[ImGuiCol_TitleBgActive]          = ImVec4(0.11f, 0.09f, 0.61f, 1.00f);
 	colors[ImGuiCol_TitleBgCollapsed]       = ImVec4(0.00f, 0.00f, 0.00f, 0.51f);
 	colors[ImGuiCol_MenuBarBg]              = ImVec4(0.10f, 0.12f, 0.27f, 1.00f);
 	colors[ImGuiCol_ScrollbarBg]            = ImVec4(0.02f, 0.02f, 0.02f, 0.53f);
@@ -59,7 +59,7 @@ void Gui::guiInit(Window* windowManager)
 	colors[ImGuiCol_Button]                 = ImVec4(0.04f, 0.32f, 0.73f, 0.54f);
     colors[ImGuiCol_ButtonHovered]          = ImVec4(0.24f, 0.50f, 0.88f, 0.85f);
 	colors[ImGuiCol_ButtonActive]           = ImVec4(0.28f, 0.55f, 0.92f, 0.90f);
-	colors[ImGuiCol_Header]                 = ImVec4(0.01f, 0.03f, 1.00f, 0.57f);
+	colors[ImGuiCol_Header]                 = ImVec4(0.01f, 0.09f, 0.61f, 0.57f);
 	colors[ImGuiCol_HeaderHovered]          = ImVec4(0.15f, 0.17f, 1.00f, 0.27f);
 	colors[ImGuiCol_HeaderActive]           = ImVec4(0.31f, 0.33f, 0.99f, 0.16f);
 	colors[ImGuiCol_Separator]              = ImVec4(0.43f, 0.43f, 0.50f, 0.50f);
@@ -106,6 +106,7 @@ void Gui::addEditorGui()
 	ImGui::SetNextWindowSize(ImVec2(window->SCREEN_WIDTH - (s.tileSelectorPaneWidth + s.propertiesPaneWidth), s.editorPaneHeight));
 	ImGui::SetNextWindowPos(ImVec2(s.tileSelectorPaneWidth, 0.0f));
 	ImGui::Begin("Level editor", p_close, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoNav);
+		ImGuiStyle& style = ImGui::GetStyle();
 		s.editorPaneHeight = ImGui::GetWindowHeight();
 		/// add tool buttons
 		float currentToolButtonX = 0.0f;
@@ -296,94 +297,118 @@ void Gui::addEditorGui()
 
 		currentToolButtonX += s.editorComboWidth + s.editorButtonOffset;
 
-		ImGui::SetCursorPos(ImVec2(currentToolButtonX + 4.0f, 0.0f));
-		ImGui::SetNextItemWidth(s.editorComboWidth);
-		ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0.5f, 0.5f));
-		bool _perspectiveEnabled = program.editor.perspectiveEnabled;
-		if (ImGui::Selectable("Perspective", &_perspectiveEnabled, 0, ImVec2(s.editorComboWidth - 8.0f, s.editorButtonSize.y / 2 - 4.0f)))
+		/// editor toggles section NOTE: RIGHT-TO-LEFT ORDER
+		if (ImGui::GetWindowWidth() > s.editorButtonSize.x * 14.0f)
 		{
-			program.editor.set_perspective_enabled(_perspectiveEnabled);
-		}
-		if (ImGui::IsItemHovered())
-		{
-			ImGui::BeginTooltip();
-			ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
-			ImGui::Text("perspective ");
-			ImGui::BulletText("if enabled, a perspective camera projection is used ");
-			ImGui::BulletText("if disabled, an orthographic camera projection is used ");
-			ImGui::BulletText("shortcut: left CTRL + P ");
-			ImGui::PopTextWrapPos();
-			ImGui::EndTooltip();
-		}
-		ImGui::PopStyleVar();
-		ImGui::SameLine();
-		if (ImGui::Checkbox("##pe", &_perspectiveEnabled))
-		{
-			program.editor.set_perspective_enabled(_perspectiveEnabled);
-		}
+			auto getPositionFromRight = [style](float current, const GuiSizes& guiSizes) -> float {
+				return current - guiSizes.editorButtonSize.x - style.FramePadding.x * 2.0f - 4.0f;
+			};
+			float positionFromRight = getPositionFromRight(ImGui::GetWindowWidth(), s);
+			ImGui::SetCursorPos(ImVec2(positionFromRight, 0.0f));
+			if (program.editor.perspectiveEnabled)
+			{
+				ImGui::PushStyleColor(ImGuiCol_Button, gd.selectedButtonColor);
+			}
+			else
+			{
+				ImGui::PushStyleColor(ImGuiCol_Button, gd.normalButtonColor);
+			}
+			if (ImGui::ImageButton("OptionButtonPerspective", guiTextures["perspective"], s.editorButtonSize))
+			{
+				program.editor.set_perspective_enabled(!program.editor.perspectiveEnabled);
+			}
+			ImGui::PopStyleColor();
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::BeginTooltip();
+				ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+				ImGui::Text("perspective ");
+				ImGui::BulletText("if enabled, a perspective camera projection is used ");
+				ImGui::BulletText("if disabled, an orthographic camera projection is used ");
+				ImGui::BulletText("shortcut: left CTRL + P ");
+				ImGui::PopTextWrapPos();
+				ImGui::EndTooltip();
+			}
 
-		ImGui::SetCursorPos(ImVec2(currentToolButtonX + 4.0f, s.editorButtonSize.y / 2 + 5.5f));
-		ImGui::SetNextItemWidth(s.editorComboWidth);
-		ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0.5f, 0.5f));
-		bool _gridVisible = program.editor.gridVisible;
-		if (ImGui::Selectable("Show grid", &_gridVisible, 0, ImVec2(s.editorComboWidth - 8.0f, s.editorButtonSize.y / 2 - 4.0f)))
-		{
-			program.editor.set_grid_visible(_gridVisible);
-		}
-		if (ImGui::IsItemHovered())
-		{
-			ImGui::BeginTooltip();
-			ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
-			ImGui::Text("grid ");
-			ImGui::BulletText("shows or hides the grid ");
-			ImGui::BulletText("shortcut: G ");
-			ImGui::PopTextWrapPos();
-			ImGui::EndTooltip();
-		}
-		ImGui::PopStyleVar();
-		ImGui::SameLine();
-		if (ImGui::Checkbox("##gv", &_gridVisible))
-		{
-			program.editor.set_grid_visible(_gridVisible);
-		}
+			positionFromRight = getPositionFromRight(positionFromRight, s);
+			ImGui::SetCursorPos(ImVec2(positionFromRight, 0.0f));
+			if (program.editor.overlap)
+			{
+				ImGui::PushStyleColor(ImGuiCol_Button, gd.selectedButtonColor);
+			}
+			else
+			{
+				ImGui::PushStyleColor(ImGuiCol_Button, gd.normalButtonColor);
+			}
+			if (ImGui::ImageButton("OptionButtonOverlap", guiTextures["overlap"], s.editorButtonSize))
+			{
+				program.editor.overlap = !program.editor.overlap;
+			}
+			ImGui::PopStyleColor();
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::BeginTooltip();
+				ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+				ImGui::Text("overlap ");
+				ImGui::BulletText("whether or not new tiles are allowed to overlap pre-existing ones ");
+				ImGui::BulletText("shortcut: left CTRL + L ");
+				ImGui::PopTextWrapPos();
+				ImGui::EndTooltip();
+			}
 
-		/// editor toggles section
-		ImGui::SetCursorPos(ImVec2(ImGui::GetWindowWidth() - 256, 0.0f));
-		ImGui::SetNextItemWidth(s.editorComboWidth);
-		ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0.5f, 0.5f));
-		ImGui::Selectable("Overlap", &program.editor.overlap, 0, ImVec2(s.editorComboWidth, s.editorButtonSize.y / 2));
-		if (ImGui::IsItemHovered())
-		{
-			ImGui::BeginTooltip();
-			ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
-			ImGui::Text("overlap ");
-			ImGui::BulletText("whether or not new tiles are allowed to overlap pre-existing ones ");
-			ImGui::BulletText("shortcut: left CTRL + L ");
-			ImGui::PopTextWrapPos();
-			ImGui::EndTooltip();
+			positionFromRight = getPositionFromRight(positionFromRight, s);
+			ImGui::SetCursorPos(ImVec2(positionFromRight, 0.0f));
+			if (program.editor.gridVisible)
+			{
+				ImGui::PushStyleColor(ImGuiCol_Button, gd.selectedButtonColor);
+			}
+			else
+			{
+				ImGui::PushStyleColor(ImGuiCol_Button, gd.normalButtonColor);
+			}
+			if (ImGui::ImageButton("OptionButtonGrid", guiTextures["grid"], s.editorButtonSize))
+			{
+				program.editor.set_grid_visible(!program.editor.gridVisible);
+			}
+			ImGui::PopStyleColor();
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::BeginTooltip();
+				ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+				ImGui::Text("grid ");
+				ImGui::BulletText("shows or hides the grid ");
+				ImGui::BulletText("shortcut: G ");
+				ImGui::PopTextWrapPos();
+				ImGui::EndTooltip();
+			}
+			
+			positionFromRight = getPositionFromRight(positionFromRight, s);
+			ImGui::SetCursorPos(ImVec2(positionFromRight, 0.0f));
+			if (program.editor.getAutosnap())
+			{
+				ImGui::PushStyleColor(ImGuiCol_Button, gd.selectedButtonColor);
+			}
+			else
+			{
+				ImGui::PushStyleColor(ImGuiCol_Button, gd.normalButtonColor);
+			}
+			if (ImGui::ImageButton("OptionButtonAutosnap", guiTextures["grid_snap"], s.editorButtonSize))
+			{
+				program.editor.setAutosnap(!program.editor.autosnap);
+			}
+			ImGui::PopStyleColor();
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::BeginTooltip();
+				ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+				ImGui::Text("auto-snap ");
+				ImGui::BulletText("essentialy holds left CTRL automatically to snap positions and sizes to the grid ");
+				ImGui::BulletText("shortcut: left CTRL + K ");
+				ImGui::PopTextWrapPos();
+				ImGui::EndTooltip();
+			}
 		}
-		ImGui::PopStyleVar();
-		ImGui::SameLine();
-		if (ImGui::Checkbox("##ol", &program.editor.overlap)){}
-
-		ImGui::SetCursorPos(ImVec2(ImGui::GetWindowWidth() - 256, s.editorButtonSize.y / 2 + 3.5f));
-		ImGui::SetNextItemWidth(s.editorComboWidth);
-		ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0.5f, 0.5f));
-		ImGui::Selectable("Auto-snap", &program.editor.autosnap, 0, ImVec2(s.editorComboWidth, s.editorButtonSize.y / 2));
-		if (ImGui::IsItemHovered())
-		{
-			ImGui::BeginTooltip();
-			ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
-			ImGui::Text("auto-snap ");
-			ImGui::BulletText("essentialy holds left CTRL automatically to snap positions and sizes to the grid ");
-			ImGui::BulletText("shortcut: left CTRL + K ");
-			ImGui::PopTextWrapPos();
-			ImGui::EndTooltip();
-		}
-		ImGui::PopStyleVar();
-		ImGui::SameLine();
-		if (ImGui::Checkbox("##as", &program.editor.autosnap)){}
-		
+	
 		ImGui::PopStyleVar();
 	ImGui::End();
 }
@@ -1266,12 +1291,13 @@ void Gui::addBottomBarGui()
 
 void Gui::addPopupGui()
 {
-	ImVec2 centeredPos = ImVec2(program.windowManager.SCREEN_WIDTH / 2, program.windowManager.SCREEN_HEIGHT / 2);
+	ImVec2 centeredPos = ImVec2(program.windowManager.SCREEN_WIDTH / 2.0f, program.windowManager.SCREEN_HEIGHT / 2.0f);
 
 	// Movable info panel showing information such as camera position, placed tile count and FPS
 	if (popupToggles[ABOUT])
 	{
-		if (ImGui::Begin("About", &popupToggles[ABOUT], ImGuiWindowFlags_AlwaysAutoResize))
+		ImGui::SetNextWindowPos(centeredPos, ImGuiCond_FirstUseEver, ImVec2(0.5f, 0.5f));
+		if (ImGui::Begin("About", &popupToggles[ABOUT], ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings))
 		{
 			guiWantKeyboard = guiIO->WantCaptureKeyboard ? true : guiWantKeyboard;
 
@@ -1290,26 +1316,31 @@ void Gui::addPopupGui()
 	}
 	if (popupToggles[IGNORE_LIST])
 	{
-		if (ImGui::Begin("Ignore list", &popupToggles[IGNORE_LIST], ImGuiWindowFlags_AlwaysAutoResize))
+		ImGui::SetNextWindowPos(centeredPos, ImGuiCond_FirstUseEver, ImVec2(0.5f, 0.5f));
+		if (ImGui::Begin("Ignore list", &popupToggles[IGNORE_LIST], ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings))
 		{
 			guiWantKeyboard = guiIO->WantCaptureKeyboard ? true : guiWantKeyboard;
 
-			ImGui::InputTextMultiline("filenames & directories to ignore", program.file_system.ignoreListBuffer, IM_ARRAYSIZE(program.file_system.ignoreListBuffer), ImVec2(600, 400));
+			ImGui::Text("%s", "filenames & directories to ignore");
+			ImGui::InputTextMultiline("##IgnoreListInput", program.file_system.ignoreListBuffer, IM_ARRAYSIZE(program.file_system.ignoreListBuffer), ImVec2(600, 400));
 			if (ImGui::Button("Apply", ImVec2(s.bottomBarButtonWidth, s.bottomBarHeight)))
 			{
 				program.file_system.ignore_buffer_to_vector();
 				program.file_system.updateTextures();
 			}
+			ImGui::SetItemTooltip("%s", "Save and apply");
 			ImGui::SameLine();
 			if (ImGui::Button("Default", ImVec2(s.bottomBarButtonWidth, s.bottomBarHeight)))
 			{
 				std::copy(std::begin(program.file_system.defaultIgnoreListBuffer), std::end(program.file_system.defaultIgnoreListBuffer), std::begin(program.file_system.ignoreListBuffer));
 			}
+			ImGui::SetItemTooltip("%s", "Load default ignore list");
 			ImGui::SameLine();
 			if (ImGui::Button("Clear", ImVec2(s.bottomBarButtonWidth, s.bottomBarHeight)))
 			{
 				std::fill(std::begin(program.file_system.ignoreListBuffer), std::end(program.file_system.ignoreListBuffer), '\0');
 			}
+			ImGui::SetItemTooltip("%s", "Clear input");
 			ImGui::End();
 		}
 		else
@@ -1320,7 +1351,7 @@ void Gui::addPopupGui()
 	// TODO: Open this popup when a new file is being loaded but there are changes
 	if (popupToggles[SAVE_CONTEXT])
 	{
-		ImGui::SetNextWindowPos(centeredPos);
+		ImGui::SetNextWindowPos(centeredPos, ImGuiCond_Always, ImVec2(0.5f, 0.5f));
 		if (ImGui::Begin("Unsaved changes", &popupToggles[SAVE_CONTEXT], ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings))
 		{
 			guiWantKeyboard = guiIO->WantCaptureKeyboard ? true : guiWantKeyboard;
@@ -1366,7 +1397,7 @@ void Gui::addPopupGui()
 	}
 	if (popupToggles[REOPEN_CONTEXT])
 	{
-		ImGui::SetNextWindowPos(centeredPos, ImGuiCond_FirstUseEver);
+		ImGui::SetNextWindowPos(centeredPos, ImGuiCond_Always, ImVec2(0.5f, 0.5f));
 		if (ImGui::Begin(("Reopen file (" + std::filesystem::path(program.file_system.blfFile).filename().string() + ")?").c_str(), &popupToggles[REOPEN_CONTEXT], ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings))
 		{
 			guiWantKeyboard = guiIO->WantCaptureKeyboard ? true : guiWantKeyboard;
@@ -1412,9 +1443,9 @@ void Gui::addPopupGui()
 	}
 	if (popupToggles[CONTENT_LACK_WARNING])
 	{
-		ImGui::OpenPopup("Select a content folder first!", ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_Modal);
+		ImGui::OpenPopup("Select a content folder first!", ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_Modal);
 	}
-	ImGui::SetNextWindowPos(centeredPos, ImGuiCond_FirstUseEver);
+	ImGui::SetNextWindowPos(centeredPos, ImGuiCond_Always, ImVec2(0.5f, 0.5f));
 	if (ImGui::BeginPopupModal("Select a content folder first!", &popupToggles[CONTENT_LACK_WARNING], ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_Modal))
 	{
 		guiWantKeyboard = guiIO->WantCaptureKeyboard ? true : guiWantKeyboard;
@@ -1438,18 +1469,18 @@ void Gui::openFileDialog(GUI_PROMPT type)
 		case DIR:
 		{
 			promptType = DIR;
-			program.file_system.contextOpen = true;
 			auto dialogConfig = IGFD::FileDialogConfig();
 			dialogConfig.path = program.file_system.contentDir == "" ? rootPath.string() : program.file_system.contentDir;
 			dialogConfig.countSelectionMax = 1;
+			// visual settings
+			ImGuiFileDialog::Instance()->SetFileStyle(IGFD_FileStyleByTypeDir, ".", ImVec4(1, 1, 0.5f, 0.9f));
 			ImGuiFileDialog::Instance()->OpenDialog(
 				"ChooseContentFolder", 
 				"Select the content folder", 
 				nullptr, 
 				dialogConfig
 			);
-			// visual settings
-			ImGuiFileDialog::Instance()->SetFileStyle(IGFD_FileStyleByTypeDir, ".", ImVec4(1, 1, 0.5f, 0.9f));
+			program.file_system.contextOpen = true;
 			break;
 		}
 
@@ -1470,12 +1501,13 @@ void Gui::openFileDialog(GUI_PROMPT type)
 			{
 				startDir = program.file_system.contentDir == "" ? startDir : program.file_system.contentDir;
 			}
-
+			
 			auto dialogConfig = IGFD::FileDialogConfig();
 			dialogConfig.path = startDir.c_str();
 			dialogConfig.countSelectionMax = 1;
 			ImGuiFileDialog::Instance()->SetFileStyle(IGFD_FileStyleByTypeFile, ".blf", gd.blfFileColor, "");
 			ImGuiFileDialog::Instance()->OpenDialog("OpenFile", "Load a BLF file", ".blf", dialogConfig);
+			program.file_system.contextOpen = true;
 			break;
 		}
 
@@ -1511,6 +1543,7 @@ void Gui::openFileDialog(GUI_PROMPT type)
 			dialogConfig.flags = ImGuiFileDialogFlags_ConfirmOverwrite;
 			ImGuiFileDialog::Instance()->SetFileStyle(IGFD_FileStyleByTypeFile, ".blf", gd.blfFileColor, "");
 			ImGuiFileDialog::Instance()->OpenDialog("SaveFileAs", "Save current BLF file as...", ".blf", dialogConfig);
+			program.file_system.contextOpen = true;
 			break;
 		}
 	};
@@ -1521,12 +1554,19 @@ void Gui::checkFileDialog()
 	// size constraints
 	ImVec2 maxSize = ImVec2(window->SCREEN_WIDTH, window->SCREEN_HEIGHT);  // The full display area
 	ImVec2 minSize = maxSize * 0.4f;
+	ImVec2 centeredPos = ImVec2(program.windowManager.SCREEN_WIDTH / 2.0f, program.windowManager.SCREEN_HEIGHT / 2.0f);
 
+	ImGui::SetNextWindowPos(centeredPos, ImGuiCond_Always, ImVec2(0.5f, 0.5f));
 	switch (promptType)
 	{
+		case SAVE:
+		{
+			// There is no SAVE dialog - it just opens SAVE_AS
+			break;
+		}
 		case DIR:
 		{
-			if (ImGuiFileDialog::Instance()->Display("ChooseContentFolder", ImGuiWindowFlags_NoCollapse, minSize, maxSize))
+			if (ImGuiFileDialog::Instance()->Display("ChooseContentFolder", ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings, minSize, maxSize))
 			{
 				// action if OK
 				if (ImGuiFileDialog::Instance()->IsOk())
@@ -1543,11 +1583,12 @@ void Gui::checkFileDialog()
 				program.file_system.contextOpen = false;
 				ImGuiFileDialog::Instance()->Close();
 			}
+			break;
 		}
 		case OPEN:
 		{
 			// TODO: check if correct selection
-			if (ImGuiFileDialog::Instance()->Display("OpenFile", ImGuiWindowFlags_NoCollapse, minSize, maxSize))
+			if (ImGuiFileDialog::Instance()->Display("OpenFile", ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings, minSize, maxSize))
 			{
 				// action if OK
 				if (ImGuiFileDialog::Instance()->IsOk())
@@ -1577,11 +1618,12 @@ void Gui::checkFileDialog()
 					ImGuiFileDialog::Instance()->Close();
 				}
 			}
+			break;
 		}
 		case SAVE_AS:
 		{
 			// TODO: check if correct selection
-			if (ImGuiFileDialog::Instance()->Display("SaveFileAs", ImGuiWindowFlags_NoCollapse, minSize, maxSize))
+			if (ImGuiFileDialog::Instance()->Display("SaveFileAs", ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings, minSize, maxSize))
 			{
 				// action if OK
 				if (ImGuiFileDialog::Instance()->IsOk())
@@ -1620,6 +1662,7 @@ void Gui::checkFileDialog()
 					ImGuiFileDialog::Instance()->Close();
 				}
 			}
+			break;
 		}
 	};
 }
@@ -1638,6 +1681,10 @@ void Gui::drawGui()
 	addTextureSelectorGui();
 	addBottomBarGui();
 	addPopupGui();
+
+	#ifdef DEBUG
+	ImGui::ShowDemoWindow();
+	#endif
 
 	// check if any window is focused and/or hovered (for input capturing purposes)
 	guiHovered = guiIO->WantCaptureMouse;

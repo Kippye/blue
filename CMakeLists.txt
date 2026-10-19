@@ -32,12 +32,7 @@ include("cmake/platform.cmake")
 message("~~~~ Configuring ${PROGRAM_NAME} ${PROJECT_VERSION}")
 ### LINUX PACKAGES / LIBRARIES ###
 IF (LINUX)
-    find_package(PkgConfig REQUIRED)
-    # glib2
-    # pkg_check_modules(deps REQUIRED IMPORTED_TARGET glib-2.0)
-    # gdkpixbuf
-    # find_package(GDKPixBuf REQUIRED)
-    # pkg_check_modules(pixbuf REQUIRED IMPORTED_TARGET gdk-pixbuf-2.0)
+
 ENDIF()
 
 ######### REMOTE FETCH LIBRARIES #########
@@ -141,20 +136,12 @@ target_include_directories(${PROGRAM_NAME}
     PUBLIC "include" 
     PUBLIC "include/generated"
     PUBLIC "libs"
-    PUBLIC "libs/ImGuiFileDialog-Lib_Only"
-    PUBLIC "libs/libconfig"
     PUBLIC "libs/glm"
     PUBLIC "libs/glm/glm"
-    PUBLIC "libs/rectpack2D"
 )
 
 ###### PLATFORM-SPECIFIC ######
-# IF (LINUX)
-#     target_include_directories(${PROGRAM_NAME} PUBLIC ${pixbuf_INCLUDE_DIRS})
-#     # IF (GDKPIXBUF_FOUND)
-#     #     target_include_directories(${PROGRAM_NAME} PUBLIC ${GDKPIXBUF_INCLUDE_DIR})
-#     # ENDIF()
-# ENDIF()
+
 
 ######### SOURCES #########
 target_sources(${PROGRAM_NAME} PRIVATE

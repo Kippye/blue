@@ -10,6 +10,9 @@ Release/
 resources/
 *.ini
 
+# User / local files
+*.cfg
+
 # CMake
 CMakeUserPresets.json
 
