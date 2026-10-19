@@ -4,7 +4,7 @@ include(FetchContent)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 ############ PROJECT DEFINITION ############
-project(blue VERSION 1.3.0)
+project(blue VERSION 1.4.0)
 set(CPP_VERSION "c++20")
 set(CMAKE_CXX_STANDARD 20)
 
