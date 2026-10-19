@@ -91,5 +91,5 @@ jobs:
       - name: Archive build artifact
         uses: actions/upload-artifact@v7
         with:
-          name: blue
+          name: blue_${{ matrix.os }}_${{ matrix.cpp_compiler }}
           path: ${{ steps.strings.outputs.build-output-dir }}/blue*
